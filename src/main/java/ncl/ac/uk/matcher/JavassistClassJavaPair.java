@@ -11,7 +11,6 @@ import javassist.bytecode.analysis.ControlFlow;
 import javassist.bytecode.analysis.ControlFlow.*;
 import ncl.ac.uk.utilities.JarReaderUtil;
 
-import javax.naming.ldap.Control;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -20,6 +19,8 @@ import java.util.jar.JarFile;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import io.disassemble.javanalysis.insn.*;
+
+import java.util.regex.*;
 
 //TODO: modify this class to be immutable
 
@@ -114,6 +115,8 @@ public class JavassistClassJavaPair implements ClassJavaPair {
             String sourceCode = JARUtility.extractSourceCode(this._srcJARFullPath, dotJavaFilename);
 
             sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
+
+
         }
 
         return sentences;
@@ -139,6 +142,12 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
     @Override
     public List<String> getDotJavaFiles() { return new LinkedList<>(this._pairs.keySet()); }
+
+    /* ************************************************
+     * ************************************************
+     * ******************* Private ********************
+     * ************************************************
+     * ************************************************/
 
     /* ************************************************
      * ************************************************
@@ -337,7 +346,8 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                         // Print all bytecode of the method to the PrintStream
                         printer.print(method);
                         // Convert the PrintStream to String
-                        sentences.add(new BytecodeSentence(
+                        sentences.add(
+                                sentencePostProcessing(
                                 ctClass.getName(),
                                 method.getName(),
                                 baos.toString(utf8)));
@@ -345,6 +355,48 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                 }
 
             return sentences;
+        }
+
+        /**
+         * This private method post-processes the String passed as parameter
+         * @param className Name of the class
+         * @param methodName Name of the method
+         * @param sentence Sentence to post process
+         * @return post processed String
+         */
+        private static Sentence sentencePostProcessing(String className, String methodName, String sentence) {
+
+            Pattern pattern = Pattern.compile("(#\\d+)(\\s=\\s\\w+\\s)([^\\s]+)");
+            Pattern costantPattern = Pattern.compile("(#\\d+)(\\s=\\s)\"(.*)\"");
+            Pattern tokenPattern = Pattern.compile("(\\w+.+\\n)");
+
+            Map<String, String> constantPool = new HashMap<>();
+
+            String sentenceWithoutLineNumber = sentence.replaceAll("\\d+:\\s", "");
+            Matcher matcher = pattern.matcher(sentenceWithoutLineNumber);
+            Matcher costantMatcher = costantPattern.matcher(sentenceWithoutLineNumber);
+
+            while (matcher.find())
+                constantPool.put(matcher.group(1), matcher.group(3));
+            while (costantMatcher.find())
+                constantPool.put(costantMatcher.group(1), costantMatcher.group(3));
+
+            sentenceWithoutLineNumber = sentenceWithoutLineNumber.replaceAll(pattern.pattern(), "$1");
+            sentenceWithoutLineNumber = sentenceWithoutLineNumber.replaceAll(costantPattern.pattern(), "$1");
+
+            Matcher tokenMatcher = tokenPattern.matcher(sentenceWithoutLineNumber);
+
+            int tokens = 0;
+            while(tokenMatcher.find())
+                tokens++;
+
+            return new BytecodeSentence(
+                    className,
+                    methodName,
+                    sentenceWithoutLineNumber,
+                    constantPool,
+                    tokens
+            );
         }
     }
 
@@ -362,7 +414,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
          */
         private static List<String> ListDotJavaFiles(String jarPath) throws IOException {
 
-            List<String> dotJavaFiles = ListFilesInJAR(jarPath, "java");
+            //List<String> dotJavaFiles = ListFilesInJAR(jarPath, "java");
 
             /**
              * This was commented out on the advice of Jonathan.
@@ -376,7 +428,8 @@ public class JavassistClassJavaPair implements ClassJavaPair {
             });
             */
 
-            return dotJavaFiles;
+            //return dotJavaFiles;
+            return ListFilesInJAR(jarPath, "java");
         }
 
         /**

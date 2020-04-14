@@ -91,15 +91,19 @@ public class ClassJavaPairTest {
 
             List<String> librariesNames = reader.getLibrariesNames();
 
-            ClassJavaPair pair = reader.getClassJavaPair(librariesNames.get(11));
-
             Map<String, List<Sentence>> sentencesMap = new HashMap<>();
 
-            for (String dotJavaFile : pair.getDotJavaFiles()) {
-                sentencesMap.put(dotJavaFile, pair.getSentences(dotJavaFile));
+            for (String library : librariesNames) {
+
+                ClassJavaPair pair = reader.getClassJavaPair(library);
+
+                for (String dotJavaFile : pair.getDotJavaFiles())
+                    sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getSentences(dotJavaFile));
+
             }
 
             Assert.assertNotEquals(sentencesMap.size(), 0);
+
         } catch (Exception ex) {
             ex.printStackTrace();
 
