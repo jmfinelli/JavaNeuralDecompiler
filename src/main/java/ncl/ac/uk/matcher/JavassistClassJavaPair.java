@@ -110,14 +110,8 @@ public class JavassistClassJavaPair implements ClassJavaPair {
         List<Sentence> sentences = new LinkedList<>();
 
         // Checks if the parameter dotJavaFile matches a .java file in this object
-        if (this._pairs.containsKey(dotJavaFilename)) {
-
-            String sourceCode = JARUtility.extractSourceCode(this._srcJARFullPath, dotJavaFilename);
-
+        if (this._pairs.containsKey(dotJavaFilename))
             sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
-
-
-        }
 
         return sentences;
     }
@@ -186,7 +180,8 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                 // wasted too much time trying to understand how to configure the plugin to run in the package
                 // phase. TODO: ask Jonathan to help with this.
                 if (name.endsWith(".class") &&
-                        !name.startsWith("module-info")) {
+                        !name.startsWith("module-info") &&
+                        !name.startsWith("META-INF")) {
 
                     // extracts the InputStream corresponding to the current .class
                     InputStream dotClassInputStream = jarFile.getInputStream(jarEntry);
@@ -194,20 +189,24 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                     // creates a CtClass object from the .class InputStream
                     CtClass ctClass = classPool.makeClass(dotClassInputStream);
 
-                    // Reads the .class source filename
-                    String sourceFile = ((SourceFileAttribute)ctClass.getClassFile().getAttribute("SourceFile")).getFileName();
+                    // FIXED bug when source file is not available
+                    if (ctClass.getClassFile().getAttribute("SourceFile") != null) {
 
-                    // Checks if there is a .java file matching the source filename
-                    if (dotJavaFiles.stream().anyMatch(x -> x.contains(sourceFile))) {
+                        // Reads the .class source filename
+                        String sourceFile = ((SourceFileAttribute) ctClass.getClassFile().getAttribute("SourceFile")).getFileName();
 
-                        // Updates or creates List of CtClass
-                        List<CtClass> ctClasses = dotClassFiles.getOrDefault(sourceFile, null);
-                        if (ctClasses == null)
-                            ctClasses = new LinkedList<>();
+                        // Checks if there is a .java file matching the source filename
+                        if (dotJavaFiles.stream().anyMatch(x -> x.contains(sourceFile))) {
 
-                        ctClasses.add(ctClass);
+                            // Updates or creates List of CtClass
+                            List<CtClass> ctClasses = dotClassFiles.getOrDefault(sourceFile, null);
+                            if (ctClasses == null)
+                                ctClasses = new LinkedList<>();
 
-                        dotClassFiles.put(sourceFile, ctClasses);
+                            ctClasses.add(ctClass);
+
+                            dotClassFiles.put(sourceFile, ctClasses);
+                        }
                     }
                 }
 

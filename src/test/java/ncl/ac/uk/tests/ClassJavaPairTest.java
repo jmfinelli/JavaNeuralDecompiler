@@ -99,7 +99,6 @@ public class ClassJavaPairTest {
 
                 for (String dotJavaFile : pair.getDotJavaFiles())
                     sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getSentences(dotJavaFile));
-
             }
 
             Assert.assertNotEquals(sentencesMap.size(), 0);
