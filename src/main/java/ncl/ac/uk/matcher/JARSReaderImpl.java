@@ -18,7 +18,7 @@ public final class JARSReaderImpl implements JARSReader {
 
     private final List<String> _libraryNames = new LinkedList<>();
 
-    private final Map<String, ClassJavaInterface> _classJavaPairs = new HashMap<>();
+    private final Map<String, ClassJavaPair> _classJavaPairs = new HashMap<>();
 
     /* ************************************************
      * ************************************************
@@ -34,7 +34,7 @@ public final class JARSReaderImpl implements JARSReader {
         if (!srcFolder.exists() || !binFolder.exists())
             throw new IllegalArgumentException("Please, check the provided path(s)!");
 
-        for (File binJar : binFolder.listFiles()) {
+        for (File binJar : Objects.requireNonNull(binFolder.listFiles())) {
             String libraryName = binJar.getName();
             if (libraryName.endsWith(".jar")) {
                 libraryName = libraryName.substring(0, libraryName.length() - ".jar".length());
@@ -48,6 +48,7 @@ public final class JARSReaderImpl implements JARSReader {
         if (this._libraryNames.size() == 0)
             throw new IllegalArgumentException("Please, check the provided path(s)!");
 
+        Collections.sort(this._libraryNames);
         this._srcJARSFullPath = srcPath;
         this._binJARSFullPath = binPath;
 
@@ -66,7 +67,7 @@ public final class JARSReaderImpl implements JARSReader {
      * ************************************************/
 
     @Override
-    public ClassJavaInterface getClassJavaPair(String libraryName) throws IOException {
+    public ClassJavaPair getClassJavaPair(String libraryName) throws IOException {
 
         if (this._classJavaPairs.containsKey(libraryName)) {
             return this._classJavaPairs.get(libraryName);
@@ -79,7 +80,9 @@ public final class JARSReaderImpl implements JARSReader {
         String srcJarPath = String.format("%s/%s%s.jar", this._srcJARSFullPath, libraryName, JARSReaderImpl._SOURCE_SUFFIX);
         String binJarPath = String.format("%s/%s.jar", this._binJARSFullPath, libraryName);
 
-        ClassJavaInterface pair = new ClassJavaPair(binJarPath, srcJarPath);
+        // TODO: add CDI management
+        //ClassJavaPair pair = new ClassJavaPairASMImpl(binJarPath, srcJarPath);
+        ClassJavaPair pair = new JavassistClassJavaPair(binJarPath, srcJarPath);
         this._classJavaPairs.put(libraryName, pair);
 
         return pair;
@@ -92,7 +95,7 @@ public final class JARSReaderImpl implements JARSReader {
      * ************************************************/
 
     @Override
-    public List<String> getLibraryNames() {
+    public List<String> getLibrariesNames() {
 
         return new LinkedList<>(this._libraryNames);
     }

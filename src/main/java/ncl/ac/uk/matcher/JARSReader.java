@@ -5,8 +5,8 @@ import java.util.List;
 
 public interface JARSReader {
 
-    List<String> getLibraryNames();
+    List<String> getLibrariesNames();
 
-    ClassJavaInterface getClassJavaPair(String libraryName) throws IOException;
+    ClassJavaPair getClassJavaPair(String libraryName) throws IOException;
 
 }

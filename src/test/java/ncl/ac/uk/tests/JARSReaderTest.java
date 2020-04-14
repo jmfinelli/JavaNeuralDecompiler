@@ -11,7 +11,6 @@ public class JARSReaderTest {
 
     private String SRCJARS_BASEPATH = "/home/jf/IdeaProjects/NeuralNetworksDecompilation/data/srcjars";
     private String BINJARS_BASEPATH = "/home/jf/IdeaProjects/NeuralNetworksDecompilation/data/binjars";
-    private String LIBRARY = "classmate-1.5.1";
 
     @Test
     public void testJARInterpreterInstantiation() {
@@ -59,7 +58,7 @@ public class JARSReaderTest {
     @Test
     public void testJARInterpreterLibraries() {
 
-        List<String> result = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH).getLibraryNames();
+        List<String> result = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH).getLibrariesNames();
 
         Assert.assertNotEquals(result.size(), 0);
     }

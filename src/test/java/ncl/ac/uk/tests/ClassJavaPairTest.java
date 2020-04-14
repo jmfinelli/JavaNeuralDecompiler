@@ -1,28 +1,28 @@
 package ncl.ac.uk.tests;
 
-import ncl.ac.uk.matcher.ClassJavaInterface;
-import ncl.ac.uk.matcher.JARSReaderImpl;
-import ncl.ac.uk.matcher.JARSReader;
+import ncl.ac.uk.matcher.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class ClassJavaPairTest {
 
-    private String SRCJARS_BASEPATH = "/home/jf/IdeaProjects/NeuralNetworksDecompilation/data/srcjars";
-    private String BINJARS_BASEPATH = "/home/jf/IdeaProjects/NeuralNetworksDecompilation/data/binjars";
-    private String LIBRARY = "classmate-1.5.1";
+    private String SRCJARS_BASEPATH = "/home/jf/IdeaProjects/ReadJarFiles/data/srcjars";
+    private String BINJARS_BASEPATH = "/home/jf/IdeaProjects/ReadJarFiles/data/binjars";
 
     @Test
     public void testClassJavaPairInstantiation() {
 
         JARSReader reader = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH);
 
-        List<String> libraryNames = reader.getLibraryNames();
+        List<String> libraryNames = reader.getLibrariesNames();
         try {
-            ClassJavaInterface pair = reader.getClassJavaPair(libraryNames.get(0));
+            ClassJavaPair pair = reader.getClassJavaPair(libraryNames.get(0));
 
             Assert.assertNotNull(pair);
         } catch (IOException ex) {
@@ -40,14 +40,67 @@ public class ClassJavaPairTest {
 
         try {
 
-            List<String> libraryNames = reader.getLibraryNames();
+            List<String> libraryNames = reader.getLibrariesNames();
 
-            ClassJavaInterface pair = reader.getClassJavaPair(libraryNames.get(0));
+            ClassJavaPair pair = reader.getClassJavaPair(libraryNames.get(11));
 
-            List<String> methods = pair.getMethodsNames();
+            List<String> methods = new LinkedList<>();
+
+            for (String dotJavaFile : pair.getDotJavaFiles())
+                methods.addAll(pair.getMethodsNames(dotJavaFile));
 
             Assert.assertNotNull(pair);
         } catch (IOException ex) {
+            ex.printStackTrace();
+
+            Assert.fail();
+        }
+
+    }
+
+    @Test
+    public void testGetDecompilationRecords() {
+
+        JARSReader reader = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH);
+
+        try {
+
+            List<String> librariesNames = reader.getLibrariesNames();
+
+            ClassJavaPair pair = reader.getClassJavaPair(librariesNames.get(11));
+
+            String dotJavaFile = pair.getDotJavaFiles().get(3);
+
+            List<DecompilationRecord> result = pair.getDecompilationRecords(dotJavaFile);
+
+            Assert.assertNotNull(result);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            Assert.fail();
+        }
+
+    }
+
+    @Test
+    public void testGetSentences() {
+
+        JARSReader reader = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH);
+
+        try {
+
+            List<String> librariesNames = reader.getLibrariesNames();
+
+            ClassJavaPair pair = reader.getClassJavaPair(librariesNames.get(11));
+
+            Map<String, List<Sentence>> sentencesMap = new HashMap<>();
+
+            for (String dotJavaFile : pair.getDotJavaFiles()) {
+                sentencesMap.put(dotJavaFile, pair.getSentences(dotJavaFile));
+            }
+
+            Assert.assertNotEquals(sentencesMap.size(), 0);
+        } catch (Exception ex) {
             ex.printStackTrace();
 
             Assert.fail();
