@@ -1,6 +1,6 @@
 package ncl.ac.uk.utilities;
 
-import jdk.internal.org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.ClassNode;
 
 import java.io.*;
 import java.util.*;

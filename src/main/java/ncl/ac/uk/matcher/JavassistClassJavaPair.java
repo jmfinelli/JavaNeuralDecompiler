@@ -1,6 +1,5 @@
 package ncl.ac.uk.matcher;
 
-import com.sun.org.apache.bcel.internal.generic.Instruction;
 import io.disassemble.javanalysis.CtMethodExtensionKt;
 import io.disassemble.javanalysis.flow.ControlFlowGraph;
 import io.disassemble.javanalysis.util.CodeParser;
