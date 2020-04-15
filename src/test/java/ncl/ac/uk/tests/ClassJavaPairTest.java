@@ -5,10 +5,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ClassJavaPairTest {
 
@@ -83,7 +80,34 @@ public class ClassJavaPairTest {
     }
 
     @Test
-    public void testGetSentences() {
+    public void testGetSentencesFromOneLibrary() {
+
+        JARSReader jarsReader = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH);
+
+        try {
+
+            // Classmate library
+            String library = jarsReader.getLibrariesNames().get(11);
+
+            Map<String, List<Sentence>> sentencesMap = new HashMap<>();
+
+            ClassJavaPair pair = jarsReader.getClassJavaPair(library);
+
+            for (String dotJavaFile : pair.getDotJavaFiles())
+                sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getSentences(dotJavaFile));
+
+            Assert.assertNotEquals(sentencesMap.size(), 0);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            Assert.fail();
+        }
+
+    }
+
+    @Test
+    public void testGetSentencesFromAllLibraries() {
 
         JARSReader reader = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH);
 
@@ -100,6 +124,15 @@ public class ClassJavaPairTest {
                 for (String dotJavaFile : pair.getDotJavaFiles())
                     sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getSentences(dotJavaFile));
             }
+
+            int numberOfMethods = 0;
+            for (List<Sentence> sentences : sentencesMap.values())
+                for (Sentence sentence : sentences)
+                    numberOfMethods++;
+
+            System.out.println("Number of methods: " + numberOfMethods);
+            Set<String> dictionary = Sentence.getDictionary();
+            System.out.println("Dictionary size: " + dictionary.size());
 
             Assert.assertNotEquals(sentencesMap.size(), 0);
 

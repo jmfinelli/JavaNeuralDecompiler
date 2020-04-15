@@ -190,6 +190,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                     CtClass ctClass = classPool.makeClass(dotClassInputStream);
 
                     // FIXED bug when source file is not available
+                    // Filter interfaces (do not have implementation)
                     if (ctClass.getClassFile().getAttribute("SourceFile") != null) {
 
                         // Reads the .class source filename
@@ -228,8 +229,10 @@ public class JavassistClassJavaPair implements ClassJavaPair {
             // For each class in the collection of classes in dotJavaFile
             for (CtClass ctClass : ctClasses)
                 // For each method in the class
-                for (CtBehavior behavior : ctClass.getDeclaredBehaviors())
-                    methodsNames.add(String.format("%s/%s", ctClass.getName(), behavior.getName()));
+                for (CtMethod method : ctClass.getDeclaredMethods())
+                    // If method is not empty
+                    if (!method.isEmpty())
+                        methodsNames.add(String.format("%s/%s", ctClass.getName(), method.getName()));
 
             return methodsNames;
         }
@@ -251,67 +254,71 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                 // getDeclaredMethods returns only methods of the CtClass object
                 for (CtMethod method : ctClass.getDeclaredMethods()) {
 
-                    // DEBUG
-                    System.out.println(String.format("Method's name: %s", method.getName()));
-                    // extract a control flow graph
-                    //ControlFlow controlFlow = new ControlFlow(ctClass, method.getMethodInfo());
-                    ControlFlow controlFlow = new ControlFlow(method);
+                    // If method is not empty
+                    if (!method.isEmpty()) {
 
-                    List<CtInsn> ctInsns = CtMethodExtensionKt.getInstructions(method);
+                        // DEBUG
+                        System.out.println(String.format("Method's name: %s", method.getName()));
+                        // extract a control flow graph
+                        //ControlFlow controlFlow = new ControlFlow(ctClass, method.getMethodInfo());
+                        ControlFlow controlFlow = new ControlFlow(method);
 
-                    InstructionPrinter printer = new InstructionPrinter(System.out);
+                        List<CtInsn> ctInsns = CtMethodExtensionKt.getInstructions(method);
 
-                    // Print all bytecode of the method
-                    printer.print(method);
+                        InstructionPrinter printer = new InstructionPrinter(System.out);
 
-                    CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
-                    CodeIterator ci = codeAttribute.iterator();
+                        // Print all bytecode of the method
+                        printer.print(method);
 
-                    Node[] nodes = controlFlow.dominatorTree();
+                        CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
+                        CodeIterator ci = codeAttribute.iterator();
 
-                    for(Block block : controlFlow.basicBlocks()) {
-                        int currentIndex = block.position();
-                        int lineNumber = method.getMethodInfo().getLineNumber(currentIndex);
-                        System.out.println(String.format("Line number: %s", lineNumber));
+                        Node[] nodes = controlFlow.dominatorTree();
 
-                        for(int i = 0; i < block.length(); i++) {
+                        for (Block block : controlFlow.basicBlocks()) {
+                            int currentIndex = block.position();
+                            int lineNumber = method.getMethodInfo().getLineNumber(currentIndex);
+                            System.out.println(String.format("Line number: %s", lineNumber));
 
-                            String instruction = InstructionPrinter.instructionString(ci, currentIndex + i, ctClass.getClassFile().getConstPool());
-                            System.out.println(instruction);
+                            for (int i = 0; i < block.length(); i++) {
 
+                                String instruction = InstructionPrinter.instructionString(ci, currentIndex + i, ctClass.getClassFile().getConstPool());
+                                System.out.println(instruction);
+
+                            }
                         }
-                    }
 
-                    /*
-                    CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
-                    CodeIterator ci = codeAttribute.iterator();
+                        /*
+                        CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
+                        CodeIterator ci = codeAttribute.iterator();
 
-                    for(Block block : controlFlow.basicBlocks()) {
-                        int currentIndex = block.position();
-                        int lineNumber = method.getMethodInfo().getLineNumber(currentIndex);
-                        System.out.println(String.format("Line number: %s", lineNumber));
+                        for(Block block : controlFlow.basicBlocks()) {
+                            int currentIndex = block.position();
+                            int lineNumber = method.getMethodInfo().getLineNumber(currentIndex);
+                            System.out.println(String.format("Line number: %s", lineNumber));
 
-                        for(int i = 0; i < block.length(); i++) {
+                            for(int i = 0; i < block.length(); i++) {
 
-                            int op = ci.byteAt(currentIndex + i);
+                                int op = ci.byteAt(currentIndex + i);
+                                System.out.println(Mnemonic.OPCODE[op]);
+                            }
+                        }
+
+                        System.out.println("BYTECODE");
+                        while (ci.hasNext()) {
+                            int index = ci.next();
+                            int op = ci.byteAt(index);
                             System.out.println(Mnemonic.OPCODE[op]);
                         }
-                    }
 
-                    System.out.println("BYTECODE");
-                    while (ci.hasNext()) {
-                        int index = ci.next();
-                        int op = ci.byteAt(index);
-                        System.out.println(Mnemonic.OPCODE[op]);
-                    }
+                        for (Block block : controlFlow.basicBlocks()) {
+                            int position = block.position();
+                            int lineNumber = behavior.getMethodInfo().getLineNumber(position);
+                            System.out.println(lineNumber);
 
-                    for (Block block : controlFlow.basicBlocks()) {
-                        int position = block.position();
-                        int lineNumber = behavior.getMethodInfo().getLineNumber(position);
-                        System.out.println(lineNumber);
-
+                        }
+                        */
                     }
-                    */
                 }
             }
 
@@ -333,70 +340,32 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
                 for (CtMethod method : ctClass.getDeclaredMethods()) {
 
-                    // Here, the ByteArrayOutputStream and the UTF_8 are used to convert the
-                    // PrintStream to a String. This conversion is needed because methods'
-                    // bytecode need to be post-processed
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    String utf8 = StandardCharsets.UTF_8.name();
+                    // If method is not empty
+                    if (!method.isEmpty()) {
 
-                    try (PrintStream ps = new PrintStream(baos, true, utf8)) {
-                        // Javassist printer
-                        InstructionPrinter printer = new InstructionPrinter(ps);
-                        // Print all bytecode of the method to the PrintStream
-                        printer.print(method);
-                        // Convert the PrintStream to String
-                        sentences.add(
-                                sentencePostProcessing(
-                                ctClass.getName(),
-                                method.getName(),
-                                baos.toString(utf8)));
+                        // Here, the ByteArrayOutputStream and the UTF_8 are used to convert the
+                        // PrintStream to a String. This conversion is needed because methods'
+                        // bytecode need to be post-processed
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        String utf8 = StandardCharsets.UTF_8.name();
+
+                        try (PrintStream ps = new PrintStream(baos, true, utf8)) {
+                            // Javassist printer
+                            InstructionPrinter printer = new InstructionPrinter(ps);
+                            // Print all bytecode of the method to the PrintStream
+                            printer.print(method);
+                            // Convert the PrintStream to String
+                            sentences.add(new BytecodeSentence(
+                                    ctClass.getName(),
+                                    method.getName(),
+                                    baos.toString(utf8)));
+                        }
                     }
                 }
 
             return sentences;
         }
 
-        /**
-         * This private method post-processes the String passed as parameter
-         * @param className Name of the class
-         * @param methodName Name of the method
-         * @param sentence Sentence to post process
-         * @return post processed String
-         */
-        private static Sentence sentencePostProcessing(String className, String methodName, String sentence) {
-
-            Pattern pattern = Pattern.compile("(#\\d+)(\\s=\\s\\w+\\s)([^\\s]+)");
-            Pattern costantPattern = Pattern.compile("(#\\d+)(\\s=\\s)\"(.*)\"");
-            Pattern tokenPattern = Pattern.compile("(\\w+.+\\n)");
-
-            Map<String, String> constantPool = new HashMap<>();
-
-            String sentenceWithoutLineNumber = sentence.replaceAll("\\d+:\\s", "");
-            Matcher matcher = pattern.matcher(sentenceWithoutLineNumber);
-            Matcher costantMatcher = costantPattern.matcher(sentenceWithoutLineNumber);
-
-            while (matcher.find())
-                constantPool.put(matcher.group(1), matcher.group(3));
-            while (costantMatcher.find())
-                constantPool.put(costantMatcher.group(1), costantMatcher.group(3));
-
-            sentenceWithoutLineNumber = sentenceWithoutLineNumber.replaceAll(pattern.pattern(), "$1");
-            sentenceWithoutLineNumber = sentenceWithoutLineNumber.replaceAll(costantPattern.pattern(), "$1");
-
-            Matcher tokenMatcher = tokenPattern.matcher(sentenceWithoutLineNumber);
-
-            int tokens = 0;
-            while(tokenMatcher.find())
-                tokens++;
-
-            return new BytecodeSentence(
-                    className,
-                    methodName,
-                    sentenceWithoutLineNumber,
-                    constantPool,
-                    tokens
-            );
-        }
     }
 
     /**
