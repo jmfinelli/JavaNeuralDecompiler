@@ -25,7 +25,7 @@ public class ClassJavaPairTest {
          */
         int seenCount = 0;
         for(String name : pair.getDotJavaFiles()) {
-            if(name.equals("Model.java")) {
+            if(name.equals("org/testng/mustache/Model.java") || name.equals("org/testng/reporters/jq/Model.java")) {
                 seenCount++;
             }
         }

@@ -179,11 +179,14 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                     // Filter interfaces (do not have implementation)
                     if (ctClass.getClassFile().getAttribute("SourceFile") != null) {
 
+                        String packageName = ctClass.getPackageName().replaceAll("\\.", "/");
+
                         // Reads the .class source filename
                         String sourceFile = ((SourceFileAttribute) ctClass.getClassFile().getAttribute("SourceFile")).getFileName();
 
                         // Checks if there is a .java file matching the source filename
-                        if (dotJavaFiles.stream().anyMatch(x -> x.contains(sourceFile))) {
+                        String fullReference = String.format("%s/%s", packageName, sourceFile);
+                        if (dotJavaFiles.contains(fullReference)) {
 
                             // Updates or creates List of CtClass
                             List<CtClass> ctClasses = dotClassFiles.getOrDefault(sourceFile, null);
@@ -192,7 +195,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
                             ctClasses.add(ctClass);
 
-                            dotClassFiles.put(sourceFile, ctClasses);
+                            dotClassFiles.put(fullReference, ctClasses);
                         }
                     }
                 }
