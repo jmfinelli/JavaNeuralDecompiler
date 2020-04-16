@@ -11,8 +11,8 @@ import java.util.*;
 
 public class Driver {
 
-    private static String SRCJARS_BASEPATH = "/home/jf/IdeaProjects/ReadJarFiles/data/srcjars";
-    private static String BINJARS_BASEPATH = "/home/jf/IdeaProjects/ReadJarFiles/data/binjars";
+    private static String SRCJARS_BASEPATH = "./data/srcjars";
+    private static String BINJARS_BASEPATH = "./data/binjars";
 
     public static void main(String[] args) {
 
