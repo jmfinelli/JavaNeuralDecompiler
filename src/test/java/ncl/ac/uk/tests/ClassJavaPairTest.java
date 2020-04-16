@@ -2,6 +2,7 @@ package ncl.ac.uk.tests;
 
 import ncl.ac.uk.matcher.*;
 import ncl.ac.uk.matcher.impl.JARSReaderImpl;
+import ncl.ac.uk.matcher.impl.JavassistClassJavaPair;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -12,6 +13,25 @@ public class ClassJavaPairTest {
 
     private String SRCJARS_BASEPATH = "./data/srcjars";
     private String BINJARS_BASEPATH = "./data/binjars";
+
+    @Test
+    public void testDuplicateFilename() throws IOException {
+        ClassJavaPair pair = new JavassistClassJavaPair(BINJARS_BASEPATH+"/testng-7.1.0.jar", SRCJARS_BASEPATH+"/testng-7.1.0-sources.jar");
+
+        /*
+        $ jar -tf testng-7.1.0-sources.jar | grep Model
+        org/testng/mustache/Model.java
+        org/testng/reporters/jq/Model.java
+         */
+        int seenCount = 0;
+        for(String name : pair.getDotJavaFiles()) {
+            if(name.equals("Model.java")) {
+                seenCount++;
+            }
+        }
+
+        Assert.assertEquals(seenCount, 2);
+    }
 
     @Test
     public void testClassJavaPairInstantiation() {
