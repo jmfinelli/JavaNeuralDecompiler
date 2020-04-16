@@ -1,10 +1,5 @@
 package ncl.ac.uk.matcher;
 
-import com.sun.org.apache.bcel.internal.generic.Instruction;
-import io.disassemble.javanalysis.CtMethodExtensionKt;
-import io.disassemble.javanalysis.flow.ControlFlowGraph;
-import io.disassemble.javanalysis.util.CodeParser;
-import io.disassemble.javanalysis.util.insn.InsnUtil;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.analysis.ControlFlow;
@@ -16,11 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import io.disassemble.javanalysis.insn.*;
-
-import java.util.regex.*;
 
 //TODO: modify this class to be immutable
 
@@ -105,15 +95,16 @@ public class JavassistClassJavaPair implements ClassJavaPair {
     }
 
     @Override
-    public List<Sentence> getSentences(String dotJavaFilename) throws Exception {
+    public List<BytecodeSentence> getSentences(String dotJavaFilename) throws Exception {
 
-        List<Sentence> sentences = new LinkedList<>();
+        List<BytecodeSentence> bytecodeSentences = new LinkedList<>();
 
         // Checks if the parameter dotJavaFile matches a .java file in this object
         if (this._pairs.containsKey(dotJavaFilename))
-            sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
+            //sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
+            bytecodeSentences = javassistUtility.extractSentencesV2(this._pairs.get(dotJavaFilename));
 
-        return sentences;
+        return bytecodeSentences;
     }
 
     /* ************************************************
@@ -175,10 +166,6 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
                 String name = jarEntry.getName();
 
-                // The second condition could be excluded if module-info is removed from jar files
-                // directly through the POM file. There are plugins (such as AntRun) that can do that but I
-                // wasted too much time trying to understand how to configure the plugin to run in the package
-                // phase. TODO: ask Jonathan to help with this.
                 if (name.endsWith(".class") &&
                         !name.startsWith("module-info") &&
                         !name.startsWith("META-INF")) {
@@ -263,9 +250,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                         //ControlFlow controlFlow = new ControlFlow(ctClass, method.getMethodInfo());
                         ControlFlow controlFlow = new ControlFlow(method);
 
-                        List<CtInsn> ctInsns = CtMethodExtensionKt.getInstructions(method);
-
-                        InstructionPrinter printer = new InstructionPrinter(System.out);
+                        InstructionPrinterMod printer = new InstructionPrinterMod(System.out);
 
                         // Print all bytecode of the method
                         printer.print(method);
@@ -282,7 +267,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
                             for (int i = 0; i < block.length(); i++) {
 
-                                String instruction = InstructionPrinter.instructionString(ci, currentIndex + i, ctClass.getClassFile().getConstPool());
+                                String instruction = InstructionPrinterMod.instructionString(ci, currentIndex + i, ctClass.getClassFile().getConstPool());
                                 System.out.println(instruction);
 
                             }
@@ -331,9 +316,9 @@ public class JavassistClassJavaPair implements ClassJavaPair {
          * @param ctClasses List of CtClass representing the .class files
          * @return List of Sentence from the .class file
          */
-        private static List<Sentence> extractSentences(List<CtClass> ctClasses) throws Exception {
+        private static List<BytecodeSentence> extractSentences(List<CtClass> ctClasses) throws Exception {
 
-            List<Sentence> sentences = new LinkedList<>();
+            List<BytecodeSentence> bytecodeSentences = new LinkedList<>();
 
             // For each class in the collection of classes in dotJavaFile
             for (CtClass ctClass : ctClasses)
@@ -351,19 +336,62 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
                         try (PrintStream ps = new PrintStream(baos, true, utf8)) {
                             // Javassist printer
-                            InstructionPrinter printer = new InstructionPrinter(ps);
+                            InstructionPrinterMod printer = new InstructionPrinterMod(ps);
                             // Print all bytecode of the method to the PrintStream
                             printer.print(method);
                             // Convert the PrintStream to String
-                            sentences.add(new BytecodeSentence(
+                            bytecodeSentences.add(new BytecodeSentenceImpl(
                                     ctClass.getName(),
-                                    method.getName(),
+                                    method.getMethodInfo(),
                                     baos.toString(utf8)));
                         }
                     }
                 }
 
-            return sentences;
+            return bytecodeSentences;
+        }
+
+        /**
+         * This private method extracts Sentence(s) from a .class file
+         *
+         * @param ctClasses List of CtClass representing the .class files
+         * @return List of Sentence from the .class file
+         */
+        private static List<BytecodeSentence> extractSentencesV2(List<CtClass> ctClasses) throws Exception {
+
+            List<BytecodeSentence> bytecodeSentences = new LinkedList<>();
+
+            // For each class in the collection of classes in dotJavaFile
+            for (CtClass ctClass : ctClasses)
+
+                for (CtMethod method : ctClass.getDeclaredMethods()) {
+
+                    // If method is not empty
+                    if (!method.isEmpty()) {
+
+                        // Here, the ByteArrayOutputStream and the UTF_8 are used to convert the
+                        // PrintStream to a String. This conversion is needed because methods'
+                        // bytecode need to be post-processed
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        String utf8 = StandardCharsets.UTF_8.name();
+
+                        try (PrintStream ps = new PrintStream(baos, true, utf8)) {
+                            // Javassist printer (modified)
+                            InstructionPrinterMod printer = new InstructionPrinterMod(ps);
+                            // Print all bytecode of the method to the PrintStream
+                            printer.print(method);
+                            // Convert the PrintStream to String
+                            bytecodeSentences.add(new BytecodeSentenceImpl(
+                                    ctClass.getName(),
+                                    method.getMethodInfo(),
+                                    baos.toString(utf8)));
+
+                            System.out.println(baos.toString(utf8));
+                        }
+                    }
+                }
+
+            return bytecodeSentences;
         }
 
     }

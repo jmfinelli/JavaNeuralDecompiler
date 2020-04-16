@@ -1,9 +1,6 @@
 package ncl.ac.uk.matcher;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface ClassJavaPair {
 
@@ -17,7 +14,7 @@ public interface ClassJavaPair {
 
     List<DecompilationRecord> getDecompilationRecords(String dotJavaFile) throws Exception;
 
-    List<Sentence> getSentences(String dotJavaFile) throws Exception;
+    List<BytecodeSentence> getSentences(String dotJavaFile) throws Exception;
 
     List<String> getMethodsNames(String dotJavaFile);
 }

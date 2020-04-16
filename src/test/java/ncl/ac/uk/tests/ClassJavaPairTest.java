@@ -89,7 +89,7 @@ public class ClassJavaPairTest {
             // Classmate library
             String library = jarsReader.getLibrariesNames().get(11);
 
-            Map<String, List<Sentence>> sentencesMap = new HashMap<>();
+            Map<String, List<BytecodeSentence>> sentencesMap = new HashMap<>();
 
             ClassJavaPair pair = jarsReader.getClassJavaPair(library);
 
@@ -115,7 +115,7 @@ public class ClassJavaPairTest {
 
             List<String> librariesNames = reader.getLibrariesNames();
 
-            Map<String, List<Sentence>> sentencesMap = new HashMap<>();
+            Map<String, List<BytecodeSentence>> sentencesMap = new HashMap<>();
 
             for (String library : librariesNames) {
 
@@ -126,12 +126,12 @@ public class ClassJavaPairTest {
             }
 
             int numberOfMethods = 0;
-            for (List<Sentence> sentences : sentencesMap.values())
-                for (Sentence sentence : sentences)
+            for (List<BytecodeSentence> bytecodeSentences : sentencesMap.values())
+                for (BytecodeSentence bytecodeSentence : bytecodeSentences)
                     numberOfMethods++;
 
             System.out.println("Number of methods: " + numberOfMethods);
-            Set<String> dictionary = Sentence.getDictionary();
+            Set<String> dictionary = BytecodeSentence.getDictionary();
             System.out.println("Dictionary size: " + dictionary.size());
 
             Assert.assertNotEquals(sentencesMap.size(), 0);
