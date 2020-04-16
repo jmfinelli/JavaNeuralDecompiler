@@ -1,4 +1,6 @@
-package ncl.ac.uk.matcher;
+package ncl.ac.uk.matcher.impl;
+
+import ncl.ac.uk.matcher.DecompilationRecord;
 
 public class DecompilationRecordImpl implements DecompilationRecord {
 

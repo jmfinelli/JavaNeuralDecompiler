@@ -3,7 +3,7 @@ package ncl.ac.uk;
 import ncl.ac.uk.matcher.BytecodeSentence;
 import ncl.ac.uk.matcher.ClassJavaPair;
 import ncl.ac.uk.matcher.JARSReader;
-import ncl.ac.uk.matcher.JARSReaderImpl;
+import ncl.ac.uk.matcher.impl.JARSReaderImpl;
 
 import org.apache.commons.math3.stat.descriptive.rank.*;
 
@@ -36,7 +36,7 @@ public class Driver {
             List<Double> methodsLengths = new LinkedList<>();
             for (List<BytecodeSentence> bytecodeSentences : sentencesMap.values())
                 for (BytecodeSentence bytecodeSentence : bytecodeSentences) {
-                    methodsLengths.add(new Double(bytecodeSentence.getTokensNumber()));
+                    methodsLengths.add((double) bytecodeSentence.getTokensNumber());
                     numberOfMethods++;
                 }
 

@@ -1,9 +1,10 @@
-package ncl.ac.uk.matcher;
+package ncl.ac.uk.matcher.impl;
 
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.analysis.ControlFlow;
 import javassist.bytecode.analysis.ControlFlow.*;
+import ncl.ac.uk.matcher.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

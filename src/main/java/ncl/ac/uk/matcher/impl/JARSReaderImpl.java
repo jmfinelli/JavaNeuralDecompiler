@@ -1,4 +1,7 @@
-package ncl.ac.uk.matcher;
+package ncl.ac.uk.matcher.impl;
+
+import ncl.ac.uk.matcher.ClassJavaPair;
+import ncl.ac.uk.matcher.JARSReader;
 
 import java.io.File;
 import java.io.IOException;

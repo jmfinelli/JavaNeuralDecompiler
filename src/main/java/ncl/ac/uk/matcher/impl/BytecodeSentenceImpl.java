@@ -1,7 +1,8 @@
-package ncl.ac.uk.matcher;
+package ncl.ac.uk.matcher.impl;
 
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.MethodInfo;
+import ncl.ac.uk.matcher.BytecodeSentence;
 
 import java.util.*;
 

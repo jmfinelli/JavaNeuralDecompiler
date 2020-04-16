@@ -1,6 +1,7 @@
 package ncl.ac.uk.tests;
 
 import ncl.ac.uk.matcher.*;
+import ncl.ac.uk.matcher.impl.JARSReaderImpl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
