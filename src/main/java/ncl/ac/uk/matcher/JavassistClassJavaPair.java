@@ -4,7 +4,6 @@ import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.analysis.ControlFlow;
 import javassist.bytecode.analysis.ControlFlow.*;
-import ncl.ac.uk.utilities.JarReaderUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -154,7 +153,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
             Map<String, List<CtClass>> dotClassFiles = new HashMap<>();
 
             // List all .java files in the source .jar file
-            List<String> dotJavaFiles = JarReaderUtil.ListDotJavaFiles(srcJarPath);
+            List<String> dotJavaFiles = JARUtility.ListDotJavaFiles(srcJarPath);
 
             // Read the JAR file that contains .class files
             JarFile jarFile = new JarFile(new File(binJarPath));
