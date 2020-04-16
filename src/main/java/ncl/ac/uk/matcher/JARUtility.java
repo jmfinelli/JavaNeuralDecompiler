@@ -25,21 +25,6 @@ public class JARUtility {
      */
     public static List<String> ListDotJavaFiles(String jarPath) throws IOException {
 
-        //List<String> dotJavaFiles = ListFilesInJAR(jarPath, "java");
-
-        /**
-         * This was commented out on the advice of Jonathan.
-         * TODO: ask Jonathan if in the same JAR there can be same .java files
-         *
-         // This little modification was added because ClassNode holds only the filename
-         // of the .java file and not the entire package path.
-         dotJavaFiles.replaceAll(x -> {
-         String[] tempArray = x.split("/");
-         return tempArray[tempArray.length - 1];
-         });
-         */
-
-        //return dotJavaFiles;
         return ListFilesInJAR(jarPath, "java");
     }
 

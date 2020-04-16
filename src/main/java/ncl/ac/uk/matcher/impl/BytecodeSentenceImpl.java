@@ -10,15 +10,13 @@ public class BytecodeSentenceImpl implements BytecodeSentence {
 
     private final String _sentence;
     private final String _class;
-    private final String _method;
-    private final ConstPool _constPool;
+    private final MethodInfo _methodInfo;
     private int _tokensNumber = 0;
-    private final Map<String, String> _constantPool = new HashMap<>();
+    private final Map<String, String> _references = new HashMap<>();
 
     public BytecodeSentenceImpl(String className, MethodInfo info, String sentence){
         this._class = className;
-        this._method = info.getName();
-        this._constPool = info.getConstPool();
+        this._methodInfo = info;
         this._sentence = sentence;
         this.sentencePostProcessing(sentence);
     }
@@ -30,16 +28,16 @@ public class BytecodeSentenceImpl implements BytecodeSentence {
     public String getClassName() { return this._class; }
 
     @Override
-    public String getMethodName() { return this._method; }
+    public String getMethodName() { return this._methodInfo.getName(); }
 
     @Override
-    public Map<String, String> getReferences() { return this._constantPool; }
+    public Map<String, String> getReferences() { return this._references; }
 
     @Override
     public int getTokensNumber() { return this._tokensNumber; }
 
     @Override
-    public ConstPool getClassPool() { return this._constPool; }
+    public ConstPool getClassPool() { return this._methodInfo.getConstPool(); }
 
     /**
      * Extract tokens from the parameter sentence

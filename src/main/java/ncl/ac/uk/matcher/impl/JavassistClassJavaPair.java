@@ -166,8 +166,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                 String name = jarEntry.getName();
 
                 if (name.endsWith(".class") &&
-                        !name.startsWith("module-info") &&
-                        !name.startsWith("META-INF")) {
+                        !name.contains("module-info")) {
 
                     // extracts the InputStream corresponding to the current .class
                     InputStream dotClassInputStream = jarFile.getInputStream(jarEntry);
