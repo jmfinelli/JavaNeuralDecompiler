@@ -3,7 +3,6 @@ package ncl.ac.uk.matcher.impl;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.analysis.ControlFlow;
-import javassist.bytecode.analysis.ControlFlow.*;
 import ncl.ac.uk.matcher.*;
 
 import java.io.*;
@@ -102,7 +101,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
         // Checks if the parameter dotJavaFile matches a .java file in this object
         if (this._pairs.containsKey(dotJavaFilename))
             //sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
-            bytecodeSentences = javassistUtility.extractSentencesV2(this._pairs.get(dotJavaFilename));
+            bytecodeSentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
 
         return bytecodeSentences;
     }
@@ -236,7 +235,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
             // For each class in the collection of classes in dotJavaFile
             for (CtClass ctClass : ctClasses) {
                 // DEBUG
-                System.out.println(String.format("Class's name: %s", ctClass.getName()));
+                //System.out.println(String.format("Class's name: %s", ctClass.getName()));
                 // getDeclaredBehaviors returns constructors and methods of the CtClass object
                 // getDeclaredMethods returns only methods of the CtClass object
                 for (CtMethod method : ctClass.getDeclaredMethods()) {
@@ -245,18 +244,18 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                     if (!method.isEmpty()) {
 
                         // DEBUG
-                        System.out.println(String.format("Method's name: %s", method.getName()));
+                        //System.out.println(String.format("Method's name: %s", method.getName()));
                         // extract a control flow graph
                         //ControlFlow controlFlow = new ControlFlow(ctClass, method.getMethodInfo());
-                        ControlFlow controlFlow = new ControlFlow(method);
+                        //ControlFlow controlFlow = new ControlFlow(method);
 
-                        InstructionPrinterMod printer = new InstructionPrinterMod(System.out);
+                        //InstructionPrinterMod printer = new InstructionPrinterMod(System.out);
 
                         // Print all bytecode of the method
-                        printer.print(method);
+                        //printer.print(method);
 
-                        CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
-                        CodeIterator ci = codeAttribute.iterator();
+                        //CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
+                        //CodeIterator ci = codeAttribute.iterator();
                         /*
 
                         Node[] nodes = controlFlow.dominatorTree();
@@ -336,47 +335,6 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                         String utf8 = StandardCharsets.UTF_8.name();
 
                         try (PrintStream ps = new PrintStream(baos, true, utf8)) {
-                            // Javassist printer
-                            InstructionPrinterMod printer = new InstructionPrinterMod(ps);
-                            // Print all bytecode of the method to the PrintStream
-                            printer.print(method);
-                            // Convert the PrintStream to String
-                            bytecodeSentences.add(new BytecodeSentenceImpl(
-                                    ctClass.getName(),
-                                    method.getMethodInfo(),
-                                    baos.toString(utf8)));
-                        }
-                    }
-                }
-
-            return bytecodeSentences;
-        }
-
-        /**
-         * This private method extracts Sentence(s) from a .class file
-         *
-         * @param ctClasses List of CtClass representing the .class files
-         * @return List of Sentence from the .class file
-         */
-        private static List<BytecodeSentence> extractSentencesV2(List<CtClass> ctClasses) throws Exception {
-
-            List<BytecodeSentence> bytecodeSentences = new LinkedList<>();
-
-            // For each class in the collection of classes in dotJavaFile
-            for (CtClass ctClass : ctClasses)
-
-                for (CtMethod method : ctClass.getDeclaredMethods()) {
-
-                    // If method is not empty
-                    if (!method.isEmpty()) {
-
-                        // Here, the ByteArrayOutputStream and the UTF_8 are used to convert the
-                        // PrintStream to a String. This conversion is needed because methods'
-                        // bytecode need to be post-processed
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        String utf8 = StandardCharsets.UTF_8.name();
-
-                        try (PrintStream ps = new PrintStream(baos, true, utf8)) {
                             // Javassist printer (modified)
                             InstructionPrinterMod printer = new InstructionPrinterMod(ps);
                             // Print all bytecode of the method to the PrintStream
@@ -386,8 +344,6 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                                     ctClass.getName(),
                                     method.getMethodInfo(),
                                     baos.toString(utf8)));
-
-                            //System.out.println(baos.toString(utf8));
                         }
                     }
                 }
