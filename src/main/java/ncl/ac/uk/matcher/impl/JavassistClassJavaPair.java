@@ -186,10 +186,11 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
                         // Checks if there is a .java file matching the source filename
                         String fullReference = String.format("%s/%s", packageName, sourceFile);
+
                         if (dotJavaFiles.contains(fullReference)) {
 
                             // Updates or creates List of CtClass
-                            List<CtClass> ctClasses = dotClassFiles.getOrDefault(sourceFile, null);
+                            List<CtClass> ctClasses = dotClassFiles.getOrDefault(fullReference, null);
                             if (ctClasses == null)
                                 ctClasses = new LinkedList<>();
 
