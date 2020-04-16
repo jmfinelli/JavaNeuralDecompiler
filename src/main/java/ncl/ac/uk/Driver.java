@@ -5,10 +5,9 @@ import ncl.ac.uk.matcher.ClassJavaPair;
 import ncl.ac.uk.matcher.JARSReader;
 import ncl.ac.uk.matcher.JARSReaderImpl;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.math3.stat.descriptive.rank.*;
+
+import java.util.*;
 
 public class Driver {
 
@@ -34,13 +33,27 @@ public class Driver {
             }
 
             int numberOfMethods = 0;
+            List<Double> methodsLengths = new LinkedList<>();
             for (List<BytecodeSentence> bytecodeSentences : sentencesMap.values())
-                for (BytecodeSentence bytecodeSentence : bytecodeSentences)
+                for (BytecodeSentence bytecodeSentence : bytecodeSentences) {
+                    methodsLengths.add(new Double(bytecodeSentence.getTokensNumber()));
                     numberOfMethods++;
+                }
+
+            // Sort the list of lengths
+            Collections.sort(methodsLengths);
 
             System.out.println("Number of methods: " + numberOfMethods);
             Set<String> dictionary = BytecodeSentence.getDictionary();
             System.out.println("Dictionary size: " + dictionary.size());
+            System.out.println("Average method length: " + methodsLengths.stream().mapToInt(Double::intValue).sum()/numberOfMethods);
+
+            Percentile percentile = new Percentile();
+            percentile.setData(methodsLengths.stream().mapToDouble(Double::doubleValue).toArray());
+
+            for(int p = 5; p <= 100; p += 5)
+                System.out.println(String.format("%sth Percentile: %s", p, percentile.evaluate(p)));
+
 
         } catch (Exception ex) {
             ex.printStackTrace();

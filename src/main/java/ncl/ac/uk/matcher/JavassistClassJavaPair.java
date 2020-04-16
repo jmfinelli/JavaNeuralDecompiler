@@ -386,7 +386,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                                     method.getMethodInfo(),
                                     baos.toString(utf8)));
 
-                            System.out.println(baos.toString(utf8));
+                            //System.out.println(baos.toString(utf8));
                         }
                     }
                 }
