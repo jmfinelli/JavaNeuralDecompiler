@@ -257,6 +257,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
 
                         CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
                         CodeIterator ci = codeAttribute.iterator();
+                        /*
 
                         Node[] nodes = controlFlow.dominatorTree();
 
@@ -273,7 +274,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                             }
                         }
 
-                        /*
+
                         CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
                         CodeIterator ci = codeAttribute.iterator();
 

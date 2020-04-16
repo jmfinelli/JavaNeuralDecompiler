@@ -10,8 +10,8 @@ import java.util.*;
 
 public class ClassJavaPairTest {
 
-    private String SRCJARS_BASEPATH = "/home/jf/IdeaProjects/ReadJarFiles/data/srcjars";
-    private String BINJARS_BASEPATH = "/home/jf/IdeaProjects/ReadJarFiles/data/binjars";
+    private String SRCJARS_BASEPATH = "./data/srcjars";
+    private String BINJARS_BASEPATH = "./data/binjars";
 
     @Test
     public void testClassJavaPairInstantiation() {

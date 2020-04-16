@@ -9,8 +9,8 @@ import java.util.List;
 
 public class JARSReaderTest {
 
-    private String SRCJARS_BASEPATH = "/home/jf/IdeaProjects/NeuralNetworksDecompilation/data/srcjars";
-    private String BINJARS_BASEPATH = "/home/jf/IdeaProjects/NeuralNetworksDecompilation/data/binjars";
+    private String SRCJARS_BASEPATH = "./data/srcjars";
+    private String BINJARS_BASEPATH = "./data/binjars";
 
     @Test
     public void testJARInterpreterInstantiation() {
