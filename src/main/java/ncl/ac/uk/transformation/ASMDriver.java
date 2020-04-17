@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Driver {
+public class ASMDriver {
 
     public static void main(String[] args) throws Exception {
 
@@ -21,7 +21,7 @@ public class Driver {
          * To populate these directories from maven central, see gather-sample-corpus.xml
          */
         DecompilationRecord<File, File> dirRecord = new GenericDecompilationRecord<>(
-                new File("data/binjars"), new File("data/srcjars"));
+                new File("../data/binjars"), new File("../data/srcjars"));
 
         /*
          * Conversion step to change the directories into jar files pairs using name matching

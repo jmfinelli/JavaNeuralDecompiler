@@ -29,7 +29,8 @@ public class FileNameAssociatingRecordTransformer implements RecordTransformer<M
 
             byte[] srcFile = srcMap.get(sourceFileName);
             if (srcFile != null) {
-                results.add(new GenericDecompilationRecord<>(classNode, srcFile, decompilationRecord));
+                GenericDecompilationRecord<String, String> predecessor = new GenericDecompilationRecord<>(entry.getKey(), sourceFileName, decompilationRecord);
+                results.add(new GenericDecompilationRecord<>(classNode, srcFile, predecessor));
             }
         }
 

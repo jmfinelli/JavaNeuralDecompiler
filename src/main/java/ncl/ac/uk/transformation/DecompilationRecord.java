@@ -13,4 +13,6 @@ public interface DecompilationRecord<LOW, HIGH> {
     LOW getLowLevelRepresentation();
 
     HIGH getHighLevelRepresentation();
+
+    DecompilationRecord getPredecessor();
 }
