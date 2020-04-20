@@ -86,12 +86,23 @@ public class JavassistClassJavaPair implements ClassJavaPair {
         return records;
     }
 
+    /**
+     * This method extracts all methods' names from the .java file specified as parameter
+     * @param dotJavaFilename .java filename to analyse
+     * @return List of methods' names
+     */
     @Override
-    public List<String> getMethodsNames(String dotJavaFile) {
+    public List<String> getMethodsNames(String dotJavaFilename) {
 
-        return javassistUtility.extractMethodsNames(this._pairs.get(dotJavaFile));
+        return javassistUtility.extractMethodsNames(this._pairs.get(dotJavaFilename));
     }
 
+    /**
+     * This method works out the bytecode representation of all methods from the .java file
+     * specified as parameter
+     * @param dotJavaFilename .java filename to analyse
+     * @return List of BytecodeRepresentation
+     */
     @Override
     public List<BytecodeRepresentation> getBytecodeRepresentations(String dotJavaFilename) throws Exception {
 
@@ -103,6 +114,17 @@ public class JavassistClassJavaPair implements ClassJavaPair {
             bytecodeRepresentations = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
 
         return bytecodeRepresentations;
+    }
+
+    /**
+     * This method works out the AST representation of all methods from the .java file
+     * specified as parameter
+     * @param dotJavaFilename .java filename to analyse
+     * @return List of BytecodeRepresentation
+     */
+    @Override
+    public List<ASTRepresentation> getASTRepresentations(String dotJavaFilename) throws Exception {
+        return null;
     }
 
     /* ************************************************
