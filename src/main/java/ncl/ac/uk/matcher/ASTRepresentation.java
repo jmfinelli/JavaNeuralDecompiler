@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public interface BytecodeSentence {
+public interface ASTRepresentation {
 
     Set<String> dictionary = new HashSet<>();
 
@@ -14,7 +14,7 @@ public interface BytecodeSentence {
 
     String getMethodName();
 
-    String getSentence();
+    String getRepresentation();
 
     ConstPool getClassPool();
 

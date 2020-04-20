@@ -14,7 +14,9 @@ public interface ClassJavaPair {
 
     List<DecompilationRecord> getDecompilationRecords(String dotJavaFile) throws Exception;
 
-    List<BytecodeSentence> getSentences(String dotJavaFile) throws Exception;
+    List<BytecodeRepresentation> getBytecodeRepresentations(String dotJavaFile) throws Exception;
+
+    List<ASTRepresentation> getASTRepresentations(String dotJavaFile) throws Exception;
 
     List<String> getMethodsNames(String dotJavaFile);
 }

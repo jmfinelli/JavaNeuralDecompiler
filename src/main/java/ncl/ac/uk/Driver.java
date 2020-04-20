@@ -1,6 +1,6 @@
 package ncl.ac.uk;
 
-import ncl.ac.uk.matcher.BytecodeSentence;
+import ncl.ac.uk.matcher.BytecodeRepresentation;
 import ncl.ac.uk.matcher.ClassJavaPair;
 import ncl.ac.uk.matcher.JARSReader;
 import ncl.ac.uk.matcher.impl.JARSReaderImpl;
@@ -22,21 +22,21 @@ public class Driver {
 
             List<String> librariesNames = reader.getLibrariesNames();
 
-            Map<String, List<BytecodeSentence>> sentencesMap = new HashMap<>();
+            Map<String, List<BytecodeRepresentation>> sentencesMap = new HashMap<>();
 
             for (String library : librariesNames) {
 
                 ClassJavaPair pair = reader.getClassJavaPair(library);
 
                 for (String dotJavaFile : pair.getDotJavaFiles())
-                    sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getSentences(dotJavaFile));
+                    sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getBytecodeRepresentations(dotJavaFile));
             }
 
             int numberOfMethods = 0;
             List<Double> methodsLengths = new LinkedList<>();
-            for (List<BytecodeSentence> bytecodeSentences : sentencesMap.values())
-                for (BytecodeSentence bytecodeSentence : bytecodeSentences) {
-                    methodsLengths.add((double) bytecodeSentence.getTokensNumber());
+            for (List<BytecodeRepresentation> bytecodeRepresentations : sentencesMap.values())
+                for (BytecodeRepresentation bytecodeRepresentation : bytecodeRepresentations) {
+                    methodsLengths.add((double) bytecodeRepresentation.getTokensNumber());
                     numberOfMethods++;
                 }
 
@@ -44,7 +44,7 @@ public class Driver {
             Collections.sort(methodsLengths);
 
             System.out.println("Number of methods: " + numberOfMethods);
-            Set<String> dictionary = BytecodeSentence.getDictionary();
+            Set<String> dictionary = BytecodeRepresentation.getDictionary();
             System.out.println("Dictionary size: " + dictionary.size());
             System.out.println("Average method length: " + methodsLengths.stream().mapToInt(Double::intValue).sum()/numberOfMethods);
 

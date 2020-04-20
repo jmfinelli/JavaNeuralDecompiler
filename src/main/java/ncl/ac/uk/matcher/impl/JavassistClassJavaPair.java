@@ -2,7 +2,6 @@ package ncl.ac.uk.matcher.impl;
 
 import javassist.*;
 import javassist.bytecode.*;
-import javassist.bytecode.analysis.ControlFlow;
 import ncl.ac.uk.matcher.*;
 
 import java.io.*;
@@ -94,16 +93,16 @@ public class JavassistClassJavaPair implements ClassJavaPair {
     }
 
     @Override
-    public List<BytecodeSentence> getSentences(String dotJavaFilename) throws Exception {
+    public List<BytecodeRepresentation> getBytecodeRepresentations(String dotJavaFilename) throws Exception {
 
-        List<BytecodeSentence> bytecodeSentences = new LinkedList<>();
+        List<BytecodeRepresentation> bytecodeRepresentations = new LinkedList<>();
 
         // Checks if the parameter dotJavaFile matches a .java file in this object
         if (this._pairs.containsKey(dotJavaFilename))
             //sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
-            bytecodeSentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
+            bytecodeRepresentations = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
 
-        return bytecodeSentences;
+        return bytecodeRepresentations;
     }
 
     /* ************************************************
@@ -319,9 +318,9 @@ public class JavassistClassJavaPair implements ClassJavaPair {
          * @param ctClasses List of CtClass representing the .class files
          * @return List of Sentence from the .class file
          */
-        private static List<BytecodeSentence> extractSentences(List<CtClass> ctClasses) throws Exception {
+        private static List<BytecodeRepresentation> extractSentences(List<CtClass> ctClasses) throws Exception {
 
-            List<BytecodeSentence> bytecodeSentences = new LinkedList<>();
+            List<BytecodeRepresentation> bytecodeRepresentations = new LinkedList<>();
 
             // For each class in the collection of classes in dotJavaFile
             for (CtClass ctClass : ctClasses)
@@ -343,7 +342,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                             // Print all bytecode of the method to the PrintStream
                             printer.print(method);
                             // Convert the PrintStream to String
-                            bytecodeSentences.add(new BytecodeSentenceImpl(
+                            bytecodeRepresentations.add(new BytecodeRepresentationImpl(
                                     ctClass.getName(),
                                     method.getMethodInfo(),
                                     baos.toString(utf8)));
@@ -351,7 +350,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                     }
                 }
 
-            return bytecodeSentences;
+            return bytecodeRepresentations;
         }
 
     }

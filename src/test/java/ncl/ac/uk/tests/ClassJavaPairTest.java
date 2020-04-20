@@ -110,12 +110,12 @@ public class ClassJavaPairTest {
             // Classmate library
             String library = jarsReader.getLibrariesNames().get(11);
 
-            Map<String, List<BytecodeSentence>> sentencesMap = new HashMap<>();
+            Map<String, List<BytecodeRepresentation>> sentencesMap = new HashMap<>();
 
             ClassJavaPair pair = jarsReader.getClassJavaPair(library);
 
             for (String dotJavaFile : pair.getDotJavaFiles())
-                sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getSentences(dotJavaFile));
+                sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getBytecodeRepresentations(dotJavaFile));
 
             Assert.assertNotEquals(sentencesMap.size(), 0);
 
@@ -136,23 +136,23 @@ public class ClassJavaPairTest {
 
             List<String> librariesNames = reader.getLibrariesNames();
 
-            Map<String, List<BytecodeSentence>> sentencesMap = new HashMap<>();
+            Map<String, List<BytecodeRepresentation>> sentencesMap = new HashMap<>();
 
             for (String library : librariesNames) {
 
                 ClassJavaPair pair = reader.getClassJavaPair(library);
 
                 for (String dotJavaFile : pair.getDotJavaFiles())
-                    sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getSentences(dotJavaFile));
+                    sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getBytecodeRepresentations(dotJavaFile));
             }
 
             int numberOfMethods = 0;
-            for (List<BytecodeSentence> bytecodeSentences : sentencesMap.values())
-                for (BytecodeSentence bytecodeSentence : bytecodeSentences)
+            for (List<BytecodeRepresentation> bytecodeRepresentations : sentencesMap.values())
+                for (BytecodeRepresentation bytecodeRepresentation : bytecodeRepresentations)
                     numberOfMethods++;
 
             System.out.println("Number of methods: " + numberOfMethods);
-            Set<String> dictionary = BytecodeSentence.getDictionary();
+            Set<String> dictionary = BytecodeRepresentation.getDictionary();
             System.out.println("Dictionary size: " + dictionary.size());
 
             Assert.assertNotEquals(sentencesMap.size(), 0);

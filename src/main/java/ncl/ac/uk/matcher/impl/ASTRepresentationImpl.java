@@ -2,11 +2,15 @@ package ncl.ac.uk.matcher.impl;
 
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.MethodInfo;
-import ncl.ac.uk.matcher.BytecodeSentence;
+import ncl.ac.uk.matcher.ASTRepresentation;
+import ncl.ac.uk.matcher.BytecodeRepresentation;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class BytecodeSentenceImpl implements BytecodeSentence {
+public class ASTRepresentationImpl implements ASTRepresentation {
 
     private final String _sentence;
     private final String _class;
@@ -14,7 +18,7 @@ public class BytecodeSentenceImpl implements BytecodeSentence {
     private int _tokensNumber = 0;
     private final Map<String, String> _references = new HashMap<>();
 
-    public BytecodeSentenceImpl(String className, MethodInfo info, String sentence){
+    public ASTRepresentationImpl(String className, MethodInfo info, String sentence){
         this._class = className;
         this._methodInfo = info;
         this._sentence = sentence;
@@ -22,7 +26,7 @@ public class BytecodeSentenceImpl implements BytecodeSentence {
     }
 
     @Override
-    public String getSentence() { return this._sentence; }
+    public String getRepresentation() { return this._sentence; }
 
     @Override
     public String getClassName() { return this._class; }
@@ -49,6 +53,6 @@ public class BytecodeSentenceImpl implements BytecodeSentence {
 
         this._tokensNumber =+ tokens.size();
 
-        BytecodeSentence.dictionary.addAll(tokens);
+        BytecodeRepresentation.dictionary.addAll(tokens);
     }
 }
