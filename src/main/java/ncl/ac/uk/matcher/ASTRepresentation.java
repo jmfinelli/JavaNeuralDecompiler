@@ -16,10 +16,6 @@ public interface ASTRepresentation {
 
     String getRepresentation();
 
-    ConstPool getClassPool();
-
-    Map<String, String> getReferences();
-
     int getTokensNumber();
 
     static Set<String> getDictionary(){

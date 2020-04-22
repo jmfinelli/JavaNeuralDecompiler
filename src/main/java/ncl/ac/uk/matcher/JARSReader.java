@@ -7,6 +7,6 @@ public interface JARSReader {
 
     List<String> getLibrariesNames();
 
-    ClassJavaPair getClassJavaPair(String libraryName) throws IOException;
+    ClassJavaPair getClassJavaPair(String libraryName) throws Exception;
 
 }

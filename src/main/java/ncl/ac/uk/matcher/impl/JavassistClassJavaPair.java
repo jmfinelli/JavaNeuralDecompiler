@@ -1,5 +1,10 @@
 package ncl.ac.uk.matcher.impl;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.visitor.VoidVisitor;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import javassist.*;
 import javassist.bytecode.*;
 import ncl.ac.uk.matcher.*;
@@ -28,8 +33,10 @@ public class JavassistClassJavaPair implements ClassJavaPair {
     private final String _binJARFullPath;
     // Path of the JAR that contains .java files
     private final String _srcJARFullPath;
-    // Map that stores connections between .class and .java files
-    private final Map<String, List<CtClass>> _pairs;
+    // Map that stores a List of CtClass instances for each .java file
+    private final Map<String, List<CtClass>> _dotClassMap;
+    // Map that stores the AST of each .java file
+    private final Map<String, CompilationUnit> _dotJavaMap;
 
     /* ************************************************
      * ************************************************
@@ -37,7 +44,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
      * ************************************************
      * ************************************************/
 
-    public JavassistClassJavaPair(String binJARFullPath, String srcJARFullPath) throws IOException {
+    public JavassistClassJavaPair(String binJARFullPath, String srcJARFullPath) throws Exception {
 
         String[] splitArray = binJARFullPath.split("/");
         String binJARFilename = splitArray[splitArray.length - 1];
@@ -53,7 +60,13 @@ public class JavassistClassJavaPair implements ClassJavaPair {
         this._binJARFullPath = binJARFullPath;
         this._srcJARFullPath = srcJARFullPath;
 
-        this._pairs = javassistUtility.extractCtClassesFromJAR(binJARFullPath, srcJARFullPath);
+        this._dotClassMap = javassistUtility.extractCtClassesFromJAR(binJARFullPath, srcJARFullPath);
+        this._dotJavaMap = javaparserUtility.extractASTs(srcJARFullPath);
+
+        for(Map.Entry<String, CompilationUnit> entry : new HashMap<>(this._dotJavaMap).entrySet()) {
+            if (!this._dotClassMap.containsKey(entry.getKey()))
+                this._dotJavaMap.remove(entry.getKey());
+        }
     }
 
     /* ************************************************
@@ -75,12 +88,12 @@ public class JavassistClassJavaPair implements ClassJavaPair {
         List<DecompilationRecord> records = new LinkedList<>();
 
         // Checks if the parameter dotJavaFile matches a .java file in this object
-        if (this._pairs.containsKey(dotJavaFilename)) {
+        if (this._dotClassMap.containsKey(dotJavaFilename)) {
 
             String sourceCode = JARUtility.extractSourceCode(this._srcJARFullPath, dotJavaFilename);
 
             // TODO: substitute dotJavaFile with the actual file.
-            records = javassistUtility.extractDecompilationRecordsFromDotClass(sourceCode, this._pairs.get(dotJavaFilename));
+            records = javassistUtility.extractDecompilationRecordsFromDotClass(sourceCode, this._dotClassMap.get(dotJavaFilename));
         }
 
         return records;
@@ -94,7 +107,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
     @Override
     public List<String> getMethodsNames(String dotJavaFilename) {
 
-        return javassistUtility.extractMethodsNames(this._pairs.get(dotJavaFilename));
+        return javassistUtility.extractMethodsNames(this._dotClassMap.get(dotJavaFilename));
     }
 
     /**
@@ -109,9 +122,9 @@ public class JavassistClassJavaPair implements ClassJavaPair {
         List<BytecodeRepresentation> bytecodeRepresentations = new LinkedList<>();
 
         // Checks if the parameter dotJavaFile matches a .java file in this object
-        if (this._pairs.containsKey(dotJavaFilename))
+        if (this._dotClassMap.containsKey(dotJavaFilename))
             //sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
-            bytecodeRepresentations = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
+            bytecodeRepresentations = javassistUtility.extractSentences(this._dotClassMap.get(dotJavaFilename));
 
         return bytecodeRepresentations;
     }
@@ -123,8 +136,16 @@ public class JavassistClassJavaPair implements ClassJavaPair {
      * @return List of BytecodeRepresentation
      */
     @Override
-    public List<ASTRepresentation> getASTRepresentations(String dotJavaFilename) throws Exception {
-        return null;
+    public List<ASTRepresentation> getASTRepresentations(String dotJavaFilename) {
+
+        List<ASTRepresentation> ASTsRepresentations = new LinkedList<>();
+
+        // Checks if the parameter dotJavaFile matches a .java file in this object
+        if (this._dotJavaMap.containsKey(dotJavaFilename))
+            //sentences = javassistUtility.extractSentences(this._pairs.get(dotJavaFilename));
+            ASTsRepresentations = javaparserUtility.extractMethods(this._dotJavaMap.get(dotJavaFilename));
+
+        return ASTsRepresentations;
     }
 
     /* ************************************************
@@ -146,7 +167,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
     }
 
     @Override
-    public List<String> getDotJavaFiles() { return new LinkedList<>(this._pairs.keySet()); }
+    public List<String> getDotJavaFiles() { return new LinkedList<>(this._dotClassMap.keySet()); }
 
     /* ************************************************
      * ************************************************
@@ -254,7 +275,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
          * @param ctClasses List of CtClass representing the .class files
          * @return List of DecompilationRecord
          */
-        private static List<DecompilationRecord> extractDecompilationRecordsFromDotClass(String sourceFile, List<CtClass> ctClasses) throws Exception {
+        private static List<DecompilationRecord> extractDecompilationRecordsFromDotClass(String sourceFile, List<CtClass> ctClasses) {
 
             // For each class in the collection of classes in dotJavaFile
             for (CtClass ctClass : ctClasses) {
@@ -373,6 +394,62 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                 }
 
             return bytecodeRepresentations;
+        }
+
+    }
+
+    private static class javaparserUtility {
+
+        private static Map<String, CompilationUnit> extractASTs(String srcJarPath) throws Exception {
+
+            // HashMap to insert .class files that matches .java files
+            Map<String, CompilationUnit> dotJavaFiles = new HashMap<>();
+
+            // Read the JAR file that contains .class files
+            JarFile jarFile = new JarFile(new File(srcJarPath));
+
+            JavaParser javaParser = new JavaParser();
+
+            for (JarEntry jarEntry : Collections.list(jarFile.entries())) {
+
+                String name = jarEntry.getName();
+
+                if (name.endsWith(".java")) {
+
+                    // extracts the InputStream corresponding to the current .class
+                    InputStream dotJavaInputStream = jarFile.getInputStream(jarEntry);
+
+                    if (!javaParser.parse(dotJavaInputStream).getResult().isPresent())
+                        continue;
+
+                    CompilationUnit compilationUnit = javaParser.parse(dotJavaInputStream).getResult().get();
+
+                    dotJavaFiles.put(name, compilationUnit);
+                }
+            }
+
+            return dotJavaFiles;
+
+        }
+
+        private static List<ASTRepresentation> extractMethods(CompilationUnit dotJavaFile) {
+
+            List<ASTRepresentation> astRepresentations = new LinkedList<>();
+
+            VoidVisitor<List<ASTRepresentation>> methodCollector = new MethodCollector();
+            methodCollector.visit(dotJavaFile, astRepresentations);
+            return astRepresentations;
+
+        }
+
+        private static class MethodCollector extends VoidVisitorAdapter<List<ASTRepresentation>> {
+
+            @Override
+            public void visit(MethodDeclaration md, List<ASTRepresentation> astRepresentations) {
+                super.visit(md, astRepresentations);
+                ASTRepresentation astRepresentation = new ASTRepresentationImpl(md.getClass().getName(), md, md.getBody().toString());
+                astRepresentations.add(astRepresentation);
+            }
         }
 
     }

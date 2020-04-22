@@ -70,7 +70,7 @@ public final class JARSReaderImpl implements JARSReader {
      * ************************************************/
 
     @Override
-    public ClassJavaPair getClassJavaPair(String libraryName) throws IOException {
+    public ClassJavaPair getClassJavaPair(String libraryName) throws Exception {
 
         if (this._classJavaPairs.containsKey(libraryName)) {
             return this._classJavaPairs.get(libraryName);

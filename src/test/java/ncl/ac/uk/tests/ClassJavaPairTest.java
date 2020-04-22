@@ -15,7 +15,7 @@ public class ClassJavaPairTest {
     private String BINJARS_BASEPATH = "./data/binjars";
 
     @Test
-    public void testDuplicateFilename() throws IOException {
+    public void testDuplicateFilename() throws Exception {
         ClassJavaPair pair = new JavassistClassJavaPair(BINJARS_BASEPATH+"/testng-7.1.0.jar", SRCJARS_BASEPATH+"/testng-7.1.0-sources.jar");
 
         /*
@@ -47,6 +47,8 @@ public class ClassJavaPairTest {
             ex.printStackTrace();
 
             Assert.fail();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -72,6 +74,8 @@ public class ClassJavaPairTest {
             ex.printStackTrace();
 
             Assert.fail();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -116,6 +120,33 @@ public class ClassJavaPairTest {
 
             for (String dotJavaFile : pair.getDotJavaFiles())
                 sentencesMap.put(String.format("%s$%s", library, dotJavaFile), pair.getBytecodeRepresentations(dotJavaFile));
+
+            Assert.assertNotEquals(sentencesMap.size(), 0);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            Assert.fail();
+        }
+
+    }
+
+    @Test
+    public void testGetASTMethodsFromOneLibrary() {
+
+        JARSReader jarsReader = new JARSReaderImpl(this.SRCJARS_BASEPATH, this.BINJARS_BASEPATH);
+
+        try {
+
+            // Classmate library
+            String library = jarsReader.getLibrariesNames().get(11);
+
+            Map<String, List<ASTRepresentation>> sentencesMap = new HashMap<>();
+
+            ClassJavaPair pair = jarsReader.getClassJavaPair(library);
+
+            for (String dotJavaFile : pair.getDotJavaFiles())
+                sentencesMap.put(dotJavaFile, pair.getASTRepresentations(dotJavaFile));
 
             Assert.assertNotEquals(sentencesMap.size(), 0);
 

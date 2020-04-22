@@ -1,10 +1,13 @@
 package ncl.ac.uk.matcher.impl;
 
+import com.github.javaparser.ast.body.MethodDeclaration;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.MethodInfo;
+import javassist.compiler.ast.MethodDecl;
 import ncl.ac.uk.matcher.ASTRepresentation;
 import ncl.ac.uk.matcher.BytecodeRepresentation;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,11 +17,10 @@ public class ASTRepresentationImpl implements ASTRepresentation {
 
     private final String _sentence;
     private final String _class;
-    private final MethodInfo _methodInfo;
+    private final MethodDeclaration _methodInfo;
     private int _tokensNumber = 0;
-    private final Map<String, String> _references = new HashMap<>();
 
-    public ASTRepresentationImpl(String className, MethodInfo info, String sentence){
+    public ASTRepresentationImpl(String className, MethodDeclaration info, String sentence){
         this._class = className;
         this._methodInfo = info;
         this._sentence = sentence;
@@ -32,16 +34,10 @@ public class ASTRepresentationImpl implements ASTRepresentation {
     public String getClassName() { return this._class; }
 
     @Override
-    public String getMethodName() { return this._methodInfo.getName(); }
-
-    @Override
-    public Map<String, String> getReferences() { return this._references; }
+    public String getMethodName() { return this._methodInfo.getName().asString(); }
 
     @Override
     public int getTokensNumber() { return this._tokensNumber; }
-
-    @Override
-    public ConstPool getClassPool() { return this._methodInfo.getConstPool(); }
 
     /**
      * Extract tokens from the parameter sentence
