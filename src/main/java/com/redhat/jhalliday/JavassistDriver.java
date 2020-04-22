@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class JavassistDriver {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         /*
          * We start with a pair of directories, one containing binary (.class) jar files
@@ -24,7 +24,7 @@ public class JavassistDriver {
          * To populate these directories from maven central, see gather-sample-corpus.xml
          */
         DecompilationRecord<File, File> dirRecord = new GenericDecompilationRecord<>(
-                new File("../data/binjars"), new File("../data/srcjars"));
+                new File("./data/binjars"), new File("./data/srcjars"));
 
         /*
          * Conversion step to change the directories into jar files pairs using name matching
