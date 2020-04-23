@@ -7,6 +7,7 @@ import javassist.Modifier;
 import javassist.bytecode.SyntheticAttribute;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -20,7 +21,20 @@ public class CtClassToCtMethodsTransformerFunction implements TransformerFunctio
         // unlike asm, this does not include constructors or static initializers.
         for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
             if (isInteresting(ctMethod)) {
-                interestingMethods.add(ctMethod);
+                //interestingMethods.add(ctMethod);
+                try {
+                    /*
+                     * CtClass.getDeclaredMethods() does not return overloaded methods.
+                     * On the other side, CtClass.getDeclaredMethods(String) give all overloaded methods
+                     * for a particular one. Combining the two methods, gives the complete collection
+                     * of methods of the class.
+                     */
+                    interestingMethods.addAll(Arrays.asList(ctClass.getDeclaredMethods(ctMethod.getName())));
+                } catch (javassist.NotFoundException ex) {
+                    /*
+                     * Nothing to do as NotFoundException cannot be thrown
+                     */
+                }
             }
         }
 

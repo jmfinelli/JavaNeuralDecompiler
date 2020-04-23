@@ -1,10 +1,12 @@
 package ncl.ac.uk.matcher.impl;
 
 import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.resolution.SymbolResolver;
 import javassist.*;
 import javassist.bytecode.*;
 import ncl.ac.uk.matcher.*;
@@ -408,7 +410,16 @@ public class JavassistClassJavaPair implements ClassJavaPair {
             // Read the JAR file that contains .class files
             JarFile jarFile = new JarFile(new File(srcJarPath));
 
-            JavaParser javaParser = new JavaParser();
+            ParserConfiguration configuration = new ParserConfiguration();
+            configuration
+                    .setStoreTokens(false)
+                    .setAttributeComments(false)
+                    .setDoNotAssignCommentsPrecedingEmptyLines(true)
+                    .setIgnoreAnnotationsWhenAttributingComments(true)
+                    .setLexicalPreservationEnabled(false)
+                    .setPreprocessUnicodeEscapes(false);
+
+            JavaParser javaParser = new JavaParser(configuration);
 
             for (JarEntry jarEntry : Collections.list(jarFile.entries())) {
 
@@ -419,7 +430,7 @@ public class JavassistClassJavaPair implements ClassJavaPair {
                     // extracts the InputStream corresponding to the current .class
                     InputStream dotJavaInputStream = jarFile.getInputStream(jarEntry);
 
-                    if (!javaParser.parse(dotJavaInputStream).getResult().isPresent())
+                    if (javaParser.parse(dotJavaInputStream).getResult().isEmpty())
                         continue;
 
                     CompilationUnit compilationUnit = javaParser.parse(dotJavaInputStream).getResult().get();

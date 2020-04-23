@@ -25,7 +25,7 @@ public class CompilationUnitCreationTransformerFunction implements TransformerFu
                 .setAttributeComments(false)
                 .setDoNotAssignCommentsPrecedingEmptyLines(true)
                 .setIgnoreAnnotationsWhenAttributingComments(true)
-                .setLexicalPreservationEnabled(true)
+                .setLexicalPreservationEnabled(false)
                 .setPreprocessUnicodeEscapes(false);
 
         JavaParser javaParser = new JavaParser(configuration);

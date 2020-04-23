@@ -139,7 +139,7 @@ public class ClassJavaPairTest {
         try {
 
             // Classmate library
-            String library = jarsReader.getLibrariesNames().get(11);
+            String library = jarsReader.getLibrariesNames().get(0);
 
             Map<String, List<ASTRepresentation>> sentencesMap = new HashMap<>();
 

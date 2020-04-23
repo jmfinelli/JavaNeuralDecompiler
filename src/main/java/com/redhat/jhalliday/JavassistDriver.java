@@ -1,6 +1,11 @@
 package com.redhat.jhalliday;
 
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.redhat.jhalliday.impl.*;
+import com.redhat.jhalliday.impl.javaparser.CompilationUnitCreationTransformerFunction;
+import com.redhat.jhalliday.impl.javaparser.CompilationUnitToMethodDeclarationTransformerFunction;
+import com.redhat.jhalliday.impl.javaparser.MethodDeclarationToTextTransformerFunction;
 import javassist.CtClass;
 import javassist.CtMethod;
 
@@ -8,6 +13,7 @@ import com.redhat.jhalliday.impl.javassist.CtClassCreationTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtMethodToTextTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.FileNameAssociatingRecordTransformer;
+import javassist.compiler.ast.MethodDecl;
 
 import java.io.File;
 import java.util.List;
@@ -48,19 +54,19 @@ public class JavassistDriver {
          * Next we need to convert the raw bytes to something more useful
          * Start with the low level (.class) side
          */
-        CompositeRecordTransformer<Map<String, byte[]>, Map<String, byte[]>, Map<String, CtClass>, Map<String, byte[]>>
+        CompositeRecordTransformer<Map<String, byte[]>, Map<String, byte[]>, Map<String, CtClass>, Map<String, CompilationUnit>>
                 CtClassBuildingTransformer = new CompositeRecordTransformer<>(
                 new CtClassCreationTransformerFunction(),
-                new IdentityTransformerFunction<>()
+                new CompilationUnitCreationTransformerFunction()
         );
-        List<DecompilationRecord<Map<String, CtClass>, Map<String, byte[]>>> ctClasses =
+        List<DecompilationRecord<Map<String, CtClass>, Map<String, CompilationUnit>>> ctClasses =
                 rawFileContentRecords.stream().flatMap(CtClassBuildingTransformer).collect(Collectors.toList());
 
         /*
          * Now we can pair up the individual .java and .class files, using the source file name from the CtClass
          */
         FileNameAssociatingRecordTransformer fileNameAssociatingRecordTransformer = new FileNameAssociatingRecordTransformer();
-        List<DecompilationRecord<CtClass, byte[]>> associatedFileRecords =
+        List<DecompilationRecord<CtClass, CompilationUnit>> associatedFileRecords =
                 ctClasses.stream().flatMap(fileNameAssociatingRecordTransformer).collect(Collectors.toList());
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), associatedFileRecords.size());
@@ -68,29 +74,23 @@ public class JavassistDriver {
         /*
          * Decompose the CtClass into a number of MethodModes, ignoring the ones that are not translatable
          */
-        CompositeRecordTransformer<CtClass, byte[], CtMethod, byte[]> methodSplitter = new CompositeRecordTransformer<>(
-                new CtClassToCtMethodsTransformerFunction(),
-                new IdentityTransformerFunction<>()
-        );
-        List<DecompilationRecord<CtMethod, byte[]>> methodRecords =
-                associatedFileRecords.stream().flatMap(methodSplitter).collect(Collectors.toList());
+        PairBuldingRecordTransformer pairBuldingRecordTransformer = new PairBuldingRecordTransformer();
+        List<DecompilationRecord<CtMethod, MethodDeclaration>> methodsRecords =
+                associatedFileRecords.stream().flatMap(pairBuldingRecordTransformer).collect(Collectors.toList());
 
-        System.out.printf("Found %d potentially interesting binary methods in the .class files\n", methodRecords.size());
+        System.out.printf("Found %d potentially interesting binary methods in the .class files\n", methodsRecords.size());
 
         /*
          * Convert each CtMethod into a list of string tokens representing opcodes, operands, etc.
          * One List<String> per CtMethod, containing one String per instruction, having space-separated tokens.
          */
-        CompositeRecordTransformer<CtMethod, byte[], List<String>, byte[]> methodPrinter = new CompositeRecordTransformer<>(
+        CompositeRecordTransformer<CtMethod, MethodDeclaration, List<String>, List<String>> methodPrinter = new CompositeRecordTransformer<>(
                 new CtMethodToTextTransformerFunction(),
-                new IdentityTransformerFunction<>()
+                new MethodDeclarationToTextTransformerFunction()
         );
-        List<DecompilationRecord<List<String>, byte[]>> textRecords =
-                methodRecords.stream().flatMap(methodPrinter).collect(Collectors.toList());
+        List<DecompilationRecord<List<String>, List<String>>> textRecords = methodsRecords.stream().flatMap(methodPrinter).collect(Collectors.toList());
 
-        Integer totalTokens = textRecords.stream()
-                .map(listDecompilationRecord -> listDecompilationRecord.getLowLevelRepresentation().size())
-                .reduce(0, Integer::sum);
+        Integer totalTokens = textRecords.stream() .map(listDecompilationRecord -> listDecompilationRecord.getLowLevelRepresentation().size()) .reduce(0, Integer::sum);
 
         System.out.printf("Total instructions %d, average instructions per method %f", totalTokens, totalTokens * 1.0 / textRecords.size());
     }

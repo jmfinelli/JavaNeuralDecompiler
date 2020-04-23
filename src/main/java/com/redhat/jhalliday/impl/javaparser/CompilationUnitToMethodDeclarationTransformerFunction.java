@@ -29,7 +29,13 @@ public class CompilationUnitToMethodDeclarationTransformerFunction
         @Override
         public void visit(MethodDeclaration md, List<MethodDeclaration> collector) {
             super.visit(md, collector);
-            collector.add(md);
+            md.getBody().ifPresent(x -> {
+                /*
+                 * Exclude empty methods
+                 */
+                if (!x.isEmpty())
+                    collector.add(md);
+            });
         }
     }
 }
