@@ -5,15 +5,16 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.Type;
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.RecordTransformer;
 import com.redhat.jhalliday.impl.javaparser.CompilationUnitToMethodDeclarationTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsTransformerFunction;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.NotFoundException;
+import javassist.bytecode.*;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -36,6 +37,9 @@ public class PairBuldingRecordTransformer implements RecordTransformer<CtClass, 
 
         List<DecompilationRecord<CtMethod, MethodDeclaration>> results = new LinkedList<>();
 
+        if (decompilationRecord.getLowLevelRepresentation().getName().equals("net.bytebuddy.jar.asm.ClassReader"))
+            System.out.println("Stop");
+
         for (CtMethod ctMethod : ctMethods) {
             List<MethodDeclaration> interestingMethods = interestingMethods(ctMethod, methodDeclarations);
             if (interestingMethods.size() == 1) {
@@ -47,10 +51,12 @@ public class PairBuldingRecordTransformer implements RecordTransformer<CtClass, 
             }
         }
 
-        if (results.size() != ctMethods.size()){
+        if (results.size() != ctMethods.size()) {
             different++;
-            System.out.println("Again: " + different);
+            System.out.printf("WARNING #%d! Methods in the .class file are %d but %d were(was) found!\n", different, ctMethods.size(), results.size());
+            System.out.printf("DEBUG INFO! .class: %s\n\n", decompilationRecord.getLowLevelRepresentation().getName());
         }
+
 
         return results.stream();
     }
@@ -62,8 +68,25 @@ public class PairBuldingRecordTransformer implements RecordTransformer<CtClass, 
 
         String methodName = ctMethod.getName();
         String methodSignature = ctMethod.getSignature();
+        String parameterString = methodSignature.substring(methodSignature.indexOf('('), methodSignature.indexOf(')'));
+
+//        I was not able to find a class in javassist to summarise the type of method's parameters.
+//        The only solution is to use the constant pool which returns a String anyway.
+
+//        CodeAttribute codeAttribute = ctMethod.getMethodInfo().getCodeAttribute();
+//        if (codeAttribute != null) {
+//            LocalVariableTypeAttribute table = (LocalVariableTypeAttribute) codeAttribute.getAttribute(LocalVariableAttribute.typeTag);
+//            if (table != null)
+//                for (int i = 0; i < table.tableLength(); i++) {
+//                    System.out.printf("Parameter %d\n", i);
+//                    System.out.printf("Parameter Type: %s\n", ctMethod.getMethodInfo().getConstPool().getUtf8Info(table.nameIndex(i)));
+//                }
+//        }
+
+        String descriptor = ctMethod.getMethodInfo2().getDescriptor();
+
         String className = ctMethod.getDeclaringClass().getSimpleName();
-        Matcher matcher = extractParametersType.matcher(methodSignature);
+        Matcher matcher = extractParametersType.matcher(parameterString);
 
         List<String> parameterTypes = matcher.results().map(x -> x.group(1)).collect(Collectors.toList());
 
@@ -84,10 +107,14 @@ public class PairBuldingRecordTransformer implements RecordTransformer<CtClass, 
                         classNameFromdotJava = ((TypeDeclaration) parent).getNameAsString();
                 }
 
-                if (!classNameFromdotJava.isEmpty() && className.contains(classNameFromdotJava)) {
+                if (!classNameFromdotJava.isEmpty() && className.endsWith(classNameFromdotJava)) {
                     int checks = 0;
                     for (Parameter parameter : parameters) {
-                        if (parameterTypes.contains(parameter.getType().asString()))
+                        Type type = parameter.getType();
+                        String typeToCheck = type.asString();
+                        if (type instanceof ClassOrInterfaceType)
+                            typeToCheck = type.asClassOrInterfaceType().getName().getIdentifier();
+                        if (parameterTypes.contains(typeToCheck))
                             checks++;
                     }
 

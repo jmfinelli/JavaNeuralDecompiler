@@ -33,7 +33,7 @@ public class CompilationUnitToMethodDeclarationTransformerFunction
                 /*
                  * Exclude empty methods
                  */
-                if (!x.isEmpty())
+                if (!x.isEmptyStmt() || !x.isEmpty())
                     collector.add(md);
             });
         }
