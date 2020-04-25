@@ -30,7 +30,11 @@ public class CtClassCreationTransformerFunction implements TransformerFunction<M
     public CtClass apply(byte[] bytes) {
 
         try {
-            ClassPool classPool = new ClassPool();
+            /*
+             * Using ClassPool.getDefault() to save all the possible Types in the ClassPool.
+             * This is fundamental when it comes to fetching information about methods's parameters.
+             */
+            ClassPool classPool = ClassPool.getDefault();
             CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(bytes));
             return ctClass;
         } catch (IOException e) {

@@ -13,16 +13,15 @@ import com.redhat.jhalliday.impl.javaparser.CompilationUnitToMethodDeclarationTr
 import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsTransformerFunction;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.bytecode.*;
+import javassist.NotFoundException;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class PairBuldingRecordTransformer implements RecordTransformer<CtClass, CompilationUnit, CtMethod, MethodDeclaration> {
+public class PairBuildingRecordTransformer implements RecordTransformer<CtClass, CompilationUnit, CtMethod, MethodDeclaration> {
+
+    // TODO: convert CtClass and CompilationUnit before pairing methods up. This would help improving performances
 
     @Override
     public Stream<DecompilationRecord<CtMethod, MethodDeclaration>> apply(DecompilationRecord<CtClass, CompilationUnit> decompilationRecord) {
@@ -61,14 +60,69 @@ public class PairBuldingRecordTransformer implements RecordTransformer<CtClass, 
         return results.stream();
     }
 
-    static private Pattern extractParametersType = Pattern.compile("(\\w+);");
     static int different = 0;
 
     private List<MethodDeclaration> interestingMethods(CtMethod ctMethod, List<MethodDeclaration> methodDeclarations) {
 
         String methodName = ctMethod.getName();
-        String methodSignature = ctMethod.getSignature();
-        String parameterString = methodSignature.substring(methodSignature.indexOf('('), methodSignature.indexOf(')'));
+
+        List<CtClass> parametersFromSource = new ArrayList<>();
+        try {
+            parametersFromSource = Arrays.asList(ctMethod.getParameterTypes());
+        } catch (NotFoundException e) {
+            // Should not be a problem as all CtClass instances were initialised with
+            // the use of the default ClassPool
+        }
+
+        String className = ctMethod.getDeclaringClass().getSimpleName();
+
+        final List<CtClass> finalParametersFromSource = new ArrayList<>(parametersFromSource);
+
+        List<MethodDeclaration> possibleMethods = methodDeclarations.stream().filter(x ->
+        {
+
+            List<Parameter> parameters = x.getParameters();
+
+            if (parameters.size() == finalParametersFromSource.size() && methodName.contains(x.getName().asString())) {
+
+                /*
+                 * Get the class where the MethodDeclaration was found
+                 * TODO: There can be a method declared in a method, change this in something better
+                 */
+                String classNameFromdotJava = "";
+                if (x.getParentNode().isPresent()) {
+                    Node parent = x.getParentNode().get();
+                    if (x.getParentNode().get() instanceof TypeDeclaration)
+                        classNameFromdotJava = ((TypeDeclaration) parent).getNameAsString();
+                }
+
+                if (!classNameFromdotJava.isEmpty() && className.endsWith(classNameFromdotJava)) {
+                    int checks = 0;
+                    for (Parameter parameter : parameters) {
+                        Type type = parameter.getType();
+                        String typeToCheck = type instanceof ClassOrInterfaceType ?
+                                type.asClassOrInterfaceType().getName().getIdentifier() :
+                                type.asString();
+                        if (finalParametersFromSource.stream().anyMatch(
+                                p -> p.getName().endsWith(typeToCheck))
+                        )
+                            checks++;
+                    }
+
+                    return checks == parameters.size();
+                }
+            }
+
+            return false;
+
+        }).collect(Collectors.toList());
+
+        return possibleMethods;
+    }
+
+    private boolean doubleCheckWithLineNumber() {
+        //        String methodSignature = ctMethod.getSignature();
+//        String parameterString = methodSignature.substring(methodSignature.indexOf('('), methodSignature.indexOf(')'));
 
 //        I was not able to find a class in javassist to summarise the type of method's parameters.
 //        The only solution is to use the constant pool which returns a String anyway.
@@ -83,49 +137,6 @@ public class PairBuldingRecordTransformer implements RecordTransformer<CtClass, 
 //                }
 //        }
 
-        String descriptor = ctMethod.getMethodInfo2().getDescriptor();
-
-        String className = ctMethod.getDeclaringClass().getSimpleName();
-        Matcher matcher = extractParametersType.matcher(parameterString);
-
-        List<String> parameterTypes = matcher.results().map(x -> x.group(1)).collect(Collectors.toList());
-
-        List<MethodDeclaration> possibleMethods = methodDeclarations.stream().filter(x ->
-        {
-
-            List<Parameter> parameters = x.getParameters();
-
-            if (parameters.size() == parameterTypes.size() && methodName.contains(x.getName().asString())) {
-
-                /*
-                 * Get the class where the MethodDeclaration was found
-                 */
-                String classNameFromdotJava = "";
-                if (x.getParentNode().isPresent()) {
-                    Node parent = x.getParentNode().get();
-                    if (x.getParentNode().get() instanceof TypeDeclaration)
-                        classNameFromdotJava = ((TypeDeclaration) parent).getNameAsString();
-                }
-
-                if (!classNameFromdotJava.isEmpty() && className.endsWith(classNameFromdotJava)) {
-                    int checks = 0;
-                    for (Parameter parameter : parameters) {
-                        Type type = parameter.getType();
-                        String typeToCheck = type.asString();
-                        if (type instanceof ClassOrInterfaceType)
-                            typeToCheck = type.asClassOrInterfaceType().getName().getIdentifier();
-                        if (parameterTypes.contains(typeToCheck))
-                            checks++;
-                    }
-
-                    return checks == parameters.size();
-                }
-            }
-
-            return false;
-
-        }).collect(Collectors.toList());
-
-        return possibleMethods;
+        return true;
     }
 }

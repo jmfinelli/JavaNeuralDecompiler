@@ -4,16 +4,13 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.javaparser.CompilationUnitCreationTransformerFunction;
-import com.redhat.jhalliday.impl.javaparser.CompilationUnitToMethodDeclarationTransformerFunction;
 import com.redhat.jhalliday.impl.javaparser.MethodDeclarationToTextTransformerFunction;
 import javassist.CtClass;
 import javassist.CtMethod;
 
 import com.redhat.jhalliday.impl.javassist.CtClassCreationTransformerFunction;
-import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtMethodToTextTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.FileNameAssociatingRecordTransformer;
-import javassist.compiler.ast.MethodDecl;
 
 import java.io.File;
 import java.util.List;
@@ -74,7 +71,7 @@ public class JavassistDriver {
         /*
          * Decompose the CtClass into a number of MethodModes, ignoring the ones that are not translatable
          */
-        PairBuldingRecordTransformer pairBuldingRecordTransformer = new PairBuldingRecordTransformer();
+        PairBuildingRecordTransformer pairBuldingRecordTransformer = new PairBuildingRecordTransformer();
         List<DecompilationRecord<CtMethod, MethodDeclaration>> methodsRecords =
                 associatedFileRecords.stream().flatMap(pairBuldingRecordTransformer).collect(Collectors.toList());
 
