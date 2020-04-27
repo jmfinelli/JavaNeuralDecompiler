@@ -21,7 +21,7 @@ public class CompilationUnitCreationTransformerFunction implements TransformerFu
 
         ParserConfiguration configuration = new ParserConfiguration();
         configuration
-                .setStoreTokens(false)
+                .setStoreTokens(true)
                 .setAttributeComments(false)
                 .setDoNotAssignCommentsPrecedingEmptyLines(true)
                 .setIgnoreAnnotationsWhenAttributingComments(true)

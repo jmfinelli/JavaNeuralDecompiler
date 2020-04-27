@@ -13,6 +13,7 @@ import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.RecordTransformer;
 import com.redhat.jhalliday.impl.javaparser.CompilationUnitToMethodDeclarationTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsTransformerFunction;
+import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
@@ -23,6 +24,9 @@ import java.util.stream.Stream;
 
 public class PairBuildingRecordTransformer implements RecordTransformer<CtClass, CompilationUnit, CtMethod, MethodDeclaration> {
 
+    final boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().
+            getInputArguments().toString().contains("jdwp");
+
     // TODO: convert CtClass and CompilationUnit before pairing methods up. This would help improving performances
 
     @Override
@@ -31,88 +35,116 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
         CtClassToCtMethodsTransformerFunction ctMethodsTransformerFunction = new CtClassToCtMethodsTransformerFunction();
         CompilationUnitToMethodDeclarationTransformerFunction methodDeclarationTransformerFunction = new CompilationUnitToMethodDeclarationTransformerFunction();
 
+        /*
+         * Transform decompilationRecord to CtMethod and MethodDeclaration objects
+         */
+
         List<CtMethod> ctMethods = ctMethodsTransformerFunction
                 .apply(decompilationRecord.getLowLevelRepresentation()).collect(Collectors.toList());
         List<MethodDeclaration> methodDeclarations = methodDeclarationTransformerFunction
                 .apply(decompilationRecord.getHighLevelRepresentation()).collect(Collectors.toList());
 
-        List<DecompilationRecord<CtMethod, MethodDeclaration>> results = new LinkedList<>();
+        /*
+         * Pairs will be stored in the "results" List
+         */
+        List<DecompilationRecord<CtMethod, MethodDeclaration>> results = new ArrayList<>();
 
         for (CtMethod ctMethod : ctMethods) {
-            List<MethodDeclaration> interestingMethods = interestingMethods(ctMethod, methodDeclarations);
+            List<MethodDeclaration> interestingMethods = new ArrayList<>();
+
+            try {
+                interestingMethods = interestingMethods(ctMethod, methodDeclarations);
+            } catch (NotFoundException e) {
+                // Nothing can happen
+            }
+
+            // DEBUG
+            if (interestingMethods.size() > 1 && isDebug)
+                System.out.println("Found 2 candidates for the same method!");
+
             if (interestingMethods.size() == 1) {
+
+                // This is a method to check line numbers between CtMethod and MethodDeclaration
+                // WARNING! There are differences between javassist and javaparser. Run this tool in debug mode
+                //checkLineNumbers(ctMethod, interestingMethods.get(0));
 
                 DecompilationRecord<CtMethod, MethodDeclaration> result =
                         new GenericDecompilationRecord<>(ctMethod, interestingMethods.get(0), decompilationRecord);
 
                 results.add(result);
+
             }
         }
 
-//        if (results.size() != ctMethods.size()) {
-//            different++;
-//            System.out.printf("WARNING #%d! Methods in the .class file are %d but %d were(was) found!\n", different, ctMethods.size(), results.size());
-//            System.out.printf("DEBUG INFO! .class: %s\n\n", decompilationRecord.getLowLevelRepresentation().getName());
-//        }
+        // DEBUG
+        if (results.size() != ctMethods.size() && isDebug) {
+            different++;
+            System.out.printf("WARNING #%d! Methods in the .class file are %d but %d were(was) found!\n", different, ctMethods.size(), results.size());
+            System.out.printf("DEBUG INFO! .class: %s\n\n", decompilationRecord.getLowLevelRepresentation().getName());
+        }
 
         return results.stream();
     }
 
     static int different = 0;
 
-    private List<MethodDeclaration> interestingMethods(CtMethod ctMethod, List<MethodDeclaration> methodDeclarations) {
+    /**
+     * This method creates a List of MethodDeclaration that are eligible to be paired up with the CtMethod
+     * passed as parameter. It is crucial to return all possible matches as more than one match would mean
+     * that something went wrong
+     * @param ctMethod The bytecode method to match
+     * @param methodDeclarations A List of MethodDeclaration to pick matches from
+     * @return A List of possible MethodDeclaration
+     */
+    private List<MethodDeclaration> interestingMethods(CtMethod ctMethod, List<MethodDeclaration> methodDeclarations)
+            throws NotFoundException {
 
-        List<CtClass> parametersFromBytecode = new ArrayList<>();
-        try {
-            parametersFromBytecode = Arrays.asList(ctMethod.getParameterTypes());
-        } catch (NotFoundException e) {
-            // Should not be a problem as all CtClass instances were initialised with
-            // the use of the default ClassPool
-        }
+        List<CtClass> parametersFromBytecode = Arrays.asList(ctMethod.getParameterTypes());
+        final CtClass returnFromBytecode = ctMethod.getReturnType();
 
+        /*
+         * Different format between javassist and javaparser
+         */
         String className = ctMethod.getDeclaringClass().getPackageName() +
                 "." + ctMethod.getDeclaringClass().getSimpleName().replaceAll("\\$", ".");
-
-        final List<CtClass> finalParametersFromSource = new ArrayList<>(parametersFromBytecode);
 
         List<MethodDeclaration> possibleMethods = methodDeclarations.stream().filter(x ->
         {
 
             List<Parameter> parameters = x.getParameters();
 
-            if (parameters.size() == finalParametersFromSource.size() && ctMethod.getName().equals(x.getName().asString())) {
+            String returnType = typeToCheck(x.getType());
 
+            if (parameters.size() == parametersFromBytecode.size() &&
+                    ctMethod.getName().equals(x.getName().asString()) &&
+                    returnFromBytecode.getName().endsWith(returnType)) {
+
+                /*
+                 * Loop until a Class containing the ctMethod is found.
+                 * The instanceof PackageDeclaration is used as upper limit
+                 */
                 Node parent = x;
                 while (!(parent instanceof ClassOrInterfaceDeclaration) && !(parent instanceof PackageDeclaration)) {
 
-                    if (!parent.getParentNode().isPresent()) break;
+                    if (parent.getParentNode().isEmpty()) break;
 
                     parent = parent.getParentNode().get();
                 }
 
                 String classNameFromdotJava = "";
                 if (parent instanceof ClassOrInterfaceDeclaration) {
-                    if (((ClassOrInterfaceDeclaration) parent).getFullyQualifiedName().isPresent())
-                        classNameFromdotJava = ((ClassOrInterfaceDeclaration) parent).getFullyQualifiedName().get();
+                    ClassOrInterfaceDeclaration parentClass = (ClassOrInterfaceDeclaration) parent;
+                    if (parentClass.getFullyQualifiedName().isPresent())
+                        classNameFromdotJava = parentClass.getFullyQualifiedName().get();
                 }
 
                 if (!classNameFromdotJava.isEmpty() && className.equals(classNameFromdotJava)) {
                     int checks = 0;
                     for (Parameter parameter : parameters) {
 
-                        Type type = parameter.getType();
-
-                        String typeToCheck = "";
-                        if (type instanceof ArrayType)
-                            typeToCheck = ((ArrayType)type).asString();
-                        else if (type instanceof ClassOrInterfaceType)
-                            typeToCheck = type.asClassOrInterfaceType().getName().getIdentifier();
-                        else
-                            type.asString();
-
-                        final String finalTypeToCheck = typeToCheck;
-                        if (finalParametersFromSource.stream().anyMatch(
-                                p -> p.getName().endsWith(finalTypeToCheck))
+                        final String typeToCheck = typeToCheck(parameter.getType());
+                        if (parametersFromBytecode.stream().anyMatch(
+                                p -> p.getName().endsWith(typeToCheck))
                         )
                             checks++;
                     }
@@ -126,6 +158,40 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
         }).collect(Collectors.toList());
 
         return possibleMethods;
+    }
+
+    private String typeToCheck(Type type) {
+        /*
+         * This is to get parameters that are arrays or classes
+         */
+        String typeToCheck = "";
+        if (type instanceof ArrayType)
+            typeToCheck = ((ArrayType)type).asString();
+        else if (type instanceof ClassOrInterfaceType)
+            typeToCheck = type.asClassOrInterfaceType().getName().getIdentifier();
+        else
+            type.asString();
+
+        return typeToCheck;
+    }
+
+    private boolean checkLineNumbers(CtMethod ctMethod, MethodDeclaration declaration) {
+
+        int lineNumberFromBytecode = ctMethod.getMethodInfo().getLineNumber(0);
+        int lineNumberFromSource = lineNumberFromBytecode;
+        if (declaration.getBody().isPresent())
+            if (declaration.getBody().get().getBegin().isPresent())
+                lineNumberFromSource = declaration.getBody().get().getBegin().get().line;
+
+            if (Math.abs(lineNumberFromBytecode - lineNumberFromSource) > 1 && isDebug)
+                System.out.printf("Method %s in %s has been found in two different locations!" +
+                        "\nJavaparser gives: %d, while Javassist gives: %d\n\n",
+                        ctMethod.getName(),
+                        ctMethod.getDeclaringClass().getName(),
+                        lineNumberFromSource,
+                        lineNumberFromBytecode);
+
+        return lineNumberFromBytecode - 1 == lineNumberFromSource;
     }
 
     private boolean doubleCheckWithLineNumber() {
