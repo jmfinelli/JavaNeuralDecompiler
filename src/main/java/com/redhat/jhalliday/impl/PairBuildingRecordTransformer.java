@@ -2,9 +2,11 @@ package com.redhat.jhalliday.impl;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.PackageDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
-import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.type.ArrayType;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.redhat.jhalliday.DecompilationRecord;
@@ -36,9 +38,6 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
 
         List<DecompilationRecord<CtMethod, MethodDeclaration>> results = new LinkedList<>();
 
-        if (decompilationRecord.getLowLevelRepresentation().getName().equals("net.bytebuddy.jar.asm.ClassReader"))
-            System.out.println("Stop");
-
         for (CtMethod ctMethod : ctMethods) {
             List<MethodDeclaration> interestingMethods = interestingMethods(ctMethod, methodDeclarations);
             if (interestingMethods.size() == 1) {
@@ -50,12 +49,11 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
             }
         }
 
-        if (results.size() != ctMethods.size()) {
-            different++;
-            System.out.printf("WARNING #%d! Methods in the .class file are %d but %d were(was) found!\n", different, ctMethods.size(), results.size());
-            System.out.printf("DEBUG INFO! .class: %s\n\n", decompilationRecord.getLowLevelRepresentation().getName());
-        }
-
+//        if (results.size() != ctMethods.size()) {
+//            different++;
+//            System.out.printf("WARNING #%d! Methods in the .class file are %d but %d were(was) found!\n", different, ctMethods.size(), results.size());
+//            System.out.printf("DEBUG INFO! .class: %s\n\n", decompilationRecord.getLowLevelRepresentation().getName());
+//        }
 
         return results.stream();
     }
@@ -64,47 +62,57 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
 
     private List<MethodDeclaration> interestingMethods(CtMethod ctMethod, List<MethodDeclaration> methodDeclarations) {
 
-        String methodName = ctMethod.getName();
-
-        List<CtClass> parametersFromSource = new ArrayList<>();
+        List<CtClass> parametersFromBytecode = new ArrayList<>();
         try {
-            parametersFromSource = Arrays.asList(ctMethod.getParameterTypes());
+            parametersFromBytecode = Arrays.asList(ctMethod.getParameterTypes());
         } catch (NotFoundException e) {
             // Should not be a problem as all CtClass instances were initialised with
             // the use of the default ClassPool
         }
 
-        String className = ctMethod.getDeclaringClass().getSimpleName();
+        String className = ctMethod.getDeclaringClass().getPackageName() +
+                "." + ctMethod.getDeclaringClass().getSimpleName().replaceAll("\\$", ".");
 
-        final List<CtClass> finalParametersFromSource = new ArrayList<>(parametersFromSource);
+        final List<CtClass> finalParametersFromSource = new ArrayList<>(parametersFromBytecode);
 
         List<MethodDeclaration> possibleMethods = methodDeclarations.stream().filter(x ->
         {
 
             List<Parameter> parameters = x.getParameters();
 
-            if (parameters.size() == finalParametersFromSource.size() && methodName.contains(x.getName().asString())) {
+            if (parameters.size() == finalParametersFromSource.size() && ctMethod.getName().equals(x.getName().asString())) {
 
-                /*
-                 * Get the class where the MethodDeclaration was found
-                 * TODO: There can be a method declared in a method, change this in something better
-                 */
-                String classNameFromdotJava = "";
-                if (x.getParentNode().isPresent()) {
-                    Node parent = x.getParentNode().get();
-                    if (x.getParentNode().get() instanceof TypeDeclaration)
-                        classNameFromdotJava = ((TypeDeclaration) parent).getNameAsString();
+                Node parent = x;
+                while (!(parent instanceof ClassOrInterfaceDeclaration) && !(parent instanceof PackageDeclaration)) {
+
+                    if (!parent.getParentNode().isPresent()) break;
+
+                    parent = parent.getParentNode().get();
                 }
 
-                if (!classNameFromdotJava.isEmpty() && className.endsWith(classNameFromdotJava)) {
+                String classNameFromdotJava = "";
+                if (parent instanceof ClassOrInterfaceDeclaration) {
+                    if (((ClassOrInterfaceDeclaration) parent).getFullyQualifiedName().isPresent())
+                        classNameFromdotJava = ((ClassOrInterfaceDeclaration) parent).getFullyQualifiedName().get();
+                }
+
+                if (!classNameFromdotJava.isEmpty() && className.equals(classNameFromdotJava)) {
                     int checks = 0;
                     for (Parameter parameter : parameters) {
+
                         Type type = parameter.getType();
-                        String typeToCheck = type instanceof ClassOrInterfaceType ?
-                                type.asClassOrInterfaceType().getName().getIdentifier() :
-                                type.asString();
+
+                        String typeToCheck = "";
+                        if (type instanceof ArrayType)
+                            typeToCheck = ((ArrayType)type).asString();
+                        else if (type instanceof ClassOrInterfaceType)
+                            typeToCheck = type.asClassOrInterfaceType().getName().getIdentifier();
+                        else
+                            type.asString();
+
+                        final String finalTypeToCheck = typeToCheck;
                         if (finalParametersFromSource.stream().anyMatch(
-                                p -> p.getName().endsWith(typeToCheck))
+                                p -> p.getName().endsWith(finalTypeToCheck))
                         )
                             checks++;
                     }
