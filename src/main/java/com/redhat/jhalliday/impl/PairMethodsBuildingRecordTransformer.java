@@ -46,15 +46,11 @@ public class PairMethodsBuildingRecordTransformer implements RecordTransformer<C
         for (CtMethod ctMethod : ctMethods) {
             List<MethodDeclaration> interestingMethods = new ArrayList<>();
 
-            try {
-                interestingMethods = interestingMethods(ctMethod, methodDeclarations);
-            } catch (NotFoundException e) {
-                // Nothing can happen
-            }
+            try { interestingMethods = interestingMethods(ctMethod, methodDeclarations); } catch (NotFoundException ignore) { }
 
-            // DEBUG
-            if (interestingMethods.size() > 1 && isDebug)
-                System.out.println("Found 2 candidates for the same method!");
+//            // DEBUG
+//            if (interestingMethods.size() > 1 && isDebug)
+//                System.out.println("Found 2 candidates for the same method!");
 
             if (interestingMethods.size() == 1) {
 
@@ -70,12 +66,12 @@ public class PairMethodsBuildingRecordTransformer implements RecordTransformer<C
             }
         }
 
-        // DEBUG
-        if (results.size() != ctMethods.size() && isDebug) {
-            different++;
-            System.out.printf("WARNING #%d! Methods in the .class file are %d but %d were(was) found!\n", different, ctMethods.size(), results.size());
-            System.out.printf("DEBUG INFO! .class: %s\n\n", decompilationRecord.getLowLevelRepresentation().getName());
-        }
+//        // DEBUG
+//        if (results.size() != ctMethods.size() && isDebug) {
+//            different++;
+//            System.out.printf("WARNING #%d! Methods in the .class file are %d but %d were(was) found!\n", different, ctMethods.size(), results.size());
+//            System.out.printf("DEBUG INFO! .class: %s\n\n", decompilationRecord.getLowLevelRepresentation().getName());
+//        }
 
         return results.stream();
     }
@@ -101,35 +97,23 @@ public class PairMethodsBuildingRecordTransformer implements RecordTransformer<C
 
         List<MethodDeclaration> possibleMethods = methodDeclarations.stream().filter(x ->
         {
-
+            /*
+             * Fetch the list of Parameters' Types and the Return Type of the MethodDeclaration
+             */
             List<Parameter> parameters = x.getParameters();
-
-            String returnType = typeToCheck(x.getType());
+            String returnTypeString = typeToCheck(x.getType());
 
             if (parameters.size() == parametersFromBytecode.size() &&
                     ctMethod.getName().equals(x.getName().asString()) &&
-                    returnFromBytecode.getName().endsWith(returnType)) {
-
-                /*
-                 * Loop until a Class containing the ctMethod is found.
-                 * The instanceof PackageDeclaration is used as upper limit
-                 */
-                Node parent = x;
-                while (!(parent instanceof ClassOrInterfaceDeclaration) && !(parent instanceof PackageDeclaration)) {
-
-                    if (parent.getParentNode().isEmpty()) break;
-
-                    parent = parent.getParentNode().get();
-                }
+                    returnFromBytecode.getName().endsWith(returnTypeString)) {
 
                 int checks = 0;
                 for (Parameter parameter : parameters) {
 
                     final String typeToCheck = typeToCheck(parameter.getType());
-                    if (parametersFromBytecode.stream().anyMatch(
-                            p -> p.getName().endsWith(typeToCheck))
-                    )
+                    if (parametersFromBytecode.stream().anyMatch(p -> p.getName().endsWith(typeToCheck))) {
                         checks++;
+                    }
                 }
 
                 return checks == parameters.size();
@@ -142,7 +126,7 @@ public class PairMethodsBuildingRecordTransformer implements RecordTransformer<C
         return possibleMethods;
     }
 
-    private String typeToCheck(Type type) {
+    private static String typeToCheck(Type type) {
         /*
          * This is to get parameters that are arrays or classes
          */
@@ -174,6 +158,20 @@ public class PairMethodsBuildingRecordTransformer implements RecordTransformer<C
                         lineNumberFromBytecode);
 
         return lineNumberFromBytecode - 1 == lineNumberFromSource;
+    }
+
+    private static TypeDeclaration returnClassOrInterfaceDeclaration(Node node) {
+        Node parent = node;
+        while (!(parent instanceof TypeDeclaration) && !(parent instanceof PackageDeclaration)) {
+
+            if (parent.getParentNode().isEmpty()) break;
+
+            parent = parent.getParentNode().get();
+        }
+
+        if (!(parent instanceof TypeDeclaration)) return null;
+
+        return (TypeDeclaration) parent;
     }
 
     private boolean doubleCheckWithLineNumber() {
