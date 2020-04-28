@@ -5,7 +5,8 @@ import com.redhat.jhalliday.TransformerFunction;
 import java.io.File;
 import java.util.Map;
 
-public class JarContentRecordTransformer extends CompositeRecordTransformer<File, File, Map<String, byte[]>, Map<String, byte[]>> {
+public class JarContentRecordTransformer
+        extends CompositeRecordTransformer<File, File, Map<String, byte[]>, Map<String, byte[]>> {
 
     public JarContentRecordTransformer(
             TransformerFunction<File, Map<String, byte[]>> lowTransform,

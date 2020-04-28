@@ -1,6 +1,7 @@
 package com.redhat.jhalliday.impl.javassist;
 
 import com.redhat.jhalliday.TransformerFunction;
+import com.redhat.jhalliday.impl.ClassWrapper;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.Modifier;
@@ -10,15 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class CtClassToCtMethodsTransformerFunction implements TransformerFunction<CtClass, CtMethod> {
+public class CtClassToCtMethodsTransformerFunction implements TransformerFunction<ClassWrapper<CtClass>, CtMethod> {
 
     @Override
-    public Stream<CtMethod> apply(CtClass ctClass) {
+    public Stream<CtMethod> apply(ClassWrapper<CtClass> wrapper) {
 
         final List<CtMethod> interestingMethods = new ArrayList<>();
 
         // unlike asm, this does not include constructors or static initializers.
-        for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
+        for (CtMethod ctMethod : wrapper.unwrap().getDeclaredMethods()) {
             if (isInteresting(ctMethod)) {
                 interestingMethods.add(ctMethod);
             }
