@@ -2,6 +2,7 @@ package com.redhat.jhalliday;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.javaparser.CompilationUnitCreationTransformerFunction;
 import com.redhat.jhalliday.impl.javaparser.MethodDeclarationToTextTransformerFunction;
@@ -10,7 +11,6 @@ import javassist.CtMethod;
 
 import com.redhat.jhalliday.impl.javassist.CtClassCreationTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtMethodToTextTransformerFunction;
-import com.redhat.jhalliday.impl.javassist.FileNameAssociatingRecordTransformer;
 
 import java.io.File;
 import java.util.List;
@@ -47,9 +47,9 @@ public class JavassistDriver {
                 jarRecords.stream().flatMap(jarContentTransformer).collect(Collectors.toList());
 
         /*
-         * From this point we are decoupled from the filesystem
-         * Next we need to convert the raw bytes to something more useful
-         * Start with the low level (.class) side
+         * From this point we are decoupled from the filesystem.
+         * .class files and related .java files are converted, respectively, to CtClass
+         * and CompilationUnit.
          */
         CompositeRecordTransformer<Map<String, byte[]>, Map<String, byte[]>, Map<String, CtClass>, Map<String, CompilationUnit>>
                 CtClassBuildingTransformer = new CompositeRecordTransformer<>(
@@ -60,20 +60,20 @@ public class JavassistDriver {
                 rawFileContentRecords.stream().flatMap(CtClassBuildingTransformer).collect(Collectors.toList());
 
         /*
-         * Now we can pair up the individual .java and .class files, using the source file name from the CtClass
+         * Now we can pair up individual Classes and Enums with related .class files.
          */
-        FileNameAssociatingRecordTransformer fileNameAssociatingRecordTransformer = new FileNameAssociatingRecordTransformer();
-        List<DecompilationRecord<CtClass, CompilationUnit>> associatedFileRecords =
-                ctClasses.stream().flatMap(fileNameAssociatingRecordTransformer).collect(Collectors.toList());
+        ClassAssociatingRecordTransformer classAssociatingRecordTransformer = new ClassAssociatingRecordTransformer();
+        List<DecompilationRecord<CtClass, TypeDeclaration>> associatedClassRecords =
+                ctClasses.stream().flatMap(classAssociatingRecordTransformer).collect(Collectors.toList());
 
-        System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), associatedFileRecords.size());
+        System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), associatedClassRecords.size());
 
         /*
          * Decompose the CtClass into a number of MethodModes, ignoring the ones that are not translatable
          */
-        PairBuildingRecordTransformer pairBuldingRecordTransformer = new PairBuildingRecordTransformer();
+        PairMethodsBuildingRecordTransformer pairBuldingRecordTransformer = new PairMethodsBuildingRecordTransformer();
         List<DecompilationRecord<CtMethod, MethodDeclaration>> methodsRecords =
-                associatedFileRecords.stream().flatMap(pairBuldingRecordTransformer).collect(Collectors.toList());
+                associatedClassRecords.stream().flatMap(pairBuldingRecordTransformer).collect(Collectors.toList());
 
         System.out.printf("Found %d potentially interesting binary methods in the .class files\n", methodsRecords.size());
 

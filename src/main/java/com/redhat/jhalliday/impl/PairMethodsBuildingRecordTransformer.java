@@ -1,19 +1,17 @@
 package com.redhat.jhalliday.impl;
 
-import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.type.ArrayType;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.RecordTransformer;
-import com.redhat.jhalliday.impl.javaparser.CompilationUnitToMethodDeclarationTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsTransformerFunction;
-import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
@@ -22,18 +20,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class PairBuildingRecordTransformer implements RecordTransformer<CtClass, CompilationUnit, CtMethod, MethodDeclaration> {
+public class PairMethodsBuildingRecordTransformer implements RecordTransformer<CtClass, TypeDeclaration, CtMethod, MethodDeclaration> {
 
     final boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().
             getInputArguments().toString().contains("jdwp");
 
-    // TODO: convert CtClass and CompilationUnit before pairing methods up. This would help improving performances
-
     @Override
-    public Stream<DecompilationRecord<CtMethod, MethodDeclaration>> apply(DecompilationRecord<CtClass, CompilationUnit> decompilationRecord) {
+    public Stream<DecompilationRecord<CtMethod, MethodDeclaration>> apply(DecompilationRecord<CtClass, TypeDeclaration> decompilationRecord) {
 
         CtClassToCtMethodsTransformerFunction ctMethodsTransformerFunction = new CtClassToCtMethodsTransformerFunction();
-        CompilationUnitToMethodDeclarationTransformerFunction methodDeclarationTransformerFunction = new CompilationUnitToMethodDeclarationTransformerFunction();
 
         /*
          * Transform decompilationRecord to CtMethod and MethodDeclaration objects
@@ -41,8 +36,7 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
 
         List<CtMethod> ctMethods = ctMethodsTransformerFunction
                 .apply(decompilationRecord.getLowLevelRepresentation()).collect(Collectors.toList());
-        List<MethodDeclaration> methodDeclarations = methodDeclarationTransformerFunction
-                .apply(decompilationRecord.getHighLevelRepresentation()).collect(Collectors.toList());
+        List<MethodDeclaration> methodDeclarations = decompilationRecord.getHighLevelRepresentation().getMethods();
 
         /*
          * Pairs will be stored in the "results" List
@@ -99,14 +93,11 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
     private List<MethodDeclaration> interestingMethods(CtMethod ctMethod, List<MethodDeclaration> methodDeclarations)
             throws NotFoundException {
 
+        /*
+         * Fetch the list of Parameters' Types and the Return Type of the CtMethod
+         */
         List<CtClass> parametersFromBytecode = Arrays.asList(ctMethod.getParameterTypes());
         final CtClass returnFromBytecode = ctMethod.getReturnType();
-
-        /*
-         * Different format between javassist and javaparser
-         */
-        String className = ctMethod.getDeclaringClass().getPackageName() +
-                "." + ctMethod.getDeclaringClass().getSimpleName().replaceAll("\\$", ".");
 
         List<MethodDeclaration> possibleMethods = methodDeclarations.stream().filter(x ->
         {
@@ -131,26 +122,17 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
                     parent = parent.getParentNode().get();
                 }
 
-                String classNameFromdotJava = "";
-                if (parent instanceof ClassOrInterfaceDeclaration) {
-                    ClassOrInterfaceDeclaration parentClass = (ClassOrInterfaceDeclaration) parent;
-                    if (parentClass.getFullyQualifiedName().isPresent())
-                        classNameFromdotJava = parentClass.getFullyQualifiedName().get();
+                int checks = 0;
+                for (Parameter parameter : parameters) {
+
+                    final String typeToCheck = typeToCheck(parameter.getType());
+                    if (parametersFromBytecode.stream().anyMatch(
+                            p -> p.getName().endsWith(typeToCheck))
+                    )
+                        checks++;
                 }
 
-                if (!classNameFromdotJava.isEmpty() && className.equals(classNameFromdotJava)) {
-                    int checks = 0;
-                    for (Parameter parameter : parameters) {
-
-                        final String typeToCheck = typeToCheck(parameter.getType());
-                        if (parametersFromBytecode.stream().anyMatch(
-                                p -> p.getName().endsWith(typeToCheck))
-                        )
-                            checks++;
-                    }
-
-                    return checks == parameters.size();
-                }
+                return checks == parameters.size();
             }
 
             return false;
@@ -166,7 +148,7 @@ public class PairBuildingRecordTransformer implements RecordTransformer<CtClass,
          */
         String typeToCheck = "";
         if (type instanceof ArrayType)
-            typeToCheck = ((ArrayType)type).asString();
+            typeToCheck = type.asArrayType().asString();
         else if (type instanceof ClassOrInterfaceType)
             typeToCheck = type.asClassOrInterfaceType().getName().getIdentifier();
         else

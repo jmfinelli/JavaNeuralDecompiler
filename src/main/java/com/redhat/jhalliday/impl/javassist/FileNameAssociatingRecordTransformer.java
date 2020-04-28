@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+@Deprecated
 public class FileNameAssociatingRecordTransformer implements RecordTransformer<Map<String, CtClass>, Map<String, CompilationUnit>, CtClass, CompilationUnit> {
 
     @Override

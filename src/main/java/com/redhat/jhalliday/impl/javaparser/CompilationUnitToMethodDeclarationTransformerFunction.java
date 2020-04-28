@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+@Deprecated
 public class CompilationUnitToMethodDeclarationTransformerFunction
         implements TransformerFunction<CompilationUnit, MethodDeclaration> {
 
