@@ -1,0 +1,5 @@
+# Increase Maven heap memory size
+export MAVEN_OPTS="-Xmx3G -XX:MaxPermSize=1G"
+
+# Run tool from command line
+mvn -X exec:java -Dexec.mainClass=com.redhat.jhalliday.JavassistDriver
