@@ -19,9 +19,7 @@ public class CtClassCreationTransformerFunction implements TransformerFunction<M
 
         map.forEach((key, bytes) -> {
             CtClass classNode = apply(bytes);
-            // Had problems with enums.
-            if (!classNode.isEnum())
-                result.put(key, classNode);
+            result.put(key, classNode);
         });
 
         return Stream.of(result);

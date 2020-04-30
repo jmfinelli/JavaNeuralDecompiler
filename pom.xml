@@ -26,13 +26,6 @@
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.testng/testng -->
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>7.1.0</version>
-            <scope>test</scope>
-        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.javassist/javassist -->
         <dependency>
@@ -48,18 +41,21 @@
             <version>7.3.1</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
+        <!-- https://github.com/javaparser/javaparser -->
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-symbol-solver-core</artifactId>
+            <!-- 3.15.18 and later (current is 3.15.21) have a bug.
+             maybe https://github.com/javaparser/javaparser/issues/2616
+             avoid -->
+            <version>3.15.17</version>
+        </dependency>
+
+        <!-- http://commons.apache.org/proper/commons-math/ -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
             <version>3.6.1</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/com.github.javaparser/javaparser-core -->
-        <dependency>
-            <groupId>com.github.javaparser</groupId>
-            <artifactId>javaparser-core</artifactId>
-            <version>3.15.18</version>
         </dependency>
 
     </dependencies>

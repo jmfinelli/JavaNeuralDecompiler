@@ -1,39 +1,32 @@
 package com.redhat.jhalliday.impl.javaparser;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.redhat.jhalliday.TransformerFunction;
 
-
-import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class CompilationUnitCreationTransformerFunction implements TransformerFunction<Map<String, byte[]>, Map<String, CompilationUnit>> {
+public class CompilationUnitCreationTransformerFunction
+        implements TransformerFunction<Map<String, byte[]>, Map<String, CompilationUnit>> {
+
+    private final ParserUtil parserUtil = new ParserUtil();
 
     @Override
     public Stream<Map<String, CompilationUnit>> apply(Map<String, byte[]> map) {
 
         Map<String, CompilationUnit> result = new HashMap<>();
 
-        ParserConfiguration configuration = new ParserConfiguration();
-        configuration
-                .setStoreTokens(true)
-                .setAttributeComments(false)
-                .setDoNotAssignCommentsPrecedingEmptyLines(true)
-                .setIgnoreAnnotationsWhenAttributingComments(true)
-                .setLexicalPreservationEnabled(false)
-                .setPreprocessUnicodeEscapes(false);
-
-        JavaParser javaParser = new JavaParser(configuration);
-
-        map.forEach((key, bytes) ->
-            javaParser.parse(new ByteArrayInputStream(bytes))
-                    .ifSuccessful(cu -> result.put(key, cu)));
+        for (Map.Entry<String, byte[]> entry : map.entrySet()) {
+            CompilationUnit compilationUnit = parserUtil.parseWithFallback(entry.getValue());
+            if (compilationUnit != null) {
+                result.put(entry.getKey(), compilationUnit);
+            } else {
+                System.out.println("javaparser failed for " + entry.getKey());
+            }
+        }
 
         return Stream.of(result);
     }
 }
+

@@ -1,6 +1,7 @@
 package com.redhat.jhalliday.impl.asm;
 
 import com.redhat.jhalliday.TransformerFunction;
+import com.redhat.jhalliday.impl.ClassWrapper;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -9,11 +10,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Stream;
 
-public class ClassNodeToMethodNodesTransformerFunction implements TransformerFunction<ClassNode, MethodNode> {
+public class ClassNodeToMethodNodesTransformerFunction implements TransformerFunction<ClassWrapper<ClassNode>, MethodNode> {
 
     @Override
-    public Stream<MethodNode> apply(ClassNode classNode) {
+    public Stream<MethodNode> apply(ClassWrapper<ClassNode> wrapper) {
 
+        ClassNode classNode = wrapper.unwrap();
         final List<MethodNode> interestingMethods = new ArrayList<>();
 
         for (MethodNode methodNode : classNode.methods) {
