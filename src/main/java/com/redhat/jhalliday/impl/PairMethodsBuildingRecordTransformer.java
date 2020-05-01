@@ -11,6 +11,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.RecordTransformer;
+import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsOldTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.CtClassToCtMethodsTransformerFunction;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -28,7 +29,7 @@ public class PairMethodsBuildingRecordTransformer implements RecordTransformer<C
     @Override
     public Stream<DecompilationRecord<CtMethod, MethodDeclaration>> apply(DecompilationRecord<CtClass, TypeDeclaration> decompilationRecord) {
 
-        CtClassToCtMethodsTransformerFunction ctMethodsTransformerFunction = new CtClassToCtMethodsTransformerFunction();
+        CtClassToCtMethodsOldTransformerFunction ctMethodsTransformerFunction = new CtClassToCtMethodsOldTransformerFunction();
 
         /*
          * Transform decompilationRecord to CtMethod and MethodDeclaration objects

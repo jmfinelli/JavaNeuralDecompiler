@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+@Deprecated
 public class CtClassCreationTransformerFunction implements TransformerFunction<Map<String, byte[]>, Map<String, CtClass>> {
 
     @Override

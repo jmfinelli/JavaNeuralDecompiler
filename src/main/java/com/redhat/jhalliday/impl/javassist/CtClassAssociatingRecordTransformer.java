@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl;
+package com.redhat.jhalliday.impl.javassist;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.RecordTransformer;
+import com.redhat.jhalliday.impl.GenericDecompilationRecord;
 import javassist.CtClass;
 import javassist.bytecode.SourceFileAttribute;
 
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Deprecated
-public class ClassAssociatingRecordTransformer implements
+public class CtClassAssociatingRecordTransformer implements
         RecordTransformer<Map<String, CtClass>, Map<String, CompilationUnit>, CtClass, TypeDeclaration> {
 
     @Override

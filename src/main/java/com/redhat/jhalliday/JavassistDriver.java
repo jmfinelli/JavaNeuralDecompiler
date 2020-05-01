@@ -6,6 +6,7 @@ import com.github.javaparser.ast.body.TypeDeclaration;
 import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.javaparser.CompilationUnitCreationTransformerFunction;
 import com.redhat.jhalliday.impl.javaparser.MethodDeclarationToTextTransformerFunction;
+import com.redhat.jhalliday.impl.javassist.CtClassAssociatingRecordTransformer;
 import javassist.CtClass;
 import javassist.CtMethod;
 
@@ -62,9 +63,9 @@ public class JavassistDriver {
         /*
          * Now we can pair up individual Classes and Enums with related .class files.
          */
-        ClassAssociatingRecordTransformer classAssociatingRecordTransformer = new ClassAssociatingRecordTransformer();
+        CtClassAssociatingRecordTransformer ctClassAssociatingRecordTransformer = new CtClassAssociatingRecordTransformer();
         List<DecompilationRecord<CtClass, TypeDeclaration>> associatedClassRecords =
-                ctClasses.stream().flatMap(classAssociatingRecordTransformer).collect(Collectors.toList());
+                ctClasses.stream().flatMap(ctClassAssociatingRecordTransformer).collect(Collectors.toList());
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), associatedClassRecords.size());
 

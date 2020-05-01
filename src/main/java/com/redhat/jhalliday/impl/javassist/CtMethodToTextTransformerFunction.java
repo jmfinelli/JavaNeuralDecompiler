@@ -3,7 +3,6 @@ package com.redhat.jhalliday.impl.javassist;
 import com.redhat.jhalliday.TransformerFunction;
 import javassist.CtMethod;
 import javassist.bytecode.*;
-import ncl.ac.uk.matcher.InstructionPrinterMod;
 
 import java.util.ArrayList;
 import java.util.Collections;
