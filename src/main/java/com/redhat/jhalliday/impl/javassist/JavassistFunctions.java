@@ -3,7 +3,6 @@ package com.redhat.jhalliday.impl.javassist;
 import com.redhat.jhalliday.TransformerFunction;
 import com.redhat.jhalliday.impl.ClassWrapper;
 import com.redhat.jhalliday.impl.MethodWrapper;
-import com.redhat.jhalliday.impl.MethodWrapperOnParameters;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -35,7 +34,4 @@ public class JavassistFunctions {
             new CtClassToCtMethodsTransformerFunction();
 
     public static Function<CtMethod, MethodWrapper<CtMethod>> methodWrappingFunction = CtMethodWrapper::new;
-
-    public static Function<CtMethod, MethodWrapperOnParameters<CtMethod>> methodWrappingOnParametersFunction =
-            CtMethodWrapperOnParameters::new;
 }

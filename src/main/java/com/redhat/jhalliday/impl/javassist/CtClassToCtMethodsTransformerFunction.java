@@ -1,4 +1,3 @@
-
 package com.redhat.jhalliday.impl.javassist;
 
 import com.redhat.jhalliday.TransformerFunction;

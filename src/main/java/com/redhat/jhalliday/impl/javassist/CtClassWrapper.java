@@ -14,20 +14,5 @@ public class CtClassWrapper extends ClassWrapper<CtClass> {
         if (attribute != null) {
             sourceFileName = attribute.getFileName();
         }
-
-        /*
-         * Truncate the qualified name of CtClass in case the .java file
-         * generated multiple .class files (which are numbered within
-         * javassist with "$"+digit
-         */
-        qualifiedName = ctClass.getName();
-        if (qualifiedName.matches(".+\\$\\d+$"))
-            qualifiedName = qualifiedName.substring(0, qualifiedName.lastIndexOf("$"));
-
-        /*
-         * To match qualified names between javassist and javaparser, "/" and "$"
-         * are replaced with "."
-         */
-        qualifiedName = qualifiedName.replaceAll("[/$]", ".");
     }
 }
