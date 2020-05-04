@@ -24,7 +24,7 @@ public class TypeDeclarationExtractionTransformerFunction
             CompilationUnit compilationUnit = parserUtil.parseWithFallback(entry.getValue());
             if (compilationUnit != null) {
 
-                TypeDeclarationWrapper.getTypeDeclarationWrappersFromCompilationUnit(compilationUnit)
+                TypeDeclarationWrapper.getTypeDeclarationWrappersFromCompilationUnit(compilationUnit, entry.getKey())
                 .forEach(x -> {
                     if (!x.getQualifiedName().isEmpty())
                         results.put(x.getQualifiedName(), x);

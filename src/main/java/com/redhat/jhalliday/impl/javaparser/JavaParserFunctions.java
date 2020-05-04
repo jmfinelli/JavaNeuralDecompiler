@@ -8,11 +8,12 @@ import com.redhat.jhalliday.impl.MethodWrapper;
 import com.redhat.jhalliday.impl.MethodWrapperOnParameters;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class JavaParserFunctions {
 
-    public static Function<CompilationUnit, List<? extends ClassWrapper<? extends TypeDeclaration>>> classWrapperFunction =
+    public static BiFunction<CompilationUnit, String, List<? extends ClassWrapper<? extends TypeDeclaration>>> classWrapperFunction =
             TypeDeclarationWrapper::getTypeDeclarationWrappersFromCompilationUnit;
 
     public static Function<MethodDeclaration, MethodWrapper<MethodDeclaration>> methodWrappingFunction =
