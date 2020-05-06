@@ -30,7 +30,7 @@ public class InstructionPrinterMod implements Opcode {
      * Prints the bytecode instructions of a given method.
      */
     public static void print(CtMethod method, PrintStream stream) {
-        (new InstructionPrinter(stream)).print(method);
+        (new InstructionPrinterMod(stream)).print(method);
     }
 
     /**

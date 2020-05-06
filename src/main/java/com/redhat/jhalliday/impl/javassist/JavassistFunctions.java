@@ -9,6 +9,7 @@ import javassist.CtMethod;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Function;
 
 public class JavassistFunctions {

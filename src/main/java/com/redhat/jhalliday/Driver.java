@@ -8,6 +8,7 @@ import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
 import com.redhat.jhalliday.impl.asm.AsmFunctions;
 import com.redhat.jhalliday.impl.javaparser.*;
+import com.redhat.jhalliday.impl.javassist.CtMethodToBodyTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import javassist.CtClass;
@@ -15,11 +16,12 @@ import javassist.CtMethod;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Driver {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         long start = System.currentTimeMillis();
 
@@ -29,7 +31,7 @@ public class Driver {
          * To populate these directories from maven central, see gather-sample-corpus.xml
          */
         DecompilationRecord<File, File> dirRecord = new GenericDecompilationRecord<>(
-                new File("../data/binjars"), new File("../data/srcjars"));
+                new File("./data/binjars"), new File("./data/srcjars"));
 
         /*
          * Conversion step to change the directories into jar files pairs using name matching
@@ -56,11 +58,16 @@ public class Driver {
                         JavassistFunctions.classShreddingFunction,
                         JavassistFunctions.methodWrappingFunction,
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
-                        JavaParserFunctions.methodWrappingFunction)
+                        JavaParserFunctions.methodWrappingFunction),
+                new DictionaryExtractionRecordTransformer<>(
+                        new CtMethodToBodyTransformerFunction(),
+                        new MethodDeclarationToBodyTransformerFunction()
+                )
         );
 
         int files = 0;
         int methods = 0;
+        int dictionary = 0;
         for (DecompilationRecord<File, File> decompilationRecord : jarRecords) {
             //System.out.println(decompilationRecord.getHighLevelRepresentation().getAbsolutePath());
 
@@ -71,6 +78,9 @@ public class Driver {
             List<DecompilationRecord<CtMethod, MethodDeclaration>> methodRecords =
                     jarProcessor.associateMethods(filePairs);
             methods += methodRecords.size();
+
+            List<DecompilationRecordWithDic<List<String>, List<String>, Map<String, String>>> shreddedRecords =
+                    jarProcessor.dictionaryExtraction(methodRecords);
         }
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);

@@ -13,14 +13,16 @@ import java.util.stream.Collectors;
 public class JarProcessor<LOW_AGGREGATE, LOW_ITEM> {
 
     private final TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction;
-
     private final MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM, MethodDeclaration> methodAssociatingRecordTransformer;
+    private final DictionaryExtractionRecordTransformer<LOW_ITEM> dictionaryExtractionRecordTransformer;
 
     public JarProcessor(
             TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction,
-            MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM, MethodDeclaration> methodAssociatingRecordTransformer) {
+            MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM, MethodDeclaration> methodAssociatingRecordTransformer,
+            DictionaryExtractionRecordTransformer<LOW_ITEM> dictionaryExtractionRecordTransformer) {
         this.classParsingFunction = classParsingFunction;
         this.methodAssociatingRecordTransformer = methodAssociatingRecordTransformer;
+        this.dictionaryExtractionRecordTransformer = dictionaryExtractionRecordTransformer;
     }
 
     public List<DecompilationRecord<ClassWrapper<LOW_AGGREGATE>, CompilationUnit>> associateFiles(
@@ -86,5 +88,17 @@ public class JarProcessor<LOW_AGGREGATE, LOW_ITEM> {
                 associatedFileRecords.stream().flatMap(methodAssociatingRecordTransformer).collect(Collectors.toList());
 
         return methodRecords;
+    }
+
+    /*
+     * Extract methods's body and related dictionary from methods pair
+     */
+    public List<DecompilationRecordWithDic<List<String>, List<String>, Map<String,String>>> dictionaryExtraction(
+            List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> pairedMethods) {
+
+        List<DecompilationRecordWithDic<List<String>, List<String>, Map<String, String>>> results =
+                pairedMethods.stream().flatMap(dictionaryExtractionRecordTransformer).collect(Collectors.toList());
+
+        return results;
     }
 }
