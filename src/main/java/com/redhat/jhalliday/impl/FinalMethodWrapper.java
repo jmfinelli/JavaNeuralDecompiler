@@ -8,19 +8,21 @@ public abstract class FinalMethodWrapper<T> {
     protected String methodBody;
     protected String name;
 
-    protected final Set<String> toReplace = new LinkedHashSet<>();
+    protected final Set<String> toReplace = new HashSet<>();
 
-    public T getMethod() {
+    public final T getMethod() {
         return method;
     }
 
-    public String getName() { return name; }
+    public final String getName() { return name; }
 
-    public String getMethodBody() {
+    public final String getMethodBody() {
         return methodBody;
     }
 
-    public List<String> getToReplace() { return new ArrayList<>(toReplace); }
+    public final List<String> getToReplace() { return new ArrayList<>(toReplace); }
 
-
+    public final void replaceStringInBody(String target, String newValue) {
+        this.methodBody = this.methodBody.replace(target, newValue);
+    }
 }

@@ -6,11 +6,11 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.metamodel.FieldAccessExprMetaModel;
-import com.redhat.jhalliday.impl.FinalMethodWrapper;
+import com.github.javaparser.printer.PrettyPrinter;
+import com.github.javaparser.printer.PrettyPrinterConfiguration;
+import com.redhat.jhalliday.impl.FinalHighLevelMethodWrapper;
 
-import java.util.LinkedHashSet;
-
-public class MethodDeclarationFinalWrapper extends FinalMethodWrapper<MethodDeclaration> {
+public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {
 
     public MethodDeclarationFinalWrapper(MethodDeclaration method) {
 
@@ -19,19 +19,34 @@ public class MethodDeclarationFinalWrapper extends FinalMethodWrapper<MethodDecl
 
         if (method.getBody().isPresent()) {
 
-            method.getBody().get().findAll(SimpleName.class).forEach(x -> this.toReplace.add(x.asString()));
+            System.out.println("NameExpr");
+            method.getBody().get().findAll(NameExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.getNameAsString()));
+            method.getBody().get().findAll(NameExpr.class).forEach(x -> this.NameExpr.add(x.getNameAsString()));
 
-//            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> this.toReplace.add(x.getName().asString()));
-//            method.getBody().get().findAll(FieldAccessExpr.class).forEach(x -> this.toReplace.add(x.getName().asString()));
-//            method.getBody().get().findAll(ClassOrInterfaceType.class).forEach(x -> this.toReplace.add(x.getName().asString()));
+            System.out.println("MethodCallExpr");
+            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.getName().getIdentifier()));
+            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> this.MethodExpr.add(x.getName().getIdentifier()));
 
-//            System.out.println("EXPRESSION.CLASS");
-//            method.getBody().get().findAll(Expression.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
-//            System.out.println("SIMPLENAME.CLASS");
-//            method.getBody().get().findAll(SimpleName.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.asString()));
-//            System.out.println("NODE.CLASS");
-//            method.getBody().get().findAll(Node.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
-//            System.out.println();
+            System.out.println("LiteralExpr");
+            method.getBody().get().findAll(LiteralExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
+            method.getBody().get().findAll(LiteralExpr.class).forEach(x -> this.LiteralExpr.add(x.toString()));
+
+            System.out.println("ClassExpr");
+            method.getBody().get().findAll(ClassExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString().replace(".class", "")));
+            method.getBody().get().findAll(ClassExpr.class).forEach(x -> this.ClassExpr.add(x.toString().replace(".class", "")));
+
+            this.toReplace.addAll(this.ClassExpr);
+            this.toReplace.addAll(this.LiteralExpr);
+            this.toReplace.addAll(this.MethodExpr);
+            this.toReplace.addAll(this.NameExpr);
+
+            PrettyPrinterConfiguration conf = new PrettyPrinterConfiguration();
+            conf.setPrintComments(false);
+            PrettyPrinter prettyPrinter = new PrettyPrinter();
+            this.methodBody = prettyPrinter.print(method.getBody().get());
+
+            System.out.println("EXPRESSION.CLASS");
+            method.getBody().get().findAll(Expression.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
         }
     }
 }

@@ -2,7 +2,7 @@ package com.redhat.jhalliday.impl.javassist;
 
 import com.redhat.jhalliday.TransformerFunction;
 import com.redhat.jhalliday.impl.ClassWrapper;
-import com.redhat.jhalliday.impl.FinalMethodWrapper;
+import com.redhat.jhalliday.impl.FinalLowLevelMethodWrapper;
 import com.redhat.jhalliday.impl.MethodWrapper;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -10,7 +10,6 @@ import javassist.CtMethod;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.function.Function;
 
 public class JavassistFunctions {
@@ -37,5 +36,5 @@ public class JavassistFunctions {
 
     public static Function<CtMethod, MethodWrapper<CtMethod>> methodWrappingFunction = CtMethodWrapper::new;
 
-    public static Function<CtMethod, FinalMethodWrapper<CtMethod>> finalMethodWrapperFunction = CtMethodFinalWrapper::new;
+    public static Function<CtMethod, FinalLowLevelMethodWrapper<CtMethod>> finalMethodWrapperFunction = CtMethodFinalWrapper::new;
 }

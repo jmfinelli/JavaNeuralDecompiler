@@ -28,10 +28,14 @@ import java.util.*;
  */
 public class ParameterExtractor implements Opcode {
 
+    public final static String LABEL_SYMBOL = "L";
+    public final static String POOL_SYMBOL = "#";
+    public final static String LOC_VAR_SYMBOL = "$";
+
     private final static String SIMPLE_PATTERN = "%s %s";
-    private final static String LABEL_PATTERN = "%s L%s";
-    private final static String POOL_PATTERN = "%s #%s";
-    private final static String LOC_VAR_PATTERN = "%s $%s";
+    private final static String LABEL_PATTERN = String.format("%%s %s%%s", LABEL_SYMBOL);
+    private final static String POOL_PATTERN = String.format("%%s %s%%s", POOL_SYMBOL);
+    private final static String LOC_VAR_PATTERN = String.format("%%s %s%%s", LOC_VAR_SYMBOL);
 
     private final String delimiter;
     private final Map<Integer, String> methodNames = new HashMap<>();
@@ -140,7 +144,7 @@ public class ParameterExtractor implements Opcode {
                 return String.format(LABEL_PATTERN, opstring, (iter.s16bitAt(pos + 1) + pos));
             case IINC:
                 getVariableName(iter, pos, iter.byteAt(pos + 1));
-                return String.format("%s $%d,%d", opstring, iter.byteAt(pos + 1), iter.signedByteAt(pos + 2));
+                return String.format("%s %s%d,%d", opstring, LABEL_SYMBOL, iter.byteAt(pos + 1), iter.signedByteAt(pos + 2));
             case GOTO:
             case JSR:
                 return String.format(LABEL_PATTERN, opstring, (iter.s16bitAt(pos + 1) + pos));
@@ -323,7 +327,7 @@ public class ParameterExtractor implements Opcode {
         for (; index < end; index += 8) {
             int match = iter.s32bitAt(index);
             int target = iter.s32bitAt(index + 4) + pos;
-            buffer.append(match).append("L").append(target).append(";");
+            buffer.append(match).append(LABEL_SYMBOL).append(target).append(";");
         }
 
         buffer.setCharAt(buffer.length() - 1, '}');
@@ -342,7 +346,7 @@ public class ParameterExtractor implements Opcode {
         // Offset table
         for (int key = low; index < end; index += 4, key++) {
             int target = iter.s32bitAt(index) + pos;
-            buffer.append(key).append("L").append(target).append(";");
+            buffer.append(key).append(LABEL_SYMBOL).append(target).append(";");
         }
 
         buffer.setCharAt(buffer.length() - 1, '}');
@@ -353,21 +357,14 @@ public class ParameterExtractor implements Opcode {
 
         int tag = pool.getTag(index);
 
-        switch (tag) {
-            case ConstPool.CONST_String:
-                return Map.entry(index, pool.getStringInfo(index));
-            case ConstPool.CONST_Integer:
-                return Map.entry(index, String.valueOf(pool.getIntegerInfo(index)));
-            case ConstPool.CONST_Float:
-                return Map.entry(index, String.valueOf(pool.getFloatInfo(index)));
-            case ConstPool.CONST_Long:
-                return Map.entry(index, String.valueOf(pool.getLongInfo(index)));
-            case ConstPool.CONST_Double:
-                return Map.entry(index, String.valueOf(pool.getDoubleInfo(index)));
-            case ConstPool.CONST_Class:
-                return classInfo(pool, index);
-            default:
-                throw new RuntimeException("bad LDC: " + tag);
-        }
+        return switch (tag) {
+            case ConstPool.CONST_String -> Map.entry(index, pool.getStringInfo(index));
+            case ConstPool.CONST_Integer -> Map.entry(index, String.valueOf(pool.getIntegerInfo(index)));
+            case ConstPool.CONST_Float -> Map.entry(index, String.valueOf(pool.getFloatInfo(index)));
+            case ConstPool.CONST_Long -> Map.entry(index, String.valueOf(pool.getLongInfo(index)));
+            case ConstPool.CONST_Double -> Map.entry(index, String.valueOf(pool.getDoubleInfo(index)));
+            case ConstPool.CONST_Class -> classInfo(pool, index);
+            default -> throw new RuntimeException("bad LDC: " + tag);
+        };
     }
 }
