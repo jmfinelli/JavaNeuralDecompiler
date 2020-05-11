@@ -2,17 +2,13 @@ package com.redhat.jhalliday.impl;
 
 import java.util.*;
 
-public class FinalMethodWrapper<T> {
+public abstract class FinalMethodWrapper<T> {
 
     protected T method;
     protected String methodBody;
     protected String name;
 
-    protected Map<Integer, String> localVariables;
-    protected Map<Integer, String> classNames;
-    protected Map<Integer, String> fieldNames;
-    protected Map<Integer, String> methodNames;
-    protected Map<Integer, String> constants;
+    protected final Set<String> toReplace = new LinkedHashSet<>();
 
     public T getMethod() {
         return method;
@@ -24,13 +20,7 @@ public class FinalMethodWrapper<T> {
         return methodBody;
     }
 
-    public Map<Integer, String> getLocalVariables() { return localVariables; }
+    public List<String> getToReplace() { return new ArrayList<>(toReplace); }
 
-    public Map<Integer, String> getClassNames() { return classNames; }
 
-    public Map<Integer, String> getFieldNames() { return fieldNames; }
-
-    public Map<Integer, String> getMethodNames() { return methodNames; }
-
-    public Map<Integer, String> getConstants() { return constants; }
 }

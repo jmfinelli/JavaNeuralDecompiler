@@ -94,17 +94,20 @@ public class ParameterExtractor implements Opcode {
             throw new IllegalArgumentException("Invalid opcode, opcode: " + opcode + " pos: "+ pos);
 
         String opstring = opcodes[opcode];
+        Map.Entry<Integer, String> entry;
         switch (opcode) {
             case BIPUSH:
                 return String.format(SIMPLE_PATTERN, opstring, iter.byteAt(pos + 1));
             case SIPUSH:
                 return String.format(SIMPLE_PATTERN, opstring, iter.s16bitAt(pos + 1));
             case LDC:
-                ldc(pool, iter.byteAt(pos + 1)).forEach(constants::putIfAbsent);
+                entry = ldc(pool, iter.byteAt(pos + 1));
+                constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.byteAt(pos + 1));
             case LDC_W:
             case LDC2_W:
-                ldc(pool, iter.u16bitAt(pos + 1)).forEach(constants::putIfAbsent);
+                entry = ldc(pool, iter.u16bitAt(pos + 1));
+                constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case ILOAD:
             case LLOAD:
@@ -151,15 +154,18 @@ public class ParameterExtractor implements Opcode {
             case PUTSTATIC:
             case GETFIELD:
             case PUTFIELD:
-                fieldInfo(pool, iter.u16bitAt(pos + 1)).forEach(fieldNames::putIfAbsent);
+                entry = fieldInfo(pool, iter.u16bitAt(pos + 1));
+                fieldNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEVIRTUAL:
             case INVOKESPECIAL:
             case INVOKESTATIC:
-                methodInfo(pool, iter.u16bitAt(pos + 1)).forEach(methodNames::putIfAbsent);
+                entry = methodInfo(pool, iter.u16bitAt(pos + 1));
+                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEINTERFACE:
-                interfaceMethodInfo(pool, iter.u16bitAt(pos + 1)).forEach(methodNames::putIfAbsent);
+                entry = interfaceMethodInfo(pool, iter.u16bitAt(pos + 1));
+                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEDYNAMIC:
                 return String.format(SIMPLE_PATTERN, opstring, iter.u16bitAt(pos + 1));
@@ -171,7 +177,8 @@ public class ParameterExtractor implements Opcode {
             case ANEWARRAY:
             case CHECKCAST:
             case MULTIANEWARRAY:
-                classInfo(pool, iter.u16bitAt(pos + 1)).forEach(classNames::putIfAbsent);
+                entry = classInfo(pool, iter.u16bitAt(pos + 1));
+                classNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case WIDE:
                 return wide(iter, pos);
@@ -238,8 +245,12 @@ public class ParameterExtractor implements Opcode {
                 if (localVariableTable.index(i) == index) {
                     int start = localVariableTable.startPc(i);
                     int end = start + localVariableTable.codeLength(i);
-                    if (current >= start - 2 && current < end)
-                        result.put(index, localVariableTable.variableName(i));
+                    if (current >= start - 2 && current < end) {
+                        String variableName = localVariableTable.variableName(i);
+                        if (!variableName.equals("this")) {
+                            result.put(index, localVariableTable.variableName(i));
+                        }
+                    }
                 }
             }
         }
@@ -270,40 +281,35 @@ public class ParameterExtractor implements Opcode {
         };
     }
 
-    private static Map<Integer, String> classInfo(ConstPool pool, int index) {
-        Map<Integer, String> result = new HashMap<>();
-        result.put(index, pool.getClassInfo(index));
-        return result;
+    private static Map.Entry<Integer, String> classInfo(ConstPool pool, int index) {
+        return Map.entry(index, pool.getClassInfo(index));
     }
 
-    private static Map<Integer, String> interfaceMethodInfo(ConstPool pool, int index) {
-        Map<Integer, String> result = new HashMap<>();
-        result.put(index, String.format("%s.%s(%s)",
-                pool.getInterfaceMethodrefClassName(index),
-                pool.getInterfaceMethodrefName(index),
-                pool.getInterfaceMethodrefType(index)));
+    private static Map.Entry<Integer, String> interfaceMethodInfo(ConstPool pool, int index) {
+//        result.put(index, String.format("%s.%s(%s)",
+//                pool.getInterfaceMethodrefClassName(index),
+//                pool.getInterfaceMethodrefName(index),
+//                pool.getInterfaceMethodrefType(index)));
 
-        return result;
+        return Map.entry(index, pool.getInterfaceMethodrefName(index));
     }
 
-    private static Map<Integer, String> methodInfo(ConstPool pool, int index) {
-        Map<Integer, String> result = new HashMap<>();
-        result.put(index, String.format("%s.%s(%s)",
-                pool.getMethodrefClassName(index),
-                pool.getMethodrefName(index),
-                pool.getMethodrefType(index)));
+    private static Map.Entry<Integer, String> methodInfo(ConstPool pool, int index) {
+//        result.put(index, String.format("%s.%s(%s)",
+//                pool.getMethodrefClassName(index),
+//                pool.getMethodrefName(index),
+//                pool.getMethodrefType(index)));
 
-        return result;
+        return Map.entry(index, pool.getMethodrefName(index));
     }
 
-    private static Map<Integer, String> fieldInfo(ConstPool pool, int index) {
-        Map<Integer, String> result = new HashMap<>();
-        result.put(index, String.format("%s.%s(%s)",
-                pool.getFieldrefClassName(index),
-                pool.getFieldrefName(index),
-                pool.getFieldrefType(index)));
+    private static Map.Entry<Integer, String> fieldInfo(ConstPool pool, int index) {
+//        result.put(index, String.format("%s.%s(%s)",
+//                pool.getFieldrefClassName(index),
+//                pool.getFieldrefName(index),
+//                pool.getFieldrefType(index)));
 
-        return result;
+        return Map.entry(index, pool.getFieldrefName(index));
     }
 
     private static String lookupSwitch(CodeIterator iter, int pos) {
@@ -343,27 +349,21 @@ public class ParameterExtractor implements Opcode {
         return buffer.toString();
     }
 
-    private static Map<Integer, String> ldc(ConstPool pool, int index) {
+    private static Map.Entry<Integer, String> ldc(ConstPool pool, int index) {
 
-        Map<Integer, String> result = new HashMap<>();
         int tag = pool.getTag(index);
 
         switch (tag) {
             case ConstPool.CONST_String:
-                result.put(index, pool.getStringInfo(index));
-                return result;
+                return Map.entry(index, pool.getStringInfo(index));
             case ConstPool.CONST_Integer:
-                result.putIfAbsent(index, String.valueOf(pool.getIntegerInfo(index)));
-                return result;
+                return Map.entry(index, String.valueOf(pool.getIntegerInfo(index)));
             case ConstPool.CONST_Float:
-                result.put(index, String.valueOf(pool.getFloatInfo(index)));
-                return result;
+                return Map.entry(index, String.valueOf(pool.getFloatInfo(index)));
             case ConstPool.CONST_Long:
-                result.put(index, String.valueOf(pool.getLongInfo(index)));
-                return result;
+                return Map.entry(index, String.valueOf(pool.getLongInfo(index)));
             case ConstPool.CONST_Double:
-                result.put(index, String.valueOf(pool.getDoubleInfo(index)));
-                return result;
+                return Map.entry(index, String.valueOf(pool.getDoubleInfo(index)));
             case ConstPool.CONST_Class:
                 return classInfo(pool, index);
             default:
