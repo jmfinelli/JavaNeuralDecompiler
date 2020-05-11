@@ -47,7 +47,7 @@ public class CtMethodToBodyTransformerFunction implements TransformerFunction<Ct
                 throw new RuntimeException(e);
             }
 
-            tokens.add(InstructionPrinter.instructionString(iterator, pos, pool));
+            tokens.add(InstructionPrinterMod.instructionString(iterator, pos, pool));
         }
 
         tokens.forEach(System.out::println);

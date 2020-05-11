@@ -6,7 +6,6 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
-import com.redhat.jhalliday.impl.asm.AsmFunctions;
 import com.redhat.jhalliday.impl.javaparser.*;
 import com.redhat.jhalliday.impl.javassist.CtMethodToBodyTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
@@ -60,8 +59,10 @@ public class Driver {
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
                 new DictionaryExtractionRecordTransformer<>(
-                        new CtMethodToBodyTransformerFunction(),
-                        new MethodDeclarationToBodyTransformerFunction()
+                        JavassistFunctions.finalMethodWrapperFunction,
+                        //new CtMethodToBodyTransformerFunction(),
+                        JavaParserFunctions.finalMethodWrapperFunction
+                        //new MethodDeclarationToBodyTransformerFunction()
                 )
         );
 
@@ -81,6 +82,8 @@ public class Driver {
 
             List<DecompilationRecordWithDic<List<String>, List<String>, Map<String, String>>> shreddedRecords =
                     jarProcessor.dictionaryExtraction(methodRecords);
+
+            System.out.println("S");
         }
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);

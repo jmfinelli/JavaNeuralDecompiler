@@ -16,8 +16,6 @@ public class InstructionPrinterMod implements Opcode {
 
     private final static String opcodes[] = Mnemonic.OPCODE;
     private final PrintStream stream;
-    private final Map<Integer, Integer> _references = new HashMap<>();
-    private final int placeholder = 0;
 
     /**
      * Constructs a <code>InstructionPrinter</code> object.
@@ -217,7 +215,7 @@ public class InstructionPrinterMod implements Opcode {
 
 
     private static String lookupSwitch(CodeIterator iter, int pos) {
-        StringBuffer buffer = new StringBuffer("lookupswitch {");
+        StringBuilder buffer = new StringBuilder("lookupswitch {");
         int index = (pos & ~3) + 4;
         // default
         buffer.append("default:").append(pos + iter.s32bitAt(index)).append(";");
@@ -236,7 +234,7 @@ public class InstructionPrinterMod implements Opcode {
 
 
     private static String tableSwitch(CodeIterator iter, int pos) {
-        StringBuffer buffer = new StringBuffer("tableswitch {");
+        StringBuilder buffer = new StringBuilder("tableswitch {");
         int index = (pos & ~3) + 4;
         // default
         buffer.append("default:").append(pos + iter.s32bitAt(index)).append(";");
@@ -257,21 +255,14 @@ public class InstructionPrinterMod implements Opcode {
 
     private static String ldc(ConstPool pool, int index) {
         int tag = pool.getTag(index);
-        switch (tag) {
-            case ConstPool.CONST_String:
-                return "#" + index;
-            case ConstPool.CONST_Integer:
-                return "#" + index;
-            case ConstPool.CONST_Float:
-                return "#" + index;
-            case ConstPool.CONST_Long:
-                return "#" + index;
-            case ConstPool.CONST_Double:
-                return "#" + index;
-            case ConstPool.CONST_Class:
-                return classInfo(pool, index);
-            default:
-                throw new RuntimeException("bad LDC: " + tag);
-        }
+        return switch (tag) {
+            case ConstPool.CONST_String -> "#" + index;
+            case ConstPool.CONST_Integer -> "#" + index;
+            case ConstPool.CONST_Float -> "#" + index;
+            case ConstPool.CONST_Long -> "#" + index;
+            case ConstPool.CONST_Double -> "#" + index;
+            case ConstPool.CONST_Class -> classInfo(pool, index);
+            default -> throw new RuntimeException("bad LDC: " + tag);
+        };
     }
 }
