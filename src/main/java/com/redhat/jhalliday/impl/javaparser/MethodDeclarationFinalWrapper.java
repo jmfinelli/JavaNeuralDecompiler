@@ -19,20 +19,20 @@ public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {
 
         if (method.getBody().isPresent()) {
 
-            System.out.println("NameExpr");
-            method.getBody().get().findAll(NameExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.getNameAsString()));
+//            System.out.println("NameExpr");
+//            method.getBody().get().findAll(NameExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.getNameAsString()));
             method.getBody().get().findAll(NameExpr.class).forEach(x -> this.NameExpr.add(x.getNameAsString()));
 
-            System.out.println("MethodCallExpr");
-            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.getName().getIdentifier()));
+//            System.out.println("MethodCallExpr");
+//            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.getName().getIdentifier()));
             method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> this.MethodExpr.add(x.getName().getIdentifier()));
 
-            System.out.println("LiteralExpr");
-            method.getBody().get().findAll(LiteralExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
+//            System.out.println("LiteralExpr");
+//            method.getBody().get().findAll(LiteralExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
             method.getBody().get().findAll(LiteralExpr.class).forEach(x -> this.LiteralExpr.add(x.toString()));
 
-            System.out.println("ClassExpr");
-            method.getBody().get().findAll(ClassExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString().replace(".class", "")));
+//            System.out.println("ClassExpr");
+//            method.getBody().get().findAll(ClassExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString().replace(".class", "")));
             method.getBody().get().findAll(ClassExpr.class).forEach(x -> this.ClassExpr.add(x.toString().replace(".class", "")));
 
             this.toReplace.addAll(this.ClassExpr);
@@ -42,11 +42,16 @@ public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {
 
             PrettyPrinterConfiguration conf = new PrettyPrinterConfiguration();
             conf.setPrintComments(false);
-            PrettyPrinter prettyPrinter = new PrettyPrinter();
+            conf.setEndOfLineCharacter(" ");
+            conf.setColumnAlignFirstMethodChain(false);
+            conf.setIndentCaseInSwitch(false);
+            conf.setIndentSize(0);
+
+            PrettyPrinter prettyPrinter = new PrettyPrinter(conf);
             this.methodBody = prettyPrinter.print(method.getBody().get());
 
-            System.out.println("EXPRESSION.CLASS");
-            method.getBody().get().findAll(Expression.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
+//            System.out.println("EXPRESSION.CLASS");
+//            method.getBody().get().findAll(Expression.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));
         }
     }
 }

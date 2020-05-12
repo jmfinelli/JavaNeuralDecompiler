@@ -8,21 +8,32 @@ import com.redhat.jhalliday.impl.javaparser.CompilationUnitCreationTransformerFu
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class JarProcessor<LOW_AGGREGATE, LOW_ITEM> {
+public class JarProcessor<
+        LOW_AGGREGATE,
+        LOW_ITEM,
+        EXTRACTOR extends Function<
+                DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>,
+                Stream<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper, Map<String, String>>>>
+        > {
 
     private final TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction;
     private final MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM, MethodDeclaration> methodAssociatingRecordTransformer;
-    private final DictionaryExtractionRecordTransformer<LOW_ITEM> dictionaryExtractionRecordTransformer;
+    private final FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer;
+    private final EXTRACTOR extractorRecordTransformer;
 
     public JarProcessor(
             TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction,
             MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM, MethodDeclaration> methodAssociatingRecordTransformer,
-            DictionaryExtractionRecordTransformer<LOW_ITEM> dictionaryExtractionRecordTransformer) {
+            FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer,
+            EXTRACTOR extractorRecordTransformer) {
         this.classParsingFunction = classParsingFunction;
         this.methodAssociatingRecordTransformer = methodAssociatingRecordTransformer;
-        this.dictionaryExtractionRecordTransformer = dictionaryExtractionRecordTransformer;
+        this.finalWrapperRecordTransformer = finalWrapperRecordTransformer;
+        this.extractorRecordTransformer = extractorRecordTransformer;
     }
 
     public List<DecompilationRecord<ClassWrapper<LOW_AGGREGATE>, CompilationUnit>> associateFiles(
@@ -90,14 +101,23 @@ public class JarProcessor<LOW_AGGREGATE, LOW_ITEM> {
         return methodRecords;
     }
 
+    public List<DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>> finalWrapper(
+            List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> pairedMethods) {
+
+        List<DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>> results =
+                pairedMethods.stream().flatMap(finalWrapperRecordTransformer).collect(Collectors.toList());
+
+        return results;
+    }
+
     /*
      * Extract methods's body and related dictionary from methods pair
      */
-    public List<DecompilationRecordWithDic<List<String>, List<String>, Map<String,String>>> dictionaryExtraction(
-            List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> pairedMethods) {
+    public List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper, Map<String,String>>> dictionaryExtraction(
+            List<DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>> pairedMethods) {
 
-        List<DecompilationRecordWithDic<List<String>, List<String>, Map<String, String>>> results =
-                pairedMethods.stream().flatMap(dictionaryExtractionRecordTransformer).collect(Collectors.toList());
+        List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper, Map<String,String>>> results =
+                pairedMethods.stream().flatMap(extractorRecordTransformer).collect(Collectors.toList());
 
         return results;
     }

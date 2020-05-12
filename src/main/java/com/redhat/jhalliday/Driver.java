@@ -13,10 +13,12 @@ import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 import javassist.CtClass;
 import javassist.CtMethod;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Driver {
 
@@ -49,7 +51,7 @@ public class Driver {
 //                        JavaParserFunctions.methodWrappingFunction)
 //        );
 
-        JarProcessor<CtClass,CtMethod> jarProcessor = new JarProcessor<>(
+        JarProcessor<CtClass,CtMethod, DictionaryExtractionRecordTransformer<CtMethod>> jarProcessor = new JarProcessor<>(
                 new ClassWrapperCreationTransformerFunction<>(
                         JavassistFunctions.classCreationFunction,
                         JavassistFunctions.classWrappingFunction),
@@ -58,19 +60,19 @@ public class Driver {
                         JavassistFunctions.methodWrappingFunction,
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
-                new DictionaryExtractionRecordTransformer<>(
+                new FinalWrapperRecordTransformer<>(
                         JavassistFunctions.finalMethodWrapperFunction,
-                        //new CtMethodToBodyTransformerFunction(),
-                        JavaParserFunctions.finalMethodWrapperFunction
-                        //new MethodDeclarationToBodyTransformerFunction()
-                )
+                        JavaParserFunctions.finalMethodWrapperFunction),
+                new DictionaryExtractionRecordTransformer<>()
         );
 
         int files = 0;
         int methods = 0;
-        int dictionary = 0;
+
+        Set<String> lowLevelDictionary = new HashSet<>();
+        Set<String> highLevelDictionary = new HashSet<>();
+
         for (DecompilationRecord<File, File> decompilationRecord : jarRecords) {
-            //System.out.println(decompilationRecord.getHighLevelRepresentation().getAbsolutePath());
 
             List<DecompilationRecord<ClassWrapper<CtClass>, CompilationUnit>> filePairs =
                     jarProcessor.associateFiles(decompilationRecord);
@@ -80,14 +82,24 @@ public class Driver {
                     jarProcessor.associateMethods(filePairs);
             methods += methodRecords.size();
 
-            List<DecompilationRecordWithDic<List<String>, List<String>, Map<String, String>>> shreddedRecords =
-                    jarProcessor.dictionaryExtraction(methodRecords);
+            List<DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper>> finalWrappedMethods =
+                    jarProcessor.finalWrapper(methodRecords);
 
-            System.out.println("S");
+            for (DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper> record : finalWrappedMethods) {
+                lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getMethodBody().split(" ")));
+                highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
+            }
+
+            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
+                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
+
         }
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);
         System.out.printf("Found %d method pairs\n", methods);
+
+        System.out.printf("The low level dictionary is composed by %d words\n", lowLevelDictionary.size());
+        System.out.printf("The high level dictionary is composed by %d words\n", highLevelDictionary.size());
 
         long end = System.currentTimeMillis();
         System.out.printf("Runtime %d ms", end-start);

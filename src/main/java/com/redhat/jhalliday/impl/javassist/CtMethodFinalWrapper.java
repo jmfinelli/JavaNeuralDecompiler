@@ -7,10 +7,10 @@ public class CtMethodFinalWrapper extends FinalLowLevelMethodWrapper<CtMethod> {
 
     public CtMethodFinalWrapper(CtMethod method) {
 
-        ParameterExtractor exprExtractor = new ParameterExtractor(method, "\n");
-
         this.method = method;
         this.name = method.getLongName();
+
+        ParameterExtractor exprExtractor = new ParameterExtractor(method, " ");
 
         this.localVariables = exprExtractor.getVariableNames();
         this.methodNames = exprExtractor.getMethodNames();
