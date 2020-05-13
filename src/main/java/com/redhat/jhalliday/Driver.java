@@ -90,8 +90,8 @@ public class Driver {
                 highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
             }
 
-            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
-                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
+//            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
+//                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
 
         }
 

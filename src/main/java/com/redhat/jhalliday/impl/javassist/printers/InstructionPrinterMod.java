@@ -1,8 +1,6 @@
-package com.redhat.jhalliday.impl.javassist;
+package com.redhat.jhalliday.impl.javassist.printers;
 
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import javassist.CtMethod;
 import javassist.bytecode.*;

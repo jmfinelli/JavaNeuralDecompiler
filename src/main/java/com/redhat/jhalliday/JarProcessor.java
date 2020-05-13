@@ -78,6 +78,13 @@ public class JarProcessor<
         List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>> fullyParsed =
                 semiParsed.stream().flatMap(compilationUnitBuildingTransformer).collect(Collectors.toList());
 
+//        CompositeBiFunctionTransformer<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>
+//                compilationUnitBuildingTransformer = new CompositeBiFunctionTransformer<>(
+//                        new IdentityTransformerFunction<>(),
+//                        new CompilationUnitCreationWithSolverTransformerFunction());
+//        List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>> fullyParsed =
+//                semiParsed.stream().flatMap(compilationUnitBuildingTransformer).collect(Collectors.toList());
+
         /*
          * Now we can pair up the individual .class and .java files, using the source file name from the .class
          */

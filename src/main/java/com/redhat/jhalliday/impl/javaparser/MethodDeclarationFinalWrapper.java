@@ -1,13 +1,9 @@
 package com.redhat.jhalliday.impl.javaparser;
 
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import com.github.javaparser.metamodel.FieldAccessExprMetaModel;
-import com.github.javaparser.printer.PrettyPrinter;
-import com.github.javaparser.printer.PrettyPrinterConfiguration;
+import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterMod;
+import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterConfigurationMod;
 import com.redhat.jhalliday.impl.FinalHighLevelMethodWrapper;
 
 public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {
@@ -40,14 +36,14 @@ public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {
             this.toReplace.addAll(this.MethodExpr);
             this.toReplace.addAll(this.NameExpr);
 
-            PrettyPrinterConfiguration conf = new PrettyPrinterConfiguration();
+            PrettyPrinterConfigurationMod conf = new PrettyPrinterConfigurationMod();
             conf.setPrintComments(false);
             conf.setEndOfLineCharacter(" ");
             conf.setColumnAlignFirstMethodChain(false);
             conf.setIndentCaseInSwitch(false);
             conf.setIndentSize(0);
 
-            PrettyPrinter prettyPrinter = new PrettyPrinter(conf);
+            PrettyPrinterMod prettyPrinter = new PrettyPrinterMod(conf);
             this.methodBody = prettyPrinter.print(method.getBody().get());
 
 //            System.out.println("EXPRESSION.CLASS");

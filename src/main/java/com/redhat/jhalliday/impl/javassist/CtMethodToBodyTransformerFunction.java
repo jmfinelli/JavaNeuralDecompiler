@@ -1,15 +1,11 @@
 package com.redhat.jhalliday.impl.javassist;
 
 import com.redhat.jhalliday.TransformerFunction;
-import javassist.CannotCompileException;
+import com.redhat.jhalliday.impl.javassist.printers.InstructionPrinterMod;
 import javassist.CtMethod;
 import javassist.bytecode.*;
-import javassist.expr.Expr;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 

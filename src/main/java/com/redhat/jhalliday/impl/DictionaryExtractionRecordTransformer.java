@@ -1,20 +1,9 @@
 package com.redhat.jhalliday.impl;
 
-import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.DecompilationRecordWithDic;
-import com.redhat.jhalliday.impl.javassist.ParameterExtractor;
+import com.redhat.jhalliday.impl.javassist.printers.ParameterExtractor;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,35 +26,8 @@ public class DictionaryExtractionRecordTransformer<LOW_INPUT> implements Functio
 
         // Set up the environment
 
-        DecompilationRecord previous = decompilationRecord.getPredecessor();
-        while (!(previous.getHighLevelRepresentation() instanceof File)) {
-            previous = previous.getPredecessor();
-        }
-
-        TypeSolver jarTypeSolver = null;
-        TypeSolver reflectionTypeSolver = new ReflectionTypeSolver();
-        reflectionTypeSolver.setParent(reflectionTypeSolver);
-        try {
-            jarTypeSolver = new JarTypeSolver((File)previous.getHighLevelRepresentation());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
-        if (jarTypeSolver != null)
-            combinedTypeSolver.add(jarTypeSolver);
-        combinedTypeSolver.add(reflectionTypeSolver);
-
-        JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
-
         FinalLowLevelMethodWrapper<LOW_INPUT> wrappedLowLevelMethod = decompilationRecord.getLowLevelRepresentation();
         FinalHighLevelMethodWrapper wrappedHighLevelMethod = decompilationRecord.getHighLevelRepresentation();
-
-        ParserConfiguration configuration = new ParserConfiguration();
-        configuration.setSymbolResolver(symbolSolver);
-        StaticJavaParser.setConfiguration(configuration);
-
-        StaticJavaParser.parse(wrappedHighLevelMethod.methodBody);
 
         // TODO: use the functional-programming paradigm here to try out different logics.
 
