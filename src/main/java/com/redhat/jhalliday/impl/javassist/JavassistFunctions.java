@@ -37,4 +37,5 @@ public class JavassistFunctions {
     public static Function<CtMethod, MethodWrapper<CtMethod>> methodWrappingFunction = CtMethodWrapper::new;
 
     public static Function<CtMethod, FinalLowLevelMethodWrapper<CtMethod>> finalMethodWrapperFunction = CtMethodFinalWrapper::new;
+
 }

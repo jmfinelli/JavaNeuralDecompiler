@@ -16,17 +16,22 @@ package com.redhat.jhalliday.impl.javassist.printers;
  * License.
  */
 
+import com.redhat.jhalliday.impl.LowInfoExtractor;
 import javassist.CtMethod;
 import javassist.bytecode.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Simple utility class for printing the bytecode instructions of a method.
  *
  * @author Jason T. Greene
  */
-public class ParameterExtractor implements Opcode {
+public class MyInfoExtractor implements Opcode, LowInfoExtractor {
 
     public final static String LABEL_SYMBOL = "L";
     public final static String POOL_SYMBOL = "#";
@@ -37,7 +42,10 @@ public class ParameterExtractor implements Opcode {
     private final static String POOL_PATTERN = String.format("%%s %s%%s", POOL_SYMBOL);
     private final static String LOC_VAR_PATTERN = String.format("%%s %s%%s", LOC_VAR_SYMBOL);
 
-    private final String delimiter;
+    private final static String DELIMITER = " ";
+
+    private final static String opcodes[] = Mnemonic.OPCODE;
+
     private final Map<Integer, String> methodNames = new HashMap<>();
     private final Map<Integer, String> classNames = new HashMap<>();
     private final Map<Integer, String> constants = new HashMap<>();
@@ -45,16 +53,9 @@ public class ParameterExtractor implements Opcode {
     private final Map<Integer, String> variableNames = new HashMap<>();
     private final List<String> body = new LinkedList<>();
 
-    private final static String opcodes[] = Mnemonic.OPCODE;
+    public MyInfoExtractor(CtMethod ctMethod) {
 
-    private final CtMethod method;
-
-    public ParameterExtractor(CtMethod method, String delimiter) {
-
-        this.method = method;
-        this.delimiter = delimiter;
-
-        final MethodInfo methodInfo = method.getMethodInfo();
+        final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();
         final CodeAttribute code = methodInfo.getCodeAttribute();
         final CodeIterator iterator = code.iterator();
@@ -71,21 +72,23 @@ public class ParameterExtractor implements Opcode {
         }
     }
 
-    /*
-     * GETTERS
-     */
-
+    @Override
     public Map<Integer, String> getMethodNames() { return methodNames; }
 
+    @Override
     public Map<Integer, String> getClassNames() { return classNames; }
 
+    @Override
     public Map<Integer, String> getConstants() { return constants; }
 
+    @Override
     public Map<Integer, String> getFieldNames() { return fieldNames; }
 
+    @Override
     public Map<Integer, String> getVariableNames() { return variableNames; }
 
-    public String getBody() { return String.join(this.delimiter, body); }
+    @Override
+    public String getBody() { return String.join(DELIMITER, body); }
 
     /**
      * Gets a string representation of the bytecode instruction at the specified
@@ -105,13 +108,13 @@ public class ParameterExtractor implements Opcode {
             case SIPUSH:
                 return String.format(SIMPLE_PATTERN, opstring, iter.s16bitAt(pos + 1));
             case LDC:
-                entry = ldc(pool, iter.byteAt(pos + 1));
-                constants.putIfAbsent(entry.getKey(), entry.getValue());
+                //entry = ldc(pool, iter.byteAt(pos + 1));
+                //constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.byteAt(pos + 1));
             case LDC_W:
             case LDC2_W:
-                entry = ldc(pool, iter.u16bitAt(pos + 1));
-                constants.putIfAbsent(entry.getKey(), entry.getValue());
+                //entry = ldc(pool, iter.u16bitAt(pos + 1));
+                //constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case ILOAD:
             case LLOAD:
@@ -124,8 +127,8 @@ public class ParameterExtractor implements Opcode {
             case DSTORE:
             case ASTORE:
                 entry = getVariableName(iter, pos, iter.byteAt(pos + 1));
-                if (!entry.getValue().isEmpty())
-                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
+//                if (!entry.getValue().isEmpty())
+//                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(LOC_VAR_PATTERN, opstring, entry.getKey());
             case IFEQ:
             case IFGE:
@@ -146,8 +149,8 @@ public class ParameterExtractor implements Opcode {
                 return String.format(LABEL_PATTERN, opstring, (iter.s16bitAt(pos + 1) + pos));
             case IINC:
                 entry = getVariableName(iter, pos, iter.byteAt(pos + 1));
-                if (!entry.getValue().isEmpty())
-                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
+//                if (!entry.getValue().isEmpty())
+//                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format("%s %s%d,%d", opstring, LOC_VAR_SYMBOL, entry.getKey(), iter.signedByteAt(pos + 2));
             case GOTO:
             case JSR:
@@ -162,18 +165,18 @@ public class ParameterExtractor implements Opcode {
             case PUTSTATIC:
             case GETFIELD:
             case PUTFIELD:
-                entry = fieldInfo(pool, iter.u16bitAt(pos + 1));
-                fieldNames.putIfAbsent(entry.getKey(), entry.getValue());
+                //entry = fieldInfo(pool, iter.u16bitAt(pos + 1));
+                //fieldNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEVIRTUAL:
             case INVOKESPECIAL:
             case INVOKESTATIC:
-                entry = methodInfo(pool, iter.u16bitAt(pos + 1));
-                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
+                //entry = methodInfo(pool, iter.u16bitAt(pos + 1));
+                //methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEINTERFACE:
-                entry = interfaceMethodInfo(pool, iter.u16bitAt(pos + 1));
-                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
+                //entry = interfaceMethodInfo(pool, iter.u16bitAt(pos + 1));
+                //methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEDYNAMIC:
                 return String.format(SIMPLE_PATTERN, opstring, iter.u16bitAt(pos + 1));
@@ -185,8 +188,8 @@ public class ParameterExtractor implements Opcode {
             case ANEWARRAY:
             case CHECKCAST:
             case MULTIANEWARRAY:
-                entry = classInfo(pool, iter.u16bitAt(pos + 1));
-                classNames.putIfAbsent(entry.getKey(), entry.getValue());
+                //entry = classInfo(pool, iter.u16bitAt(pos + 1));
+                //classNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case WIDE:
                 return wide(iter, pos);

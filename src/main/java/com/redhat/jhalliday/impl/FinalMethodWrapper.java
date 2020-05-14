@@ -1,20 +1,17 @@
 package com.redhat.jhalliday.impl;
 
 import java.util.*;
+import java.util.function.Function;
 
 public abstract class FinalMethodWrapper<T> {
 
     protected T method;
     protected String methodBody;
-    protected String name;
-
     protected final Set<String> toReplace = new HashSet<>();
 
     public final T getMethod() {
         return method;
     }
-
-    public final String getName() { return name; }
 
     public final String getMethodBody() {
         return methodBody;

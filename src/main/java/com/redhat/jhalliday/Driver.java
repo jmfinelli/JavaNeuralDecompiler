@@ -7,18 +7,14 @@ import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
 import com.redhat.jhalliday.impl.javaparser.*;
-import com.redhat.jhalliday.impl.javassist.CtMethodToBodyTransformerFunction;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import javassist.CtClass;
 import javassist.CtMethod;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Driver {
 

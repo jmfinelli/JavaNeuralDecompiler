@@ -2,7 +2,7 @@ package com.redhat.jhalliday.impl;
 
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.DecompilationRecordWithDic;
-import com.redhat.jhalliday.impl.javassist.printers.ParameterExtractor;
+import com.redhat.jhalliday.impl.javassist.printers.MyInfoExtractor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,13 +31,13 @@ public class DictionaryExtractionRecordTransformer<LOW_INPUT> implements Functio
 
         // TODO: use the functional-programming paradigm here to try out different logics.
 
-        List<Integer> indexes = new ArrayList<>(wrappedLowLevelMethod.getLocalVariables().keySet());
+        List<Integer> indexes = new ArrayList<>(wrappedLowLevelMethod.getVariableNames().keySet());
         for (Integer variableIndex : indexes) {
-            String variableName = wrappedLowLevelMethod.getLocalVariables().get(variableIndex);
-            if (wrappedHighLevelMethod.getNameExpr().contains(variableName)) {
+            String variableName = wrappedLowLevelMethod.getVariableNames().get(variableIndex);
+            if (wrappedHighLevelMethod.getNameExprNames().contains(variableName)) {
                 String placeHolder = String.format("%s_%d", VAR_PREFIX, variableIndex);
-                dictionary.putIfAbsent(ParameterExtractor.LOC_VAR_SYMBOL + variableIndex, placeHolder);
-                wrappedLowLevelMethod.replaceStringInBody(ParameterExtractor.LOC_VAR_SYMBOL + variableIndex, placeHolder);
+                dictionary.putIfAbsent(MyInfoExtractor.LOC_VAR_SYMBOL + variableIndex, placeHolder);
+                wrappedLowLevelMethod.replaceStringInBody(MyInfoExtractor.LOC_VAR_SYMBOL + variableIndex, placeHolder);
                 wrappedHighLevelMethod.replaceStringInBody(variableName, placeHolder);
             }
         }
@@ -46,10 +46,10 @@ public class DictionaryExtractionRecordTransformer<LOW_INPUT> implements Functio
         for (int i = 0; i < indexes.size(); i++) {
             Integer methodIndex = indexes.get(i);
             String methodName = wrappedLowLevelMethod.getMethodNames().get(methodIndex);
-            if (wrappedHighLevelMethod.getMethodExpr().contains(methodName)) {
+            if (wrappedHighLevelMethod.getMethodExprNames().contains(methodName)) {
                 String placeHolder = String.format("%s_%d", METHOD_PREFIX, i);
-                dictionary.putIfAbsent(ParameterExtractor.POOL_SYMBOL + methodIndex, placeHolder);
-                wrappedLowLevelMethod.replaceStringInBody(ParameterExtractor.POOL_SYMBOL + methodIndex, placeHolder);
+                dictionary.putIfAbsent(MyInfoExtractor.POOL_SYMBOL + methodIndex, placeHolder);
+                wrappedLowLevelMethod.replaceStringInBody(MyInfoExtractor.POOL_SYMBOL + methodIndex, placeHolder);
                 wrappedHighLevelMethod.replaceStringInBody(methodName, placeHolder);
             }
         }

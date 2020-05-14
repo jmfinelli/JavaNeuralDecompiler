@@ -3,19 +3,38 @@ package com.redhat.jhalliday.impl;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
 import java.util.*;
+import java.util.function.Function;
 
 public abstract class FinalHighLevelMethodWrapper extends FinalMethodWrapper<MethodDeclaration> {
 
-    protected Set<String> NameExpr = new HashSet<>();
-    protected Set<String> ClassExpr = new HashSet<>();
-    protected Set<String> MethodExpr = new HashSet<>();
-    protected Set<String> LiteralExpr = new HashSet<>();
+    protected Set<String> NameExprNames;
+    protected Set<String> ClassExprNames;
+    protected Set<String> MethodExprNames;
+    protected Set<String> LiteralExprNames;
 
-    public Set<String> getNameExpr() { return NameExpr; }
+    public FinalHighLevelMethodWrapper(MethodDeclaration method, Function<MethodDeclaration, HighInfoExtractor> methodBodyExtractor) {
 
-    public Set<String> getClassExpr() { return ClassExpr; }
+        this.method = method;
+        HighInfoExtractor info = methodBodyExtractor.apply(method);
 
-    public Set<String> getMethodExpr() { return MethodExpr; }
+        NameExprNames = info.getNameExprNames();
+        ClassExprNames = info.getClassExprNames();
+        MethodExprNames = info.getMethodExprNames();
+        LiteralExprNames = info.getLiteralExprNames();
 
-    public Set<String> getLiteralExpr() { return LiteralExpr; }
+        this.toReplace.addAll(this.ClassExprNames);
+        this.toReplace.addAll(this.LiteralExprNames);
+        this.toReplace.addAll(this.MethodExprNames);
+        this.toReplace.addAll(this.NameExprNames);
+
+        this.methodBody = info.getBody();
+    }
+
+    public Set<String> getNameExprNames() { return NameExprNames; }
+
+    public Set<String> getClassExprNames() { return ClassExprNames; }
+
+    public Set<String> getMethodExprNames() { return MethodExprNames; }
+
+    public Set<String> getLiteralExprNames() { return LiteralExprNames; }
 }

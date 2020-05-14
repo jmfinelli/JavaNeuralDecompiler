@@ -4,6 +4,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.redhat.jhalliday.impl.FinalHighLevelMethodWrapper;
 import com.redhat.jhalliday.impl.MethodWrapper;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class JavaParserFunctions {

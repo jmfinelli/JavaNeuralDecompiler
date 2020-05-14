@@ -22,28 +22,51 @@ package com.redhat.jhalliday.impl.javaparser.printer;
  */
 
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitor;
+import com.redhat.jhalliday.impl.HighInfoExtractor;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Pretty printer for AST nodes.
  */
-public class PrettyPrinterMod {
+public class PrettyPrinterMod implements HighInfoExtractor {
+
     private final PrettyPrinterConfigurationMod configuration;
+    private final String body;
 
-    public PrettyPrinterMod() {
-        this(new PrettyPrinterConfigurationMod());
+    public PrettyPrinterMod(MethodDeclaration methodDeclaration) {
+
+        this.configuration = new PrettyPrinterConfigurationMod();
+        this.configuration.setExtraWhiteSpace(true);
+        this.configuration.setPrintComments(false);
+        this.configuration.setEndOfLineCharacter(" ");
+        this.configuration.setColumnAlignFirstMethodChain(false);
+        this.configuration.setIndentCaseInSwitch(false);
+        this.configuration.setIndentSize(0);
+
+        final VoidVisitor<Void> visitor = configuration.getVisitorFactory().apply(this.configuration);
+        methodDeclaration.accept(visitor, null);
+
+        body = visitor.toString().replaceAll("\\s+", " ");
     }
 
-    public PrettyPrinterMod(PrettyPrinterConfigurationMod configuration) {
-        this.configuration = configuration;
-    }
+    @Override
+    public Set<String> getMethodExprNames() { return new HashSet<>(); }
 
-    public String print(Node node) {
-        final VoidVisitor<Void> visitor = configuration.getVisitorFactory().apply(configuration);
-        node.accept(visitor, null);
-        if (configuration.isExtraWhiteSpace())
-            return visitor.toString().replaceAll("\\s+", " ");
-        else
-            return visitor.toString();
-    }
+    @Override
+    public Set<String> getClassExprNames() { return new HashSet<>(); }
+
+    @Override
+    public Set<String> getLiteralExprNames() { return new HashSet<>(); }
+
+    @Override
+    public Set<String> getNameExprNames() { return new HashSet<>(); }
+
+    @Override
+    public String getBody() { return this.body; }
+
 }
