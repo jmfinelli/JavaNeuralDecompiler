@@ -22,6 +22,11 @@ public class Driver {
 
         long start = System.currentTimeMillis();
 
+        File outputFile = new File("./pairs.output");
+        if (outputFile.exists()) {
+            outputFile.delete();
+        }
+
         /*
          * We start with a pair of directories, one containing binary (.class) jar files
          * and the other containing the corresponding source (.java) jar files.
@@ -89,7 +94,13 @@ public class Driver {
 //            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
 //                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
 
+            WritePairsToFile<CtMethod> writePairsToFile = new WritePairsToFile<>(outputFile);
+
+            finalWrappedMethods.forEach(writePairsToFile);
+
         }
+
+        System.out.printf("Errors: %d\n", MethodDeclarationFinalWrapper.errors);
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);
         System.out.printf("Found %d method pairs\n", methods);

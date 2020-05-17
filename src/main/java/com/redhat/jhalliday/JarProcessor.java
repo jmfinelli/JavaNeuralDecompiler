@@ -39,7 +39,7 @@ public class JarProcessor<
     public List<DecompilationRecord<ClassWrapper<LOW_AGGREGATE>, CompilationUnit>> associateFiles(
             DecompilationRecord<File, File> decompilationRecord) {
 
-        List<DecompilationRecord<File, File>> jarRecords = List.of(decompilationRecord);
+        //List<DecompilationRecord<File, File>> jarRecords = List.of(decompilationRecord);
 
         /*
          * jar pairs are a good start, but next we need to extract the contents.
@@ -50,7 +50,7 @@ public class JarProcessor<
                 new JarContentTransformerFunction(s -> s.endsWith(".java"))
         );
         List<DecompilationRecord<Map<String, byte[]>, Map<String, byte[]>>> rawFileContentRecords =
-                jarRecords.stream().flatMap(jarContentTransformer).collect(Collectors.toList());
+                Stream.of(decompilationRecord).flatMap(jarContentTransformer).collect(Collectors.toList());
 
         /*
          * From this point we are decoupled from the filesystem
@@ -73,7 +73,7 @@ public class JarProcessor<
         CompositeRecordTransformer<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>
                 compilationUnitBuildingTransformer = new CompositeRecordTransformer<>(
                 new IdentityTransformerFunction<>(),
-                new CompilationUnitCreationTransformerFunction()
+                new CompilationUnitCreationTransformerFunction(decompilationRecord.getLowLevelRepresentation())
         );
         List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>> fullyParsed =
                 semiParsed.stream().flatMap(compilationUnitBuildingTransformer).collect(Collectors.toList());
