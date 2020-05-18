@@ -21,22 +21,32 @@ package com.redhat.jhalliday.impl.javaparser.printer;
  * GNU Lesser General Public License for more details.
  */
 
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.ClassExpr;
+import com.github.javaparser.ast.expr.LiteralExpr;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.redhat.jhalliday.impl.HighInfoExtractor;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Pretty printer for AST nodes.
  */
 public class PrettyPrinterMod implements HighInfoExtractor {
 
+    public static int errors = 0;
+
     private final PrettyPrinterConfigurationMod configuration;
     private final String body;
+
+    private final Set<String> nameExprNames = new HashSet<>();
+    private final Set<String> methodExprNames = new HashSet<>();
+    private final Set<String> literalExprNames = new HashSet<>();
+    private final Set<String> classExprNames = new HashSet<>();
 
     public PrettyPrinterMod(MethodDeclaration methodDeclaration) {
 
@@ -52,19 +62,47 @@ public class PrettyPrinterMod implements HighInfoExtractor {
         methodDeclaration.accept(visitor, null);
 
         body = visitor.toString().replaceAll("\\s+", " ");
+
+        BlockStmt bodyStmt = methodDeclaration.getBody().get();
+
+        bodyStmt.findAll(NameExpr.class).forEach(x -> this.nameExprNames.add(x.getNameAsString()));
+
+        bodyStmt.findAll(MethodCallExpr.class).forEach(x -> {
+            try {
+                this.methodExprNames.add(x.resolve().getQualifiedName());
+            } catch (Exception ex) {
+                errors++;
+            }
+        });
+
+        bodyStmt.findAll(LiteralExpr.class).forEach(x -> {
+            try {
+                this.literalExprNames.add(x.calculateResolvedType().toString());
+            } catch (Exception ex) {
+                errors++;
+            }
+        });
+
+        bodyStmt.findAll(ClassExpr.class).forEach(x -> {
+            try {
+                this.classExprNames.add(x.calculateResolvedType().toString());
+            } catch (Exception ex) {
+                errors++;
+            }
+        });
     }
 
     @Override
-    public Set<String> getMethodExprNames() { return new HashSet<>(); }
+    public Set<String> getMethodExprNames() { return this.methodExprNames; }
 
     @Override
-    public Set<String> getClassExprNames() { return new HashSet<>(); }
+    public Set<String> getClassExprNames() { return this.classExprNames; }
 
     @Override
-    public Set<String> getLiteralExprNames() { return new HashSet<>(); }
+    public Set<String> getLiteralExprNames() { return this.literalExprNames; }
 
     @Override
-    public Set<String> getNameExprNames() { return new HashSet<>(); }
+    public Set<String> getNameExprNames() { return this.nameExprNames; }
 
     @Override
     public String getBody() { return this.body; }

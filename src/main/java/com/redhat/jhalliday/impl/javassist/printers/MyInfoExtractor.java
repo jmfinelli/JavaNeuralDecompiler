@@ -108,13 +108,13 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
             case SIPUSH:
                 return String.format(SIMPLE_PATTERN, opstring, iter.s16bitAt(pos + 1));
             case LDC:
-                //entry = ldc(pool, iter.byteAt(pos + 1));
-                //constants.putIfAbsent(entry.getKey(), entry.getValue());
+                entry = ldc(pool, iter.byteAt(pos + 1));
+                constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.byteAt(pos + 1));
             case LDC_W:
             case LDC2_W:
-                //entry = ldc(pool, iter.u16bitAt(pos + 1));
-                //constants.putIfAbsent(entry.getKey(), entry.getValue());
+                entry = ldc(pool, iter.u16bitAt(pos + 1));
+                constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case ILOAD:
             case LLOAD:
@@ -127,8 +127,8 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
             case DSTORE:
             case ASTORE:
                 entry = getVariableName(iter, pos, iter.byteAt(pos + 1));
-//                if (!entry.getValue().isEmpty())
-//                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
+                if (!entry.getValue().isEmpty())
+                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(LOC_VAR_PATTERN, opstring, entry.getKey());
             case IFEQ:
             case IFGE:
@@ -149,8 +149,8 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
                 return String.format(LABEL_PATTERN, opstring, (iter.s16bitAt(pos + 1) + pos));
             case IINC:
                 entry = getVariableName(iter, pos, iter.byteAt(pos + 1));
-//                if (!entry.getValue().isEmpty())
-//                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
+                if (!entry.getValue().isEmpty())
+                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format("%s %s%d,%d", opstring, LOC_VAR_SYMBOL, entry.getKey(), iter.signedByteAt(pos + 2));
             case GOTO:
             case JSR:
@@ -165,18 +165,18 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
             case PUTSTATIC:
             case GETFIELD:
             case PUTFIELD:
-                //entry = fieldInfo(pool, iter.u16bitAt(pos + 1));
-                //fieldNames.putIfAbsent(entry.getKey(), entry.getValue());
+                entry = fieldInfo(pool, iter.u16bitAt(pos + 1));
+                fieldNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEVIRTUAL:
             case INVOKESPECIAL:
             case INVOKESTATIC:
-                //entry = methodInfo(pool, iter.u16bitAt(pos + 1));
-                //methodNames.putIfAbsent(entry.getKey(), entry.getValue());
+                entry = methodInfo(pool, iter.u16bitAt(pos + 1));
+                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEINTERFACE:
-                //entry = interfaceMethodInfo(pool, iter.u16bitAt(pos + 1));
-                //methodNames.putIfAbsent(entry.getKey(), entry.getValue());
+                entry = interfaceMethodInfo(pool, iter.u16bitAt(pos + 1));
+                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEDYNAMIC:
                 return String.format(SIMPLE_PATTERN, opstring, iter.u16bitAt(pos + 1));
@@ -188,8 +188,8 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
             case ANEWARRAY:
             case CHECKCAST:
             case MULTIANEWARRAY:
-                //entry = classInfo(pool, iter.u16bitAt(pos + 1));
-                //classNames.putIfAbsent(entry.getKey(), entry.getValue());
+                entry = classInfo(pool, iter.u16bitAt(pos + 1));
+                classNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case WIDE:
                 return wide(iter, pos);
@@ -310,30 +310,42 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
     }
 
     private static Map.Entry<Integer, String> interfaceMethodInfo(ConstPool pool, int index) {
-//        result.put(index, String.format("%s.%s(%s)",
+        return Map.entry(index, String.format("%s.%s",
+                pool.getInterfaceMethodrefClassName(index),
+                pool.getInterfaceMethodrefName(index)));
+
+//        return Map.entry(index, String.format("%s.%s(%s)",
 //                pool.getInterfaceMethodrefClassName(index),
 //                pool.getInterfaceMethodrefName(index),
 //                pool.getInterfaceMethodrefType(index)));
 
-        return Map.entry(index, pool.getInterfaceMethodrefName(index));
+//        return Map.entry(index, pool.getInterfaceMethodrefName(index));
     }
 
     private static Map.Entry<Integer, String> methodInfo(ConstPool pool, int index) {
-//        result.put(index, String.format("%s.%s(%s)",
+        return Map.entry(index, String.format("%s.%s",
+                pool.getMethodrefClassName(index),
+                pool.getMethodrefName(index)));
+
+//        return Map.entry(index, String.format("%s.%s(%s)",
 //                pool.getMethodrefClassName(index),
 //                pool.getMethodrefName(index),
 //                pool.getMethodrefType(index)));
 
-        return Map.entry(index, pool.getMethodrefName(index));
+//        return Map.entry(index, pool.getMethodrefName(index));
     }
 
     private static Map.Entry<Integer, String> fieldInfo(ConstPool pool, int index) {
-//        result.put(index, String.format("%s.%s(%s)",
+        return Map.entry(index, String.format("%s.%s",
+                pool.getFieldrefClassName(index),
+                pool.getFieldrefName(index)));
+
+//        return Map.entry(index, String.format("%s.%s(%s)",
 //                pool.getFieldrefClassName(index),
 //                pool.getFieldrefName(index),
 //                pool.getFieldrefType(index)));
 
-        return Map.entry(index, pool.getFieldrefName(index));
+//        return Map.entry(index, pool.getFieldrefName(index));
     }
 
     private static String lookupSwitch(CodeIterator iter, int pos) {

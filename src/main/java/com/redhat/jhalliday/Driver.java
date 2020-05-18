@@ -7,6 +7,7 @@ import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
 import com.redhat.jhalliday.impl.javaparser.*;
+import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterMod;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import javassist.CtClass;
@@ -103,7 +104,7 @@ public class Driver {
 
         }
 
-        System.out.printf("Errors: %d\n", MethodDeclarationFinalWrapper.errors);
+        System.out.printf("Errors: %d\n", PrettyPrinterMod.errors);
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);
         System.out.printf("Found %d method pairs\n", methods);

@@ -31,18 +31,11 @@ public class CreatePairsFromMainFolder implements Function<File, Stream<Decompil
 
                 if (folder.isDirectory()) {
 
-                    List<File> binJars = new LinkedList<>();
-                    List<File> srcJars = new LinkedList<>();
-
                     File binJarFolder = folder.listFiles(x -> x.getName().equals(binFolder))[0];
                     File srcJarFolder = folder.listFiles(x -> x.getName().equals(srcFolder))[0];
 
-                    try {
-                        binJars = listFilesForFolder(binJarFolder);
-                        srcJars = listFilesForFolder(srcJarFolder);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    List<File> binJars = listFilesForFolder(binJarFolder);
+                    List<File> srcJars = listFilesForFolder(srcJarFolder);
 
                     for (File binJar : binJars) {
                         String binJarPath = binJar.getPath();
