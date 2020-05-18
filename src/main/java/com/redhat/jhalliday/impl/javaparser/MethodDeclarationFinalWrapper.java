@@ -23,14 +23,14 @@ public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {
 //            System.out.println("MethodCallExpr");
 //            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.getName().getIdentifier()));
             method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> this.MethodExprNames.add(x.getName().getIdentifier()));
-//            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> {
-//                try {
-//                    ResolvedMethodDeclaration methodDeclaration = x.resolve();
-//                    //System.out.println(methodDeclaration.getQualifiedSignature());
-//                } catch (Exception ex) {
-//                    errors++;
-//                }
-//            });
+            method.getBody().get().findAll(MethodCallExpr.class).forEach(x -> {
+                try {
+                    ResolvedMethodDeclaration methodDeclaration = x.resolve();
+                    //System.out.println(methodDeclaration.getQualifiedSignature());
+                } catch (Exception ex) {
+                    errors++;
+                }
+            });
 
 //            System.out.println("LiteralExpr");
 //            method.getBody().get().findAll(LiteralExpr.class).forEach(x -> System.out.printf("%s: %s\n", x.getClass().toGenericString(), x.toString()));

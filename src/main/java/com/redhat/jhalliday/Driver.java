@@ -38,8 +38,11 @@ public class Driver {
         /*
          * Conversion step to change the directories into jar files pairs using name matching
          */
-        DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer();
-        List<DecompilationRecord<File, File>> jarRecords = dir2jarsTransformer.apply(dirRecord).collect(Collectors.toList());
+//        DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer();
+//        List<DecompilationRecord<File, File>> jarRecords = dir2jarsTransformer.apply(dirRecord).collect(Collectors.toList());
+
+        CreatePairsFromMainFolder createPairsFromMainFolder = new CreatePairsFromMainFolder("binjars", "srcjars");
+        List<DecompilationRecord<File, File>> jarRecords = createPairsFromMainFolder.apply(new File("./lib/")).collect(Collectors.toList());
 
 //        JarProcessor<ClassNode, MethodNode> jarProcessor = new JarProcessor<>(
 //                new ClassWrapperCreationTransformerFunction<>(

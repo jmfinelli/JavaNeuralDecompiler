@@ -15,8 +15,12 @@ public class CompilationUnitCreationTransformerFunction
     private File classJarFile;
     private final ParserUtil parserUtil = new ParserUtil();
 
-    public CompilationUnitCreationTransformerFunction(File classJarFile) {
-        this.classJarFile = classJarFile;
+    public CompilationUnitCreationTransformerFunction(File classJarFolder) {
+
+        if (!classJarFolder.isDirectory())
+            throw new IllegalArgumentException("Parameter must be a folder containing jars!");
+
+        this.classJarFile = classJarFolder;
     }
 
     public CompilationUnitCreationTransformerFunction() {

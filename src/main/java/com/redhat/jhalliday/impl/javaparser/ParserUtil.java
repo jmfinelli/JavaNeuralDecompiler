@@ -43,11 +43,11 @@ public class ParserUtil {
         return compilationUnit;
     }
 
-    public CompilationUnit parseWithFallback(byte[] inputBytes, File jarFile) {
+    public CompilationUnit parseWithFallback(byte[] inputBytes, File jarFolder) {
 
         CompilationUnit compilationUnit = null;
         for (int i = 0; i < configurations.length && compilationUnit == null; i++) {
-            compilationUnit = tryParseWithConfig(inputBytes, configurations[i], jarFile);
+            compilationUnit = tryParseWithConfig(inputBytes, configurations[i], jarFolder);
         }
 
         return compilationUnit;
@@ -70,16 +70,28 @@ public class ParserUtil {
         }
     }
 
-    private CompilationUnit tryParseWithConfig(byte[] inputBytes, ParserConfiguration parserConfiguration, File jarFile) {
+    private CompilationUnit tryParseWithConfig(byte[] inputBytes, ParserConfiguration parserConfiguration, File jarFolder) {
 
         try {
 
-            TypeSolver reflectionTypeSolver = new ReflectionTypeSolver();
-            TypeSolver jarTypeSolver = new JarTypeSolver(jarFile);
-
             CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
-            combinedTypeSolver.add(jarTypeSolver);
-            combinedTypeSolver.add(reflectionTypeSolver);
+            combinedTypeSolver.add(new ReflectionTypeSolver());
+
+            for(File binJar : jarFolder.listFiles()) {
+                if (binJar.getPath().endsWith(".jar")) {
+                    TypeSolver tempJre;
+                    try {
+                        tempJre = new JarTypeSolver(binJar);
+                        if (tempJre != null){
+                            combinedTypeSolver.add(tempJre);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }
+            }
+
             JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
 
             parserConfiguration.setSymbolResolver(symbolSolver);
