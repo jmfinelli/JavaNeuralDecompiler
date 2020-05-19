@@ -38,7 +38,8 @@ import java.util.Set;
  */
 public class PrettyPrinterMod implements HighInfoExtractor {
 
-    public static int errors = 0;
+    public static float passes = 0;
+    public static float fails = 0;
 
     private final PrettyPrinterConfigurationMod configuration;
     private final String body;
@@ -70,24 +71,27 @@ public class PrettyPrinterMod implements HighInfoExtractor {
         bodyStmt.findAll(MethodCallExpr.class).forEach(x -> {
             try {
                 this.methodExprNames.add(x.resolve().getQualifiedName());
+                passes++;
             } catch (Exception ex) {
-                errors++;
+                fails++;
             }
         });
 
         bodyStmt.findAll(LiteralExpr.class).forEach(x -> {
             try {
                 this.literalExprNames.add(x.calculateResolvedType().toString());
+                passes++;
             } catch (Exception ex) {
-                errors++;
+                fails++;
             }
         });
 
         bodyStmt.findAll(ClassExpr.class).forEach(x -> {
             try {
                 this.classExprNames.add(x.calculateResolvedType().toString());
+                passes++;
             } catch (Exception ex) {
-                errors++;
+                fails++;
             }
         });
     }

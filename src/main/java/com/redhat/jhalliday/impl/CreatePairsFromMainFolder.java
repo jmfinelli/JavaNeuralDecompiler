@@ -41,7 +41,7 @@ public class CreatePairsFromMainFolder implements Function<File, Stream<Decompil
                         String binJarPath = binJar.getPath();
                         String binFilename = binJarPath.substring(binJarPath.lastIndexOf("/") + 1);
 
-                        List<File> srcMatches = srcJars.stream().filter(x -> x.getPath().contains(binFilename.replace(".jar", ""))).collect(Collectors.toList());
+                        List<File> srcMatches = srcJars.stream().filter(x -> x.getName().contains(binFilename.replace(".jar", ""))).collect(Collectors.toList());
                         if (srcMatches.size() == 1) {
                             DecompilationRecord<File, File> predecessor = new GenericDecompilationRecord<>(binJarFolder, srcJarFolder);
                             results.add(new GenericDecompilationRecord<>(binJar, srcMatches.get(0), predecessor));

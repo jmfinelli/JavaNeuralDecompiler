@@ -12,19 +12,18 @@ import java.util.stream.Stream;
 public class CompilationUnitCreationTransformerFunction
         implements TransformerFunction<Map<String, byte[]>, Map<String, CompilationUnit>> {
 
-    private File classJarFile;
-    private final ParserUtil parserUtil = new ParserUtil();
+    private final ParserUtil parserUtil;
 
-    public CompilationUnitCreationTransformerFunction(File classJarFolder) {
+    public CompilationUnitCreationTransformerFunction(File binJarsFolder) {
 
-        if (!classJarFolder.isDirectory())
+        if (!binJarsFolder.isDirectory())
             throw new IllegalArgumentException("Parameter must be a folder containing jars!");
 
-        this.classJarFile = classJarFolder;
+        this.parserUtil = new ParserUtil(binJarsFolder);
     }
 
     public CompilationUnitCreationTransformerFunction() {
-        this.classJarFile = null;
+        this.parserUtil = new ParserUtil();
     }
 
     @Override
@@ -33,9 +32,7 @@ public class CompilationUnitCreationTransformerFunction
         Map<String, CompilationUnit> result = new HashMap<>();
 
         for (Map.Entry<String, byte[]> entry : map.entrySet()) {
-            CompilationUnit compilationUnit = (Objects.isNull(this.classJarFile) ?
-                    parserUtil.parseWithFallback(entry.getValue()) :
-                    parserUtil.parseWithFallback(entry.getValue(), this.classJarFile));
+            CompilationUnit compilationUnit = parserUtil.parseWithFallback(entry.getValue());
             if (compilationUnit != null) {
                 result.put(entry.getKey(), compilationUnit);
             } else {

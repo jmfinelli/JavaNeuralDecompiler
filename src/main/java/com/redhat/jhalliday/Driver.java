@@ -3,6 +3,7 @@ package com.redhat.jhalliday;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
@@ -77,7 +78,15 @@ public class Driver {
         Set<String> lowLevelDictionary = new HashSet<>();
         Set<String> highLevelDictionary = new HashSet<>();
 
+        float tempPasses = 0;
+        float tempFails = 0;
+	    int count = 0;
+
         for (DecompilationRecord<File, File> decompilationRecord : jarRecords) {
+
+            System.out.printf("%d: %s\n", count + 1, decompilationRecord.getLowLevelRepresentation().getName());
+
+            long localStart = System.currentTimeMillis();
 
             List<DecompilationRecord<ClassWrapper<CtClass>, CompilationUnit>> filePairs =
                     jarProcessor.associateFiles(decompilationRecord);
@@ -102,9 +111,26 @@ public class Driver {
 
             finalWrappedMethods.forEach(writePairsToFile);
 
+            System.out.printf("Successful resolutions: %.0f\n", PrettyPrinterMod.passes - tempPasses);
+            System.out.printf("Failed resolutions: %.0f\n", PrettyPrinterMod.fails - tempFails);
+            float percentage = 100f * (PrettyPrinterMod.passes - tempPasses)/((PrettyPrinterMod.passes - tempPasses) + (PrettyPrinterMod.fails - tempFails));
+            System.out.printf("Passes rate: %.2f%%\n", percentage);
+            long localEnd = System.currentTimeMillis();
+            System.out.printf("Runtime %d ms\n", localEnd-localStart);
+
+            System.out.println();
+
+            tempFails = PrettyPrinterMod.fails;
+            tempPasses = PrettyPrinterMod.passes;
+
+            count++;
+
+            JavaParserFacade.clearInstances();
+
         }
 
-        System.out.printf("Errors: %d\n", PrettyPrinterMod.errors);
+        System.out.printf("Overall successful resolutions: %.0f\n", PrettyPrinterMod.passes);
+        System.out.printf("Overall failed resolutions: %.0f\n", PrettyPrinterMod.fails);
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);
         System.out.printf("Found %d method pairs\n", methods);

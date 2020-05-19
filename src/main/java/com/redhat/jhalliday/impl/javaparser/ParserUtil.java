@@ -3,6 +3,7 @@ package com.redhat.jhalliday.impl.javaparser;
 import com.github.javaparser.*;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
@@ -33,6 +34,37 @@ public class ParserUtil {
         }
     }
 
+    public ParserUtil(File binFolder) {
+
+        CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
+        combinedTypeSolver.add(new ReflectionTypeSolver());
+
+        for(File binJar : binFolder.listFiles()) {
+            if (binJar.getPath().endsWith(".jar")) {
+                TypeSolver tempJre;
+                try {
+                    tempJre = new JarTypeSolver(binJar);
+                    if (tempJre != null){
+                        combinedTypeSolver.add(tempJre);
+                    }
+                } catch (IOException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+        }
+
+        JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
+
+        for (int i = 0; i < configurations.length; i++) {
+            ParserConfiguration parserConfiguration = new ParserConfiguration();
+            parserConfiguration.setLanguageLevel(levels[i >= 3 ? i - 3 : i]);
+            parserConfiguration.setAttributeComments(false); // otherwise lexical preservation won't work.
+            parserConfiguration.setPreprocessUnicodeEscapes(i >= 3);
+            parserConfiguration.setSymbolResolver(symbolSolver);
+            configurations[i] = parserConfiguration;
+        }
+    }
+
     public CompilationUnit parseWithFallback(byte[] inputBytes) {
 
         CompilationUnit compilationUnit = null;
@@ -43,15 +75,15 @@ public class ParserUtil {
         return compilationUnit;
     }
 
-    public CompilationUnit parseWithFallback(byte[] inputBytes, File jarFolder) {
-
-        CompilationUnit compilationUnit = null;
-        for (int i = 0; i < configurations.length && compilationUnit == null; i++) {
-            compilationUnit = tryParseWithConfig(inputBytes, configurations[i], jarFolder);
-        }
-
-        return compilationUnit;
-    }
+//    public CompilationUnit parseWithFallback(byte[] inputBytes, File jarFolder) {
+//
+//        CompilationUnit compilationUnit = null;
+//        for (int i = 0; i < configurations.length && compilationUnit == null; i++) {
+//            compilationUnit = tryParseWithConfig(inputBytes, configurations[i], jarFolder);
+//        }
+//
+//        return compilationUnit;
+//    }
 
     private CompilationUnit tryParseWithConfig(byte[] inputBytes, ParserConfiguration parserConfiguration) {
 
@@ -73,28 +105,6 @@ public class ParserUtil {
     private CompilationUnit tryParseWithConfig(byte[] inputBytes, ParserConfiguration parserConfiguration, File jarFolder) {
 
         try {
-
-            CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
-            combinedTypeSolver.add(new ReflectionTypeSolver());
-
-            for(File binJar : jarFolder.listFiles()) {
-                if (binJar.getPath().endsWith(".jar")) {
-                    TypeSolver tempJre;
-                    try {
-                        tempJre = new JarTypeSolver(binJar);
-                        if (tempJre != null){
-                            combinedTypeSolver.add(tempJre);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return null;
-                    }
-                }
-            }
-
-            JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
-
-            parserConfiguration.setSymbolResolver(symbolSolver);
             JavaParser javaParser = new JavaParser(parserConfiguration);
 
             ParseResult<CompilationUnit> result = javaParser.parse(new String(inputBytes));
