@@ -24,9 +24,11 @@ Create Datasets
 ----------------------
 sudo dnf install git
 git clone https://github.com/manuNCL/ReadJarFiles.git
+cd ReadJarFiles/utilityFiles
 mvn -f gather-sample-corpus.xml -DoutputDirectory=data/binjars dependency:copy-dependencies
 mvn -f gather-sample-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies
 mv data ../
+cd ../
 mvn compile
 mvn exec:java -Dexec.mainClass=com.redhat.jhalliday.Driver
 mv pairs.output ~/datasets/
@@ -36,7 +38,18 @@ python createDatasets.py
 rm createDatasets.py
 
 ----------------------
-Create a SWAP area
+Run experiment
+----------------------
+onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000
+onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel
+----------------------
+Training with GPU
+----------------------
+CUDA_VISIBLE_DEVICES=0 onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel -world_size 1 -gpu_ranks 0
+CUDA_VISIBLE_DEVICES=0,1 onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel -world_size 2 -gpu_ranks 0 1
+
+----------------------
+Create a SWAP area (in case of memory problems)
 ----------------------
 sudo dd if=/dev/zero of=/swapfile bs=128M count=32
 sudo chmod 600 /swapfile
@@ -44,10 +57,3 @@ sudo mkswap /swapfile
 sudo swapon /swapfile
 sudo swapon -s
 sudo nano /etc/fstab -> /swapfile swap swap defaults 0 0
-
-----------------------
-Run experiment
-----------------------
-
-onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000
-onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel
