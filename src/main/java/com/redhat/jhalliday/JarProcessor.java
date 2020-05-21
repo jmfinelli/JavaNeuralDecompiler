@@ -73,7 +73,8 @@ public class JarProcessor<
         CompositeRecordTransformer<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>
                 compilationUnitBuildingTransformer = new CompositeRecordTransformer<>(
                 new IdentityTransformerFunction<>(),
-                new CompilationUnitCreationTransformerFunction((File)decompilationRecord.getPredecessor().getLowLevelRepresentation())
+                //new CompilationUnitCreationTransformerFunction((File)decompilationRecord.getPredecessor().getLowLevelRepresentation())
+                new CompilationUnitCreationTransformerFunction()
         );
         List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>> fullyParsed =
                 semiParsed.stream().flatMap(compilationUnitBuildingTransformer).collect(Collectors.toList());

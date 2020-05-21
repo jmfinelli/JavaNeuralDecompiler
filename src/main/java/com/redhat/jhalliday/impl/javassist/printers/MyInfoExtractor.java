@@ -73,22 +73,34 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
     }
 
     @Override
-    public Map<Integer, String> getMethodNames() { return methodNames; }
+    public Map<Integer, String> getMethodNames() {
+        return methodNames;
+    }
 
     @Override
-    public Map<Integer, String> getClassNames() { return classNames; }
+    public Map<Integer, String> getClassNames() {
+        return classNames;
+    }
 
     @Override
-    public Map<Integer, String> getConstants() { return constants; }
+    public Map<Integer, String> getConstants() {
+        return constants;
+    }
 
     @Override
-    public Map<Integer, String> getFieldNames() { return fieldNames; }
+    public Map<Integer, String> getFieldNames() {
+        return fieldNames;
+    }
 
     @Override
-    public Map<Integer, String> getVariableNames() { return variableNames; }
+    public Map<Integer, String> getVariableNames() {
+        return variableNames;
+    }
 
     @Override
-    public String getBody() { return String.join(DELIMITER, body); }
+    public String getBody() {
+        return String.join(DELIMITER, body);
+    }
 
     /**
      * Gets a string representation of the bytecode instruction at the specified
@@ -98,7 +110,7 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
         int opcode = iter.byteAt(pos);
 
         if (opcode > opcodes.length || opcode < 0)
-            throw new IllegalArgumentException("Invalid opcode, opcode: " + opcode + " pos: "+ pos);
+            throw new IllegalArgumentException("Invalid opcode, opcode: " + opcode + " pos: " + pos);
 
         String opstring = opcodes[opcode];
         Map.Entry<Integer, String> entry;
@@ -183,7 +195,7 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
             case NEWARRAY:
                 // TODO: is it worth to replace primitive types?
                 return String.format(SIMPLE_PATTERN, opstring, iter.byteAt(pos + 1));
-                // return pos + ":" + opstring + " " + arrayInfo(iter.byteAt(pos + 1));
+            // return pos + ":" + opstring + " " + arrayInfo(iter.byteAt(pos + 1));
             case NEW:
             case ANEWARRAY:
             case CHECKCAST:
@@ -248,9 +260,9 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
     private static Map.Entry<Integer, String> getVariableName(CodeIterator iterator, int current, int index) {
 
         CodeAttribute ca = iterator.get();
-        LocalVariableAttribute localVariableTable = (LocalVariableAttribute)ca.getAttribute(LocalVariableAttribute.tag);
+        LocalVariableAttribute localVariableTable = (LocalVariableAttribute) ca.getAttribute(LocalVariableAttribute.tag);
         if (localVariableTable != null) {
-            for(int i = 0; i < localVariableTable.tableLength(); i++) {
+            for (int i = 0; i < localVariableTable.tableLength(); i++) {
                 int localVariableIndex = localVariableTable.index(i);
                 if (localVariableIndex == index) {
                     int start = localVariableTable.startPc(i);
@@ -272,9 +284,9 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
 
         CodeAttribute ca = iterator.get();
         ConstPool pool = ca.getConstPool();
-        LocalVariableTypeAttribute localVariableTypeAttribute = (LocalVariableTypeAttribute)ca.getAttribute(LocalVariableTypeAttribute.tag);
+        LocalVariableTypeAttribute localVariableTypeAttribute = (LocalVariableTypeAttribute) ca.getAttribute(LocalVariableTypeAttribute.tag);
         if (localVariableTypeAttribute != null) {
-            for(int i = 0; i < localVariableTypeAttribute.tableLength(); i++) {
+            for (int i = 0; i < localVariableTypeAttribute.tableLength(); i++) {
                 if (localVariableTypeAttribute.index(i) == index)
                     return pool.getUtf8Info(localVariableTypeAttribute.signatureIndex(i));
             }
@@ -285,24 +297,46 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
     private static String wide(CodeIterator iter, int pos) {
         int opcode = iter.byteAt(pos + 1);
         int index = iter.u16bitAt(pos + 2);
-        return switch (opcode) {
-            case ILOAD, LLOAD, FLOAD, DLOAD, ALOAD, ISTORE, LSTORE, FSTORE, DSTORE, ASTORE, IINC, RET -> String.format(SIMPLE_PATTERN, opcodes[opcode], index);
-            default -> throw new RuntimeException("Invalid WIDE operand");
-        };
+        switch (opcode) {
+            case ILOAD:
+            case LLOAD:
+            case FLOAD:
+            case DLOAD:
+            case ALOAD:
+            case ISTORE:
+            case LSTORE:
+            case FSTORE:
+            case DSTORE:
+            case ASTORE:
+            case IINC:
+            case RET:
+                return String.format(SIMPLE_PATTERN, opcodes[opcode], index);
+            default:
+                throw new RuntimeException("Invalid WIDE operand");
+        }
     }
 
     private static String arrayInfo(int type) {
-        return switch (type) {
-            case T_BOOLEAN -> "boolean";
-            case T_CHAR -> "char";
-            case T_BYTE -> "byte";
-            case T_SHORT -> "short";
-            case T_INT -> "int";
-            case T_LONG -> "long";
-            case T_FLOAT -> "float";
-            case T_DOUBLE -> "double";
-            default -> throw new RuntimeException("Invalid array type");
-        };
+        switch (type) {
+            case T_BOOLEAN:
+                return "boolean";
+            case T_CHAR:
+                return "char";
+            case T_BYTE:
+                return "byte";
+            case T_SHORT:
+                return "short";
+            case T_INT:
+                return "int";
+            case T_LONG:
+                return "long";
+            case T_FLOAT:
+                return "float";
+            case T_DOUBLE:
+                return "double";
+            default:
+                throw new RuntimeException("Invalid array type");
+        }
     }
 
     private static Map.Entry<Integer, String> classInfo(ConstPool pool, int index) {
@@ -389,14 +423,21 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
 
         int tag = pool.getTag(index);
 
-        return switch (tag) {
-            case ConstPool.CONST_String -> Map.entry(index, pool.getStringInfo(index));
-            case ConstPool.CONST_Integer -> Map.entry(index, String.valueOf(pool.getIntegerInfo(index)));
-            case ConstPool.CONST_Float -> Map.entry(index, String.valueOf(pool.getFloatInfo(index)));
-            case ConstPool.CONST_Long -> Map.entry(index, String.valueOf(pool.getLongInfo(index)));
-            case ConstPool.CONST_Double -> Map.entry(index, String.valueOf(pool.getDoubleInfo(index)));
-            case ConstPool.CONST_Class -> classInfo(pool, index);
-            default -> throw new RuntimeException("bad LDC: " + tag);
-        };
+        switch (tag) {
+            case ConstPool.CONST_String:
+                return Map.entry(index, pool.getStringInfo(index));
+            case ConstPool.CONST_Integer:
+                return Map.entry(index, String.valueOf(pool.getIntegerInfo(index)));
+            case ConstPool.CONST_Float:
+                return Map.entry(index, String.valueOf(pool.getFloatInfo(index)));
+            case ConstPool.CONST_Long:
+                return Map.entry(index, String.valueOf(pool.getLongInfo(index)));
+            case ConstPool.CONST_Double:
+                return Map.entry(index, String.valueOf(pool.getDoubleInfo(index)));
+            case ConstPool.CONST_Class:
+                return classInfo(pool, index);
+            default:
+                throw new RuntimeException("bad LDC: " + tag);
+        }
     }
 }

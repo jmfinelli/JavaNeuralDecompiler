@@ -26,9 +26,13 @@ public class FinalWrapperRecordTransformer<LOW_INPUT> implements Function<
         FinalLowLevelMethodWrapper<LOW_INPUT> wrappedLowLevelMethod = lowMethodWrapper.apply(decompilationRecord.getLowLevelRepresentation());
         FinalHighLevelMethodWrapper wrappedHighLevelMethod = highMethodWrapper.apply(decompilationRecord.getHighLevelRepresentation());
 
-        DecompilationRecord<FinalLowLevelMethodWrapper<LOW_INPUT>, FinalHighLevelMethodWrapper> finalWrappedDecompilationRecord = new
-                GenericDecompilationRecord<>(wrappedLowLevelMethod, wrappedHighLevelMethod, decompilationRecord);
+        if (wrappedLowLevelMethod.getMethodBody().split(" ").length < 50) {
+            DecompilationRecord<FinalLowLevelMethodWrapper<LOW_INPUT>, FinalHighLevelMethodWrapper> finalWrappedDecompilationRecord = new
+                    GenericDecompilationRecord<>(wrappedLowLevelMethod, wrappedHighLevelMethod, decompilationRecord);
 
-        return Stream.of(finalWrappedDecompilationRecord);
+            return Stream.of(finalWrappedDecompilationRecord);
+        }
+
+        return Stream.empty();
     }
 }

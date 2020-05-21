@@ -3,11 +3,13 @@ package com.redhat.jhalliday.impl.javaparser;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterMod;
 import com.redhat.jhalliday.impl.FinalHighLevelMethodWrapper;
+import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterWithoutSolver;
 
 public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {
 
     public MethodDeclarationFinalWrapper(MethodDeclaration method) {
-        super(method, PrettyPrinterMod::new);
+        //super(method, PrettyPrinterMod::new);
+        super(method, PrettyPrinterWithoutSolver::new);
 
         //method.getBody().get().findAll(NameExpr.class).forEach(x -> this.NameExprNames.add(x.getNameAsString()));
 
