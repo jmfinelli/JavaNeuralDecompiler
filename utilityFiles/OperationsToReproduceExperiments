@@ -1,0 +1,52 @@
+From a clean RedHat EC2
+-----------------------
+
+Anaconda3 Installation
+-----------------------
+
+sudo dnf install wget
+wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+chmod +x Anaconda3-2020.02-Linux-x86_64.sh
+bash ./Anaconda3-2020.02-Linux-x86_64.sh
+exit
+
+pip --no-cache-dir install opennmt-py
+
+Maven Installation
+----------------------
+sudo dnf install java-11-openjdk-devel.x86_64
+wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+tar xfv apache-maven-3.6.3-bin.tar.gz
+nano ~/bash_profile -> export M2_HOME=/home/ec2-user/software/apache-maven-3.6.3 export M2=$M2_HOME/bin export PATH=$M2:$PATH
+source ~/.bash_profile
+
+
+Download code
+----------------------
+sudo dnf install git
+git clone https://github.com/manuNCL/ReadJarFiles.git
+mvn -f gather-sample-corpus.xml -DoutputDirectory=data/binjars dependency:copy-dependencies
+mvn -f gather-sample-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies
+mvn compile
+mvn -X exec:java -Dexec.mainClass=com.redhat.jhalliday.Driver
+mv pairs.output ~/datasets/
+
+Run Experiments
+----------------------
+Create a SWAP area
+----------------------
+sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+sudo swapon -s
+sudo nano /etc/fstab -> /swapfile swap swap defaults 0 0
+
+----------------------
+Experiment
+----------------------
+
+onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000
+onmt_train -data ./model/secondExperiment -save_model ./model/secondExperimentTrainedModel
+
+
