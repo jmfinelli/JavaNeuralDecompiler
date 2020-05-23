@@ -1,27 +1,58 @@
-From a clean RedHat EC2
------------------------
+From a clean RedHat EC2 - G4
+----------------------------
 
+----------------------------
+NVIDIA Drivers
+----------------------------
+cd ~
+mkdir drivers
+cd drivers
+sudo dnf groupinstall "Development Tools"
+sudo dnf install elfutils-libelf-devel "kernel-devel-uname-r == $(uname -r)"
+sudo dnf install wget
+wget http://us.download.nvidia.com/tesla/440.64.00/NVIDIA-Linux-x86_64-440.64.00.run
+chmod +x NVIDIA-Linux-x86_64-440.64.00.run
+sudo ./NVIDIA-Linux-x86_64-440.64.00.run
+
+----------------------------
 Anaconda3 Installation
------------------------
+----------------------------
+cd ~
+mkdir software
+cd software
+mkdir anaconda
+cd anaconda
 sudo dnf install wget
 wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
 chmod +x Anaconda3-2020.02-Linux-x86_64.sh
 bash ./Anaconda3-2020.02-Linux-x86_64.sh
 exit
-pip --no-cache-dir install opennmt-py
+pip install opennmt-py
 
+----------------------------
 Maven Installation
-----------------------
+----------------------------
+cd ~
+mkdir software
+cd software
+mkdir maven
+cd maven
 sudo dnf install java-11-openjdk-devel.x86_64
+sudo snf install wget
 wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
 tar xfv apache-maven-3.6.3-bin.tar.gz
-nano ~/bash_profile -> 
--> export M2_HOME=/home/ec2-user/software/apache-maven-3.6.3
--> export M2=$M2_HOME/bin export PATH=$M2:$PATH
+nano ~/.bash_profile -> 
+-> export M2_HOME=/home/ec2-user/software/maven/apache-maven-3.6.3
+-> export M2=$M2_HOME/bin export
+-> PATH=$M2:$PATH
 source ~/.bash_profile
 
+----------------------------
 Create Datasets
-----------------------
+----------------------------
+cd ~
+mkdir code
+cd code
 sudo dnf install git
 git clone https://github.com/manuNCL/ReadJarFiles.git
 cd ReadJarFiles/utilityFiles
@@ -31,29 +62,56 @@ mv data ../
 cd ../
 mvn compile
 mvn exec:java -Dexec.mainClass=com.redhat.jhalliday.Driver
-mv pairs.output ~/datasets/
+mkdir ~/datasets
+cp pairs.output ~/datasets/
 cp utilityFiles/createDatasets.py ~
 cd ~
 python createDatasets.py
 rm createDatasets.py
 
-----------------------
+----------------------------
 Run experiment
-----------------------
+----------------------------
+cd ~
+mkdir models
 onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000
-onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel
-----------------------
-Training with GPU
-----------------------
+----------------------------
+1 or 2 GPUs
+----------------------------
 CUDA_VISIBLE_DEVICES=0 onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel -world_size 1 -gpu_ranks 0
 CUDA_VISIBLE_DEVICES=0,1 onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel -world_size 2 -gpu_ranks 0 1
+----------------------------
 
-----------------------
+----------------------------
+----------------------------
+----------------------------
+      IN CASE OF ERRORS
+----------------------------
+----------------------------
+----------------------------
+
+----------------------------
 Create a SWAP area (in case of memory problems)
-----------------------
+----------------------------
 sudo dd if=/dev/zero of=/swapfile bs=128M count=32
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 sudo swapon -s
 sudo nano /etc/fstab -> /swapfile swap swap defaults 0 0
+
+----------------------------
+Old version of OpenNMT
+----------------------------
+cd ~
+mkdir code
+cd code
+git clone https://github.com/OpenNMT/OpenNMT-py.git
+cd OpenNMT-py
+git checkout 0.7.0
+conda create --name openNMT --clone base
+conda activate openNMT
+conda install pytorch==1.0.0 torchvision==0.2.1 cuda90 -c pytorch
+conda install -c anaconda configargparse
+pip install torchtext
+python preprocess.py -train_src ~/datasets/x_train -train_tgt ~/datasets/y_train -valid_src ~/datasets/x_valid -valid_tgt ~/datasets/y_valid -save_data ~/models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000
