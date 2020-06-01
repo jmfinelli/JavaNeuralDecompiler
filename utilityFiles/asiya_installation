@@ -43,6 +43,5 @@ sudo nano /etc/environment
 exit
 
 sudo apt-get install openjdk-8-jdk
-sudo apt-get install wordnet
 
 Asiya.pl -eval single -metric_set metrics_TER -no_tok -pdf output.pdf -g sys -v Asiya.config
