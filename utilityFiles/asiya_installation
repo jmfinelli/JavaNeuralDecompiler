@@ -1,0 +1,48 @@
+sudo apt-get update
+sudo apt-get install build-essential
+sudo apt-get install subversion
+
+svn co http://svn-rdlab.lsi.upc.edu/subversion/asiya/public asiya
+
+sudo apt-get install libxml-perl
+sudo cpan -> o conf init
+exit
+
+sudo cpan YAML
+sudo cpan XML::Twig
+sudo apt-get install libexpat1-dev
+sudo cpan XML::Parser
+sudo cpan XML::DOM
+sudo cpan Modern::Perl
+sudo cpan Getopt::Long
+sudo cpan Data::Dumper
+sudo cpan Data::UUID
+sudo cpan IO::File
+sudo cpan Unicode::String
+sudo cpan File::ReadBackwards
+sudo cpan Scalar::Util
+sudo cpan Statistics::Descriptive
+sudo cpan Statistics::Distributions
+sudo cpan Statistics::LSNoHistory
+sudo cpan Statistics::RankCorrelation
+sudo cpan Statistics::Regression
+sudo cpan boolean
+
+cd tools/svmtool-1.3.1
+perl Makefile.PL
+make
+sudo make install
+cd ../..
+mv tools/candc/models/chunk removed/tools/candc/models/
+perl Makefile.PL
+sudo make install
+sudo nano /etc/environment
+-> PERL5LIB=$PERL5LIB:"/home/ubuntu/asiya/lib:/home/ubuntu/asiya/tools"
+-> ASIYA_HOME="/home/ubuntu/asiya"
+-> PATH=$PATH:"/home/ubuntu/asiya/bin"
+exit
+
+sudo apt-get install openjdk-8-jdk
+sudo apt-get install wordnet
+
+Asiya.pl -eval single -metric_set metrics_TER -no_tok -pdf output.pdf -g sys -v Asiya.config

@@ -1,0 +1,18 @@
+sudo apt-get install tk8.4-dev
+sudo cp /usr/lib/tcl8.4/tclConfig.sh /usr/lib/
+sudo cp /usr/lib/tk8.4/tkConfig.sh /usr/lib/
+wget http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz
+tar xvf WordNet-3.0.tar.gz
+rm WordNet-3.0.tar.gz
+cd WordNet-3.0
+./configure
+make
+sudo make install
+sudo nano /etc/environment
+-> PATH=$PATH:/usr/local/WordNet-3.0/bin
+-> WNHOME=/usr/local/WordNet-3.0
+-> WNDICT=/usr/local/WordNet-3.0/dict
+
+cd ~/asiya/tools/terp.v1/
+sudo find / -name java [select the forlder that contains bin/java]
+./bin/setup_bin.sh ./ /usr/lib/jvm/java-8-openjdk-amd64/ /usr/local/WordNet-3.0/
