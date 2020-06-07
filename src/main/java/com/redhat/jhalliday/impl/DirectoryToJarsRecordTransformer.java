@@ -1,6 +1,7 @@
 package com.redhat.jhalliday.impl;
 
 import com.redhat.jhalliday.DecompilationRecord;
+import com.redhat.jhalliday.Decompiler;
 import com.redhat.jhalliday.RecordTransformer;
 
 import java.io.File;
@@ -10,6 +11,16 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 public class DirectoryToJarsRecordTransformer implements RecordTransformer<File, File, File, File> {
+
+    private final Decompiler<File, File> _decompiler;
+
+    public DirectoryToJarsRecordTransformer(Decompiler<File, File> _decompiler) {
+        this._decompiler = _decompiler;
+    }
+
+    public DirectoryToJarsRecordTransformer() {
+        this._decompiler = null;
+    }
 
     @Override
     public Stream<DecompilationRecord<File, File>> apply(DecompilationRecord<File, File> decompilationRecord) {
@@ -30,7 +41,8 @@ public class DirectoryToJarsRecordTransformer implements RecordTransformer<File,
 
                 File srcJar = new File(srcFolder, String.format("%s-sources.jar", libraryName));
                 if (srcJar.exists()) {
-                    DecompilationRecord<File, File> result = new GenericDecompilationRecord<>(binJar, srcJar, decompilationRecord);
+                    File decompiledJar = this._decompiler == null ? null : this._decompiler.apply(binJar);
+                    DecompilationRecord<File, File> result = new GenericDecompilationRecord<>(binJar, srcJar, decompiledJar, decompilationRecord);
                     results.add(result);
                 }
             }
