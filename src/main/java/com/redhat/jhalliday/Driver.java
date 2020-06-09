@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class Driver {
 
-    private static final String FILENAME = "tuple.output";
+    private static final String FILENAME = "pairs.output";
 
     public static void main(String[] args) {
 
@@ -43,8 +43,8 @@ public class Driver {
         /*
          * Conversion step to change the directories into jar files pairs using name matching
          */
-        DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer(new CLIFernFlower());
-        //DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer();
+        // DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer(new CLIFernFlower());
+        DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer();
         List<DecompilationRecord<File, File>> jarRecords = dir2jarsTransformer.apply(dirRecord).collect(Collectors.toList());
 
 //        CreatePairsFromMainFolder createPairsFromMainFolder = new CreatePairsFromMainFolder("binjars", "srcjars");
