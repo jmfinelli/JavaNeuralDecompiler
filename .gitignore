@@ -1,3 +1,6 @@
+# Output files
+*.output
+
 # Intellij files
 .idea/
 data/

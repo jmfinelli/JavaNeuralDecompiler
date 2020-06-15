@@ -17,6 +17,7 @@ public class FileNameAssociatingRecordTransformer<LOW_ITEM extends ClassWrapper<
 
         Map<String, LOW_ITEM> binMap = decompilationRecord.getLowLevelRepresentation();
         Map<String, HIGH_ITEM> srcMap = decompilationRecord.getHighLevelRepresentation();
+        Map<String, HIGH_ITEM> decMap = decompilationRecord.getHighLevelDecompiled();
 
         List<DecompilationRecord<LOW_ITEM, HIGH_ITEM>> results = new ArrayList<>();
 
@@ -30,10 +31,19 @@ public class FileNameAssociatingRecordTransformer<LOW_ITEM extends ClassWrapper<
             String prefix = entry.getKey();
             prefix = prefix.substring(0, prefix.lastIndexOf('/') + 1);
             String sourceFileName = prefix + lowItem.getSourceFileName();
-            HIGH_ITEM sourceFile = srcMap.get(sourceFileName);
-            if (sourceFile != null) {
-                GenericDecompilationRecord<String, String> predecessor = new GenericDecompilationRecord<>(entry.getKey(), sourceFileName, decompilationRecord);
-                results.add(new GenericDecompilationRecord<>(lowItem, sourceFile, predecessor));
+            HIGH_ITEM referenceSourceFile = srcMap.get(sourceFileName);
+            if (referenceSourceFile != null) {
+                // Checks if a decompilation record is available
+                if (decMap == null) {
+                    GenericDecompilationRecord<String, String> predecessor = new GenericDecompilationRecord<>(entry.getKey(), sourceFileName, decompilationRecord);
+                    results.add(new GenericDecompilationRecord<>(lowItem, referenceSourceFile, predecessor));
+                } else {
+                    HIGH_ITEM decompilerSourceFile = decMap.get(sourceFileName);
+                    if (decompilerSourceFile != referenceSourceFile) {
+                        GenericDecompilationRecord<String, String> predecessor = new GenericDecompilationRecord<>(entry.getKey(), sourceFileName, decompilationRecord);
+                        results.add(new GenericDecompilationRecord<>(lowItem, referenceSourceFile, decompilerSourceFile, predecessor));
+                    }
+                }
             }
         }
 

@@ -43,8 +43,8 @@ public class Driver {
         /*
          * Conversion step to change the directories into jar files pairs using name matching
          */
-        // DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer(new CLIFernFlower());
-        DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer();
+        DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer(new CLIFernFlower());
+        // DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer();
         List<DecompilationRecord<File, File>> jarRecords = dir2jarsTransformer.apply(dirRecord).collect(Collectors.toList());
 
 //        CreatePairsFromMainFolder createPairsFromMainFolder = new CreatePairsFromMainFolder("binjars", "srcjars");
@@ -101,22 +101,22 @@ public class Driver {
                     jarProcessor.associateMethods(filePairs);
             methods += methodRecords.size();
 
-            List<DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper>> finalWrappedMethods =
-                    jarProcessor.finalWrapper(methodRecords);
-
-            filteredMethods += finalWrappedMethods.size();
-
-            for (DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper> record : finalWrappedMethods) {
-                lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getMethodBody().split(" ")));
-                highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
-            }
+//            List<DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper>> finalWrappedMethods =
+//                    jarProcessor.finalWrapper(methodRecords);
+//
+//            filteredMethods += finalWrappedMethods.size();
+//
+//            for (DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper> record : finalWrappedMethods) {
+//                lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getMethodBody().split(" ")));
+//                highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
+//            }
 
 //            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
 //                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
 
-            WritePairsToFile<CtMethod> writePairsToFile = new WritePairsToFile<>(outputFile);
-
-            finalWrappedMethods.forEach(writePairsToFile);
+//            WritePairsToFile<CtMethod> writePairsToFile = new WritePairsToFile<>(outputFile);
+//
+//            finalWrappedMethods.forEach(writePairsToFile);
 
 //            System.out.printf("Successful resolutions: %.0f\n", PrettyPrinterMod.passes - tempPasses);
 //            System.out.printf("Failed resolutions: %.0f\n", PrettyPrinterMod.fails - tempFails);

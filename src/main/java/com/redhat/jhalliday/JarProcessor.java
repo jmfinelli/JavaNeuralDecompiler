@@ -21,13 +21,13 @@ public class JarProcessor<
         > {
 
     private final TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction;
-    private final MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM, MethodDeclaration> methodAssociatingRecordTransformer;
+    private final MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer;
     private final FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer;
     private final EXTRACTOR extractorRecordTransformer;
 
     public JarProcessor(
             TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction,
-            MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM, MethodDeclaration> methodAssociatingRecordTransformer,
+            MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer,
             FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer,
             EXTRACTOR extractorRecordTransformer) {
         this.classParsingFunction = classParsingFunction;

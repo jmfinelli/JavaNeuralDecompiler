@@ -6,7 +6,7 @@ public class GenericDecompilationRecord<LOW, HIGH> implements DecompilationRecor
 
     private final LOW lowLevelRepresentation;
     private final HIGH highLevelRepresentation;
-    private final HIGH highLevelReference;
+    private final HIGH highLevelDecompiled;
 
     private final DecompilationRecord predecessor;
 
@@ -18,10 +18,10 @@ public class GenericDecompilationRecord<LOW, HIGH> implements DecompilationRecor
         this(lowLevelRepresentation, highLevelRepresentation, null, predecessor);
     }
 
-    public GenericDecompilationRecord(LOW lowLevelRepresentation, HIGH highLevelRepresentation, HIGH highLevelReference, DecompilationRecord predecessor) {
+    public GenericDecompilationRecord(LOW lowLevelRepresentation, HIGH highLevelRepresentation, HIGH highLevelDecompiled, DecompilationRecord predecessor) {
         this.lowLevelRepresentation = lowLevelRepresentation;
         this.highLevelRepresentation = highLevelRepresentation;
-        this.highLevelReference = highLevelReference;
+        this.highLevelDecompiled = highLevelDecompiled;
         this.predecessor = predecessor;
     }
 
@@ -36,7 +36,7 @@ public class GenericDecompilationRecord<LOW, HIGH> implements DecompilationRecor
     }
 
     @Override
-    public HIGH getHighLevelReference() { return highLevelReference; }
+    public HIGH getHighLevelDecompiled() { return highLevelDecompiled; }
 
     public DecompilationRecord getPredecessor() {
         return predecessor;

@@ -68,10 +68,10 @@ public class CLIFernFlower implements Decompiler<File, File> {
 
             int exitVal = process.waitFor();
             if (exitVal == 0) {
-                System.out.println("Success!");
+                System.out.println(binJar.getName() + ": Success!");
                 return new File(outputFolder + File.separator + binJar.getName().replace(".jar", ""));
             } else {
-                System.out.println("Failure!");
+                System.out.println(binJar.getName() + ": Failure!");
                 return null;
             }
 

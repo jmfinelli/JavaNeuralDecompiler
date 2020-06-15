@@ -23,6 +23,9 @@ public class JarContentTransformerFunction implements TransformerFunction<File, 
     @Override
     public Stream<Map<String, byte[]>> apply(File jar) {
 
+        // This handles when a null reference is passed
+        if (jar == null) return Stream.empty();
+
         Map<String, byte[]> results = new HashMap<>();
 
         try {

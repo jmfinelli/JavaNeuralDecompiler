@@ -23,15 +23,26 @@ public class CompositeRecordTransformer<T_LOW, T_HIGH, R_LOW, R_HIGH> implements
     public Stream<DecompilationRecord<R_LOW, R_HIGH>> apply(DecompilationRecord<T_LOW, T_HIGH> decompilationRecord) {
 
         Stream<R_LOW> rLowStream = lowTransform.apply(decompilationRecord.getLowLevelRepresentation());
-        List<R_HIGH> rHighStream = highTransform.apply(decompilationRecord.getHighLevelRepresentation()).collect(Collectors.toList());
+        Stream<R_HIGH> rHighStream = highTransform.apply(decompilationRecord.getHighLevelRepresentation());
+        List<R_HIGH> rDecompiledStream = highTransform.apply(decompilationRecord.getHighLevelDecompiled()).collect(Collectors.toList());
 
         List<DecompilationRecord<R_LOW, R_HIGH>> result = new ArrayList<>();
 
-        rLowStream.forEach(r_low -> {
-            rHighStream.forEach(r_high -> {
-                result.add(new GenericDecompilationRecord<>(r_low, r_high, decompilationRecord));
+        if (rDecompiledStream.isEmpty()) {
+            rLowStream.forEach(r_low -> {
+                rHighStream.forEach(r_high -> {
+                    result.add(new GenericDecompilationRecord<>(r_low, r_high, decompilationRecord));
+                });
             });
-        });
+        } else {
+            rLowStream.forEach(r_low -> {
+                rHighStream.forEach(r_high -> {
+                    rDecompiledStream.forEach(r_decomp -> {
+                        result.add(new GenericDecompilationRecord<>(r_low, r_high, r_decomp, decompilationRecord));
+                    });
+                });
+            });
+        }
 
         return result.stream();
     }

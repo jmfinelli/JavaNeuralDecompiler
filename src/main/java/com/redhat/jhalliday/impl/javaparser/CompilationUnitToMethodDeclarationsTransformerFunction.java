@@ -12,6 +12,10 @@ public class CompilationUnitToMethodDeclarationsTransformerFunction implements T
     @Override
     public Stream<MethodDeclaration> apply(CompilationUnit compilationUnit) {
 
+        if (compilationUnit == null) {
+            return Stream.empty();
+        }
+
         List<MethodDeclaration> methodDeclarations = compilationUnit.findAll(MethodDeclaration.class);
 
         return methodDeclarations.stream();
