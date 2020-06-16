@@ -57,7 +57,12 @@ public class PrettyPrinterWithoutSolver implements HighInfoExtractor {
         this.configuration.setIndentSize(0);
 
         final VoidVisitor<Void> visitor = configuration.getVisitorFactory().apply(this.configuration);
-        methodDeclaration.getBody().get().accept(visitor, null);
+        if (methodDeclaration.getBody().isPresent()) {
+            methodDeclaration.getBody().get().accept(visitor, null);
+        } else {
+            //suspect
+            System.out.println("We have a problem with " + methodDeclaration.getName());
+        }
 
         String tempBody = visitor.toString();
         body = tempBody.replaceAll("\\s+", " ");

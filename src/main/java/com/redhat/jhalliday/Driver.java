@@ -3,13 +3,11 @@ package com.redhat.jhalliday;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
-import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
 import com.redhat.jhalliday.impl.fernflower.CLIFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
-import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterMod;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import javassist.CtClass;
@@ -21,16 +19,27 @@ import java.util.stream.Collectors;
 
 public class Driver {
 
-    private static final String FILENAME = "pairs.output";
+    private static final File LOW_FILENAME = new File("./LowLevelReferences.output");
+    private static final File HIGH_FILENAME = new File("./HighLevelReferences.output");
+    private static final File HIGH_DEC_FILENAME = new File("./HighLevelCandidates.output");
+
+    private static boolean USE_DECOMPILER = false;
 
     public static void main(String[] args) {
 
-        long start = System.currentTimeMillis();
+        File[] fileArray = {LOW_FILENAME, HIGH_FILENAME, HIGH_DEC_FILENAME};
 
-        File outputFile = new File("./" + FILENAME);
-        if (outputFile.exists()) {
-            outputFile.delete();
+        for(File file : fileArray) {
+            if (file.exists()) {
+                file.delete();
+            }
         }
+
+        WritePairsToFile<CtMethod> writePairsToFile = USE_DECOMPILER ?
+                new WritePairsToFile<>(LOW_FILENAME, HIGH_FILENAME, HIGH_DEC_FILENAME) :
+                new WritePairsToFile<>(LOW_FILENAME, HIGH_FILENAME);
+
+        long start = System.currentTimeMillis();
 
         /*
          * We start with a pair of directories, one containing binary (.class) jar files
@@ -38,13 +47,15 @@ public class Driver {
          * To populate these directories from maven central, see gather-sample-corpus.xml
          */
         DecompilationRecord<File, File> dirRecord = new GenericDecompilationRecord<>(
-                new File("./data/binjars"), new File("./data/srcjars"));
+                new File("./data/binjars"), new File("./data/srcjars"), new File("./data/decjars"), null);
 
         /*
          * Conversion step to change the directories into jar files pairs using name matching
          */
-        DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer(new CLIFernFlower());
-        // DirectoryToJarsRecordTransformer dir2jarsTransformer = new DirectoryToJarsRecordTransformer();
+        DirectoryToJarsRecordTransformer dir2jarsTransformer = USE_DECOMPILER ?
+                new DirectoryToJarsRecordTransformer(new CLIFernFlower(dirRecord.getHighLevelDecompiled())) :
+                new DirectoryToJarsRecordTransformer();
+
         List<DecompilationRecord<File, File>> jarRecords = dir2jarsTransformer.apply(dirRecord).collect(Collectors.toList());
 
 //        CreatePairsFromMainFolder createPairsFromMainFolder = new CreatePairsFromMainFolder("binjars", "srcjars");
@@ -101,22 +112,20 @@ public class Driver {
                     jarProcessor.associateMethods(filePairs);
             methods += methodRecords.size();
 
-//            List<DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper>> finalWrappedMethods =
-//                    jarProcessor.finalWrapper(methodRecords);
-//
-//            filteredMethods += finalWrappedMethods.size();
-//
-//            for (DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper> record : finalWrappedMethods) {
-//                lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getMethodBody().split(" ")));
-//                highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
-//            }
+            List<DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper>> finalWrappedMethods =
+                    jarProcessor.finalWrapper(methodRecords);
+
+            filteredMethods += finalWrappedMethods.size();
+
+            for (DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper> record : finalWrappedMethods) {
+                lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getMethodBody().split(" ")));
+                highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
+            }
 
 //            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
 //                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
 
-//            WritePairsToFile<CtMethod> writePairsToFile = new WritePairsToFile<>(outputFile);
-//
-//            finalWrappedMethods.forEach(writePairsToFile);
+            finalWrappedMethods.forEach(writePairsToFile);
 
 //            System.out.printf("Successful resolutions: %.0f\n", PrettyPrinterMod.passes - tempPasses);
 //            System.out.printf("Failed resolutions: %.0f\n", PrettyPrinterMod.fails - tempFails);
@@ -131,8 +140,6 @@ public class Driver {
 //            tempPasses = PrettyPrinterMod.passes;
 //
             count++;
-//
-//            JavaParserFacade.clearInstances();
 
         }
 //

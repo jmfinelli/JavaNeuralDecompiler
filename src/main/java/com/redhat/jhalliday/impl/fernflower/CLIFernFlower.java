@@ -7,6 +7,15 @@ import java.io.IOException;
 
 public class CLIFernFlower implements Decompiler<File, File> {
 
+    private final File outputFolder;
+
+    public CLIFernFlower(File outputFolder) {
+        if (!outputFolder.exists()) {
+            outputFolder.mkdir();
+        }
+        this.outputFolder = outputFolder;
+    }
+
     @Override
     public File apply(File binJar) {
 
@@ -14,20 +23,20 @@ public class CLIFernFlower implements Decompiler<File, File> {
             return null;
         }
 
-        String libraryName = binJar.getAbsolutePath()
-                .substring(binJar.getAbsolutePath().lastIndexOf(File.separator) + 1)
-                .replace(".jar", "");
+//        String libraryName = binJar.getAbsolutePath()
+//                .substring(binJar.getAbsolutePath().lastIndexOf(File.separator) + 1)
+//                .replace(".jar", "");
 
-        // Go to the parent folder
-        String newPath = binJar.getPath()
-                .substring(0, binJar.getPath().lastIndexOf(File.separator));
-        newPath = newPath
-                .substring(0, newPath.lastIndexOf(File.separator))
-                + File.separator + "decJars";
+//        // Go to the parent folder
+//        String newPath = binJar.getPath()
+//                .substring(0, binJar.getPath().lastIndexOf(File.separator));
+//        newPath = newPath
+//                .substring(0, newPath.lastIndexOf(File.separator))
+//                + File.separator + "decJars";
 
-        File outputFolder = new File(newPath);
-        if (!outputFolder.exists())
-            outputFolder.mkdir();
+//        File outputFolder = new File(newPath);
+//        if (!outputFolder.exists())
+//            outputFolder.mkdir();
 
         File check = new File(outputFolder + File.separator + binJar.getName());
 
@@ -51,7 +60,8 @@ public class CLIFernFlower implements Decompiler<File, File> {
 
         String binariesPath = binJar.getPath().substring(0, binJar.getPath().lastIndexOf("/"));
 
-        File fernflowerJar = new File(binariesPath + File.separator + "fernflower.jar");
+        // File fernflowerJar = new File(binariesPath + File.separator + "fernflower.jar");
+        File fernflowerJar = new File(outputFolder + File.separator + "fernflower.jar");
 
         if (!fernflowerJar.exists())
             throw new IOException("FernFlower JAR is not present in " + binariesPath);
@@ -69,7 +79,7 @@ public class CLIFernFlower implements Decompiler<File, File> {
             int exitVal = process.waitFor();
             if (exitVal == 0) {
                 System.out.println(binJar.getName() + ": Success!");
-                return new File(outputFolder + File.separator + binJar.getName().replace(".jar", ""));
+                return new File(outputFolder + File.separator + binJar.getName());
             } else {
                 System.out.println(binJar.getName() + ": Failure!");
                 return null;

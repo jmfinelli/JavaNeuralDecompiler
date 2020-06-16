@@ -41,9 +41,25 @@ public class DirectoryToJarsRecordTransformer implements RecordTransformer<File,
 
                 File srcJar = new File(srcFolder, String.format("%s-sources.jar", libraryName));
                 if (srcJar.exists()) {
+                    // Decompile the binary jar through the decompiler interface
                     File decompiledJar = this._decompiler == null ? null : this._decompiler.apply(binJar);
-                    DecompilationRecord<File, File> result = new GenericDecompilationRecord<>(binJar, srcJar, decompiledJar, decompilationRecord);
-                    results.add(result);
+
+                    // if the decompiler fails to decompile the binary jar, continue
+                    if (_decompiler != null && decompiledJar == null) {
+                        continue;
+                    }
+
+                    // if the decompiler created the jar file
+                    // (because of the above condition, "&& decompiledJar.exists()" is assured)
+                    if (decompiledJar != null) {
+                        DecompilationRecord<File, File> result = new GenericDecompilationRecord<>(binJar, srcJar, decompiledJar, decompilationRecord);
+                        results.add(result);
+                    }
+                    // if the decompilation is not required: if (_decompiler == null)
+                    else  {
+                        DecompilationRecord<File, File> result = new GenericDecompilationRecord<>(binJar, srcJar, decompilationRecord);
+                        results.add(result);
+                    }
                 }
             }
         }

@@ -84,9 +84,9 @@ public class MethodAssociatingRecordTransformer<LOW_AGGREGATE, HIGH_AGGREGATE, L
                 // Check if there are candidates
                 if (candidateDecompiledMatches!= null && !candidateDecompiledMatches.isEmpty()) {
                     MethodDeclaration highLevelMethod = matchedPair.b.unwrap();
-//                    List<MethodWrapper<MethodDeclaration>> decompiledMethods = candidateDecompiledMatches.stream().filter(x -> matchMethodDeclaration(highLevelMethod, x.unwrap())).collect(Collectors.toList());
-//                    if (decompiledMethods.size() == 1)
-//                        results.add(new GenericDecompilationRecord<>(matchedPair.a.unwrap(), matchedPair.b.unwrap(), decompiledMethods.get(0).unwrap(), decompilationRecord));
+                    List<MethodWrapper<MethodDeclaration>> decompiledMethods = candidateDecompiledMatches.stream().filter(x -> matchMethodDeclaration(highLevelMethod, x.unwrap())).collect(Collectors.toList());
+                    if (decompiledMethods.size() == 1)
+                        results.add(new GenericDecompilationRecord<>(matchedPair.a.unwrap(), matchedPair.b.unwrap(), decompiledMethods.get(0).unwrap(), decompilationRecord));
                 } else {
                     results.add(new GenericDecompilationRecord<>(matchedPair.a.unwrap(), matchedPair.b.unwrap(), decompilationRecord));
                 }

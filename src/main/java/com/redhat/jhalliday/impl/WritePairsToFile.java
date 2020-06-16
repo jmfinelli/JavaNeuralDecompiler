@@ -10,21 +10,52 @@ import java.util.function.Consumer;
 
 public class WritePairsToFile<LOW> implements Consumer<DecompilationRecord<FinalLowLevelMethodWrapper<LOW>, FinalHighLevelMethodWrapper>> {
 
-    private final File outputFile;
+    private final File lowLevelReferencesFile;
+    private final File highLevelReferencesFile;
+    private final File highLevelCandidatesFile;
 
-    public WritePairsToFile(File outputFile) {
-        this.outputFile = outputFile;
+    public WritePairsToFile(File lowLevelReferencesFile, File highLevelReferencesFile, File highLevelCandidatesFile) {
+        this.lowLevelReferencesFile = lowLevelReferencesFile;
+        this.highLevelReferencesFile = highLevelReferencesFile;
+        this.highLevelCandidatesFile = highLevelCandidatesFile;
+    }
+
+    public WritePairsToFile(File lowLevelReferencesFile, File highLevelReferencesFile) {
+        this.lowLevelReferencesFile = lowLevelReferencesFile;
+        this.highLevelReferencesFile = highLevelReferencesFile;
+        this.highLevelCandidatesFile = null;
     }
 
     @Override
     public void accept(DecompilationRecord<FinalLowLevelMethodWrapper<LOW>, FinalHighLevelMethodWrapper> finalDecompilationRecord) {
 
-        try (PrintWriter printWriter = new PrintWriter(new FileWriter(this.outputFile, true))) {
-            printWriter.write(String.format("%s\t%s\n",
-                    finalDecompilationRecord.getLowLevelRepresentation().getMethodBody(),
-                    finalDecompilationRecord.getHighLevelRepresentation().getMethodBody()));
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (finalDecompilationRecord.getHighLevelDecompiled() != null) {
+
+            try (
+                    PrintWriter lowRefPrintWriter = new PrintWriter(new FileWriter(this.lowLevelReferencesFile, true));
+                    PrintWriter highRefPrintWriter = new PrintWriter(new FileWriter(this.highLevelReferencesFile, true));
+                    PrintWriter highCandPrintWriter = new PrintWriter(new FileWriter(this.highLevelCandidatesFile, true))
+            ) {
+
+                lowRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getLowLevelRepresentation().getMethodBody()));
+                highRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getHighLevelRepresentation().getMethodBody()));
+                highCandPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getHighLevelDecompiled().getMethodBody()));
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try (
+                    PrintWriter lowRefPrintWriter = new PrintWriter(new FileWriter(this.lowLevelReferencesFile, true));
+                    PrintWriter highRefPrintWriter = new PrintWriter(new FileWriter(this.highLevelReferencesFile, true));
+            ) {
+
+                lowRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getLowLevelRepresentation().getMethodBody()));
+                highRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getHighLevelRepresentation().getMethodBody()));
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

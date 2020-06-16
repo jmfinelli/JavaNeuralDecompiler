@@ -57,27 +57,38 @@ public class JarProcessor<
          * Next we need to convert the raw bytes to something more useful
          * Start with the low level (.class) side
          */
-        CompositeRecordTransformer<Map<String, byte[]>, Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>>
-                ctClassBuildingTransformer = new CompositeRecordTransformer<>(
-                classParsingFunction,
-                new IdentityTransformerFunction<>()
-        );
-        List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>>> semiParsed =
-                rawFileContentRecords.stream().flatMap(ctClassBuildingTransformer).collect(Collectors.toList());
+//        CompositeRecordTransformer<Map<String, byte[]>, Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>>
+//                ctClassBuildingTransformer = new CompositeRecordTransformer<>(
+//                classParsingFunction,
+//                new IdentityTransformerFunction<>()
+//        );
+//        List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>>> semiParsed =
+//                rawFileContentRecords.stream().flatMap(ctClassBuildingTransformer).collect(Collectors.toList());
 
         /*
          * Now the high level side.
          * Note that this ordering will parse some .java files unnecessarily, as they won't have matching .class files in the next step.
          * However, it's cheaper than re-parsing the same .java file multiple times if it contains multiple classes.
          */
-        CompositeRecordTransformer<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>
-                compilationUnitBuildingTransformer = new CompositeRecordTransformer<>(
-                new IdentityTransformerFunction<>(),
-                //new CompilationUnitCreationTransformerFunction((File)decompilationRecord.getPredecessor().getLowLevelRepresentation())
+//        CompositeRecordTransformer<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>
+//                compilationUnitBuildingTransformer = new CompositeRecordTransformer<>(
+//                new IdentityTransformerFunction<>(),
+////                new CompilationUnitCreationTransformerFunction((File)decompilationRecord.getPredecessor().getLowLevelRepresentation())
+//                new CompilationUnitCreationTransformerFunction()
+//        );
+//        List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>> fullyParsed =
+//                semiParsed.stream().flatMap(compilationUnitBuildingTransformer).collect(Collectors.toList());
+
+        /*
+         * Squeeze the two above operations in one call
+         */
+        ByteArrayRecordTransformer <Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>
+                byteArrayRecordTransformer = new ByteArrayRecordTransformer<>(
+                classParsingFunction,
                 new CompilationUnitCreationTransformerFunction()
         );
         List<DecompilationRecord<Map<String, ClassWrapper<LOW_AGGREGATE>>, Map<String, CompilationUnit>>> fullyParsed =
-                semiParsed.stream().flatMap(compilationUnitBuildingTransformer).collect(Collectors.toList());
+                rawFileContentRecords.stream().flatMap(byteArrayRecordTransformer).collect(Collectors.toList());
 
         /*
          * Now we can pair up the individual .class and .java files, using the source file name from the .class
