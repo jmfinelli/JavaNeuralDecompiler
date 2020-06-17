@@ -29,29 +29,24 @@ public class WritePairsToFile<LOW> implements Consumer<DecompilationRecord<Final
     @Override
     public void accept(DecompilationRecord<FinalLowLevelMethodWrapper<LOW>, FinalHighLevelMethodWrapper> finalDecompilationRecord) {
 
+        try (
+                PrintWriter lowRefPrintWriter = new PrintWriter(new FileWriter(this.lowLevelReferencesFile, true));
+                PrintWriter highRefPrintWriter = new PrintWriter(new FileWriter(this.highLevelReferencesFile, true))
+        ) {
+
+            lowRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getLowLevelRepresentation().getMethodBody()));
+            highRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getHighLevelRepresentation().getMethodBody()));
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         if (finalDecompilationRecord.getHighLevelDecompiled() != null) {
 
-            try (
-                    PrintWriter lowRefPrintWriter = new PrintWriter(new FileWriter(this.lowLevelReferencesFile, true));
-                    PrintWriter highRefPrintWriter = new PrintWriter(new FileWriter(this.highLevelReferencesFile, true));
-                    PrintWriter highCandPrintWriter = new PrintWriter(new FileWriter(this.highLevelCandidatesFile, true))
-            ) {
+            try (PrintWriter highCandPrintWriter = new PrintWriter(new FileWriter(this.highLevelCandidatesFile, true))) {
 
-                lowRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getLowLevelRepresentation().getMethodBody()));
-                highRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getHighLevelRepresentation().getMethodBody()));
                 highCandPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getHighLevelDecompiled().getMethodBody()));
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try (
-                    PrintWriter lowRefPrintWriter = new PrintWriter(new FileWriter(this.lowLevelReferencesFile, true));
-                    PrintWriter highRefPrintWriter = new PrintWriter(new FileWriter(this.highLevelReferencesFile, true));
-            ) {
-
-                lowRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getLowLevelRepresentation().getMethodBody()));
-                highRefPrintWriter.write(String.format("%s\n", finalDecompilationRecord.getHighLevelRepresentation().getMethodBody()));
 
             } catch (IOException e) {
                 e.printStackTrace();

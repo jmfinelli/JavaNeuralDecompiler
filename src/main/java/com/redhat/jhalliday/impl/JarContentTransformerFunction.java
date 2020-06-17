@@ -5,7 +5,9 @@ import com.redhat.jhalliday.TransformerFunction;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -15,9 +17,16 @@ import java.util.zip.ZipInputStream;
 public class JarContentTransformerFunction implements TransformerFunction<File, Map<String, byte[]>> {
 
     private final Predicate<String> matchingName;
+    private final List<String> exclusions;
 
     public JarContentTransformerFunction(Predicate<String> matchingName) {
         this.matchingName = matchingName;
+        exclusions = new ArrayList<>();
+    }
+
+    public JarContentTransformerFunction(Predicate<String> matchingName, List<String> exclusions) {
+        this.matchingName = matchingName;
+        this.exclusions = exclusions;
     }
 
     @Override
@@ -36,8 +45,13 @@ public class JarContentTransformerFunction implements TransformerFunction<File, 
                 String name = zipEntry.getName();
 
                 if (matchingName.test(name)) {
-                    byte[] fileBytes = zipInputStream.readAllBytes();
-                    results.put(name, fileBytes);
+                    if (exclusions.isEmpty()) {
+                        byte[] fileBytes = zipInputStream.readAllBytes();
+                        results.put(name, fileBytes);
+                    } else if (exclusions.stream().noneMatch(name::matches)) {
+                        byte[] fileBytes = zipInputStream.readAllBytes();
+                        results.put(name, fileBytes);
+                    }
                 }
                 zipEntry = zipInputStream.getNextEntry();
             }

@@ -47,7 +47,7 @@ public class ByteArrayRecordTransformer<R_LOW, R_HIGH> implements RecordTransfor
                     result.add(new GenericDecompilationRecord<>(r_low, r_high, decompilationRecord));
                 });
             });
-        } else {
+        } else if (!rDecompiledList.isEmpty()) {
             rLowList.forEach(r_low -> {
                 rHighList.forEach(r_high -> {
                     rDecompiledList.forEach(r_decomp -> {

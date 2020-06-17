@@ -6,6 +6,7 @@ import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.javaparser.CompilationUnitCreationTransformerFunction;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -24,6 +25,10 @@ public class JarProcessor<
     private final MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer;
     private final FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer;
     private final EXTRACTOR extractorRecordTransformer;
+
+    private static final List<String> javaExclusions = new ArrayList<>() {{
+        add(".+/package-info.java$");
+    }};
 
     public JarProcessor(
             TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction,
@@ -47,7 +52,7 @@ public class JarProcessor<
          */
         JarContentRecordTransformer jarContentTransformer = new JarContentRecordTransformer(
                 new JarContentTransformerFunction(s -> s.endsWith(".class")),
-                new JarContentTransformerFunction(s -> s.endsWith(".java"))
+                new JarContentTransformerFunction(s -> s.endsWith(".java"), javaExclusions)
         );
         List<DecompilationRecord<Map<String, byte[]>, Map<String, byte[]>>> rawFileContentRecords =
                 Stream.of(decompilationRecord).flatMap(jarContentTransformer).collect(Collectors.toList());

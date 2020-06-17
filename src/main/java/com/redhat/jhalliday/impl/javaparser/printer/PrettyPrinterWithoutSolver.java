@@ -57,12 +57,9 @@ public class PrettyPrinterWithoutSolver implements HighInfoExtractor {
         this.configuration.setIndentSize(0);
 
         final VoidVisitor<Void> visitor = configuration.getVisitorFactory().apply(this.configuration);
-        if (methodDeclaration.getBody().isPresent()) {
-            methodDeclaration.getBody().get().accept(visitor, null);
-        } else {
-            //suspect
-            System.out.println("We have a problem with " + methodDeclaration.getName());
-        }
+        // it is not needed to check if there is a body because
+        // all previous operations (in the Driver.java) make sure that a body is present
+        methodDeclaration.getBody().get().accept(visitor, null);
 
         String tempBody = visitor.toString();
         body = tempBody.replaceAll("\\s+", " ");

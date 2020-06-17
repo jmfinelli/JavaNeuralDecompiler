@@ -76,13 +76,17 @@ public class MethodAssociatingRecordTransformer<LOW_AGGREGATE, HIGH_AGGREGATE, L
             }
 
             List<MethodWrapper<MethodDeclaration>> candidateDecompiledMatches = decItemsByName.get(methodName);
-            // No need to run the above check
+
+            // Check if there are candidates
+            if (decompilationRecord.getHighLevelDecompiled() != null && candidateDecompiledMatches == null) {
+                continue;
+            }
 
             List<Pair<MethodWrapper<LOW_ITEM>, MethodWrapper<MethodDeclaration>>> matchedPairs = match(entry.getValue(), candidateMatches);
 
             for (Pair<MethodWrapper<LOW_ITEM>, MethodWrapper<MethodDeclaration>> matchedPair : matchedPairs) {
-                // Check if there are candidates
-                if (candidateDecompiledMatches!= null && !candidateDecompiledMatches.isEmpty()) {
+
+                if (decompilationRecord.getHighLevelDecompiled() != null) {
                     MethodDeclaration highLevelMethod = matchedPair.b.unwrap();
                     List<MethodWrapper<MethodDeclaration>> decompiledMethods = candidateDecompiledMatches.stream().filter(x -> matchMethodDeclaration(highLevelMethod, x.unwrap())).collect(Collectors.toList());
                     if (decompiledMethods.size() == 1)
@@ -137,7 +141,8 @@ public class MethodAssociatingRecordTransformer<LOW_AGGREGATE, HIGH_AGGREGATE, L
     }
 
     public boolean matchMethodDeclaration (MethodDeclaration base, MethodDeclaration target) {
-        return (base.getType().equals(target.getType()) &&
+        return (!target.isAbstract() && target.getBody().isPresent() &&
+                base.getType().equals(target.getType()) &&
                 base.getParameters().containsAll(target.getParameters()));
     }
 }

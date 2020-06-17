@@ -44,4 +44,5 @@ exit
 
 sudo apt-get install openjdk-8-jdk
 
-Asiya.pl -eval single -metric_set metrics_TER -no_tok -pdf output.pdf -g sys -v Asiya.config
+Asiya.pl -eval single -metric_set some_metrics -no_tok -g sys -v Asiya.config
+Asiya.pl -eval single -metric_set metrics_TER -no_tok -g sys -v Asiya.config

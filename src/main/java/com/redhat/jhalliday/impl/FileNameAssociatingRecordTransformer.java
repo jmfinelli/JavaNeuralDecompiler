@@ -39,7 +39,7 @@ public class FileNameAssociatingRecordTransformer<LOW_ITEM extends ClassWrapper<
                     results.add(new GenericDecompilationRecord<>(lowItem, referenceSourceFile, predecessor));
                 } else {
                     HIGH_ITEM decompilerSourceFile = decMap.get(sourceFileName);
-                    if (decompilerSourceFile != referenceSourceFile) {
+                    if (decompilerSourceFile != null) {
                         GenericDecompilationRecord<String, String> predecessor = new GenericDecompilationRecord<>(entry.getKey(), sourceFileName, decompilationRecord);
                         results.add(new GenericDecompilationRecord<>(lowItem, referenceSourceFile, decompilerSourceFile, predecessor));
                     }

@@ -19,11 +19,11 @@ import java.util.stream.Collectors;
 
 public class Driver {
 
-    private static final File LOW_FILENAME = new File("./LowLevelReferences.output");
-    private static final File HIGH_FILENAME = new File("./HighLevelReferences.output");
-    private static final File HIGH_DEC_FILENAME = new File("./HighLevelCandidates.output");
+    private static final File LOW_FILENAME = new File("./bytecode.output");
+    private static final File HIGH_FILENAME = new File("./references.output");
+    private static final File HIGH_DEC_FILENAME = new File("./candidates.output");
 
-    private static boolean USE_DECOMPILER = false;
+    private static boolean USE_DECOMPILER = true;
 
     public static void main(String[] args) {
 
@@ -46,8 +46,11 @@ public class Driver {
          * and the other containing the corresponding source (.java) jar files.
          * To populate these directories from maven central, see gather-sample-corpus.xml
          */
-        DecompilationRecord<File, File> dirRecord = new GenericDecompilationRecord<>(
-                new File("./data/binjars"), new File("./data/srcjars"), new File("./data/decjars"), null);
+        DecompilationRecord<File, File> dirRecord = USE_DECOMPILER ?
+                new GenericDecompilationRecord<>(
+                        new File("./data/binjars"), new File("./data/srcjars"), new File("./data/decjars"), null) :
+                new GenericDecompilationRecord<>(
+                        new File("./data/binjars"), new File("./data/srcjars"));
 
         /*
          * Conversion step to change the directories into jar files pairs using name matching
