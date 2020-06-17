@@ -1,5 +1,6 @@
 # Output files
 *.output
+target/
 
 # Intellij files
 .idea/
