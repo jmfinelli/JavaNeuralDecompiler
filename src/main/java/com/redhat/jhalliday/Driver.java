@@ -7,6 +7,7 @@ import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
 import com.redhat.jhalliday.impl.fernflower.CLIFernFlower;
+import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
@@ -55,8 +56,18 @@ public class Driver {
         /*
          * Conversion step to change the directories into jar files pairs using name matching
          */
+
+        Decompiler<File,File> decompiler;
+        try {
+            decompiler = new OriginalFernFlower(dirRecord.getHighLevelDecompiled());
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+            decompiler = new CLIFernFlower(dirRecord.getHighLevelDecompiled());
+        }
+
         DirectoryToJarsRecordTransformer dir2jarsTransformer = USE_DECOMPILER ?
-                new DirectoryToJarsRecordTransformer(new CLIFernFlower(dirRecord.getHighLevelDecompiled())) :
+                //new DirectoryToJarsRecordTransformer(new CLIFernFlower(dirRecord.getHighLevelDecompiled())) :
+                new DirectoryToJarsRecordTransformer(decompiler) :
                 new DirectoryToJarsRecordTransformer();
 
         List<DecompilationRecord<File, File>> jarRecords = dir2jarsTransformer.apply(dirRecord).collect(Collectors.toList());
