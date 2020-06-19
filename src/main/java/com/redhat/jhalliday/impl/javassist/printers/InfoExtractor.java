@@ -31,7 +31,7 @@ import java.util.function.Function;
  *
  * @author Jason T. Greene
  */
-public class MyInfoExtractor implements Opcode, LowInfoExtractor {
+public class InfoExtractor implements Opcode, LowInfoExtractor {
 
     public final static String LABEL_SYMBOL = "L";
     public final static String POOL_SYMBOL = "#";
@@ -53,7 +53,7 @@ public class MyInfoExtractor implements Opcode, LowInfoExtractor {
     private final Map<Integer, String> variableNames = new HashMap<>();
     private final List<String> body = new LinkedList<>();
 
-    public MyInfoExtractor(CtMethod ctMethod) {
+    public InfoExtractor(CtMethod ctMethod) {
 
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();

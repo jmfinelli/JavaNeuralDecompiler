@@ -62,7 +62,11 @@ public class PrettyPrinterMod implements HighInfoExtractor {
         final VoidVisitor<Void> visitor = configuration.getVisitorFactory().apply(this.configuration);
         methodDeclaration.accept(visitor, null);
 
-        body = visitor.toString().replaceAll("\\s+", " ");
+        String tempBody = visitor.toString();
+        tempBody = tempBody.replaceAll("\\s+", " ");
+        tempBody = tempBody.replaceAll("\\s+\\}\\s+$", "");
+        tempBody = tempBody.replaceAll("\\s+\\{\\s+", "");
+        body = tempBody;
 
         BlockStmt bodyStmt = methodDeclaration.getBody().get();
 

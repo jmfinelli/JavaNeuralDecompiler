@@ -62,7 +62,11 @@ public class PrettyPrinterWithoutSolver implements HighInfoExtractor {
         methodDeclaration.getBody().get().accept(visitor, null);
 
         String tempBody = visitor.toString();
-        body = tempBody.replaceAll("\\s+", " ");
+
+        tempBody = tempBody.replaceAll("\\s+", " ");
+        tempBody = tempBody.replaceAll("\\s+\\}\\s+$", "");
+        tempBody = tempBody.replaceAll("\\s+\\{\\s+", "");
+        body = tempBody;
     }
 
     @Override
