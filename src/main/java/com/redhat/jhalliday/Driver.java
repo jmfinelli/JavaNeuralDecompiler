@@ -9,8 +9,11 @@ import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 import com.redhat.jhalliday.impl.fernflower.CLIFernFlower;
 import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
+import com.redhat.jhalliday.impl.javaparser.printer.HighLevelBodyExtractor;
+import com.redhat.jhalliday.impl.javassist.CtMethodInfoExtractor;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
+import com.redhat.jhalliday.impl.javassist.printers.LowLevelBodyExtractor;
 import javassist.CtClass;
 import javassist.CtMethod;
 
@@ -86,7 +89,7 @@ public class Driver {
 //                        JavaParserFunctions.methodWrappingFunction)
 //        );
 
-        JarProcessor<CtClass, CtMethod, DictionaryExtractionRecordTransformer<CtMethod>> jarProcessor = new JarProcessor<>(
+        JarProcessor<CtClass, CtMethod> jarProcessor = new JarProcessor<>(
                 new ClassWrapperCreationTransformerFunction<>(
                         JavassistFunctions.classCreationFunction,
                         JavassistFunctions.classWrappingFunction),
@@ -98,7 +101,11 @@ public class Driver {
                 new FinalWrapperRecordTransformer<>(
                         JavassistFunctions.finalMethodWrapperFunction,
                         JavaParserFunctions.finalMethodWrapperFunction),
-                new DictionaryExtractionRecordTransformer<>()
+                new JuicerRecordLowBasedTransformer<>(
+                        new CtMethodInfoExtractor(),
+                        new MethodDeclarationInfoExtractor(),
+                        new LowLevelBodyExtractor(),
+                        new HighLevelBodyExtractor())
         );
 
         int files = 0;
@@ -126,34 +133,37 @@ public class Driver {
                     jarProcessor.associateMethods(filePairs);
             methods += methodRecords.size();
 
-            List<DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper>> finalWrappedMethods =
-                    jarProcessor.finalWrapper(methodRecords);
+            List<DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>>> juice =
+                    jarProcessor.juicer(methodRecords);
 
-            filteredMethods += finalWrappedMethods.size();
-
-            for (DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper> record : finalWrappedMethods) {
-                lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getMethodBody().split(" ")));
-                highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
-            }
-
-//            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
-//                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
-
-            finalWrappedMethods.forEach(writePairsToFile);
-
-//            System.out.printf("Successful resolutions: %.0f\n", PrettyPrinterMod.passes - tempPasses);
-//            System.out.printf("Failed resolutions: %.0f\n", PrettyPrinterMod.fails - tempFails);
-//            float percentage = 100f * (PrettyPrinterMod.passes - tempPasses)/((PrettyPrinterMod.passes - tempPasses) + (PrettyPrinterMod.fails - tempFails));
-//            System.out.printf("Passes rate: %.2f%%\n", percentage);
-//            long localEnd = System.currentTimeMillis();
-//            System.out.printf("Runtime %d ms\n", localEnd-localStart);
+//            List<DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper>> finalWrappedMethods =
+//                    jarProcessor.finalWrapper(methodRecords);
 //
-//            System.out.println();
+//            filteredMethods += finalWrappedMethods.size();
 //
-//            tempFails = PrettyPrinterMod.fails;
-//            tempPasses = PrettyPrinterMod.passes;
+//            for (DecompilationRecord<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper> record : finalWrappedMethods) {
+//                lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getMethodBody().split(" ")));
+//                highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getMethodBody().split(" ")));
+//            }
 //
-            count++;
+////            List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<CtMethod>, FinalHighLevelMethodWrapper, Map<String, String>>> finalResults =
+////                    jarProcessor.dictionaryExtraction(finalWrappedMethods);
+//
+//            finalWrappedMethods.forEach(writePairsToFile);
+//
+////            System.out.printf("Successful resolutions: %.0f\n", PrettyPrinterMod.passes - tempPasses);
+////            System.out.printf("Failed resolutions: %.0f\n", PrettyPrinterMod.fails - tempFails);
+////            float percentage = 100f * (PrettyPrinterMod.passes - tempPasses)/((PrettyPrinterMod.passes - tempPasses) + (PrettyPrinterMod.fails - tempFails));
+////            System.out.printf("Passes rate: %.2f%%\n", percentage);
+////            long localEnd = System.currentTimeMillis();
+////            System.out.printf("Runtime %d ms\n", localEnd-localStart);
+////
+////            System.out.println();
+////
+////            tempFails = PrettyPrinterMod.fails;
+////            tempPasses = PrettyPrinterMod.passes;
+//
+//            count++;
 
         }
 //

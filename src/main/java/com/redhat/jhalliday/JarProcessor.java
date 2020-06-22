@@ -15,16 +15,14 @@ import java.util.stream.Stream;
 
 public class JarProcessor<
         LOW_AGGREGATE,
-        LOW_ITEM,
-        EXTRACTOR extends Function<
-                DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>,
-                Stream<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper, Map<String, String>>>>
-        > {
+        LOW_ITEM> {
 
     private final TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction;
     private final MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer;
     private final FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer;
-    private final EXTRACTOR extractorRecordTransformer;
+    private final Function<
+            DecompilationRecord<LOW_ITEM, MethodDeclaration>,
+            Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> juicer;
 
     private static final List<String> javaExclusions = new ArrayList<>() {{
         add(".+/package-info.java$");
@@ -34,11 +32,13 @@ public class JarProcessor<
             TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction,
             MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer,
             FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer,
-            EXTRACTOR extractorRecordTransformer) {
+            Function<
+                    DecompilationRecord<LOW_ITEM, MethodDeclaration>,
+                    Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> juicer) {
         this.classParsingFunction = classParsingFunction;
         this.methodAssociatingRecordTransformer = methodAssociatingRecordTransformer;
         this.finalWrapperRecordTransformer = finalWrapperRecordTransformer;
-        this.extractorRecordTransformer = extractorRecordTransformer;
+        this.juicer = juicer;
     }
 
     public List<DecompilationRecord<ClassWrapper<LOW_AGGREGATE>, CompilationUnit>> associateFiles(
@@ -118,6 +118,14 @@ public class JarProcessor<
         return methodRecords;
     }
 
+    public List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> juicer(List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> associatedMethods) {
+
+        List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> results =
+                associatedMethods.stream().flatMap(juicer).collect(Collectors.toList());
+
+        return results;
+    }
+
     public List<DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>> finalWrapper(
             List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> pairedMethods) {
 
@@ -127,15 +135,4 @@ public class JarProcessor<
         return results;
     }
 
-    /*
-     * Extract methods's body and related dictionary from methods pair
-     */
-    public List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper, Map<String,String>>> dictionaryExtraction(
-            List<DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>> pairedMethods) {
-
-        List<DecompilationRecordWithDic<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper, Map<String,String>>> results =
-                pairedMethods.stream().flatMap(extractorRecordTransformer).collect(Collectors.toList());
-
-        return results;
-    }
 }
