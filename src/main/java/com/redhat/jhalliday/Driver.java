@@ -9,11 +9,11 @@ import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 import com.redhat.jhalliday.impl.fernflower.CLIFernFlower;
 import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
-import com.redhat.jhalliday.impl.javaparser.printer.HighLevelBodyExtractor;
+import com.redhat.jhalliday.impl.javaparser.HighLevelBodyExtractor;
 import com.redhat.jhalliday.impl.javassist.CtMethodInfoExtractor;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
-import com.redhat.jhalliday.impl.javassist.printers.LowLevelBodyExtractor;
+import com.redhat.jhalliday.impl.javassist.LowLevelBodyExtractor;
 import javassist.CtClass;
 import javassist.CtMethod;
 

@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javassist.printers;
+package com.redhat.jhalliday.impl.javassist;
 
 /*
  * Javassist, a Java-bytecode translator toolkit.

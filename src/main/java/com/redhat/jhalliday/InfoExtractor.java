@@ -10,7 +10,7 @@ public interface InfoExtractor<T> extends Function<T, Map<String, InfoExtractor.
         VAR,
         FIELD,
         MET,
-        COSTANT;
+        CONST;
 
     }
 }

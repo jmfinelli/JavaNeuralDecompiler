@@ -4,8 +4,10 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.InfoExtractor;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,7 +39,19 @@ public class JuicerRecordLowBasedTransformer<LOW_ITEM> implements Function<
 
         Map<String, InfoExtractor.InfoType> lowLevelSet = lowLevelInfoExtractor.apply(decompilationRecord.getLowLevelRepresentation());
 
-        Map<String, String> placeholders = new HashMap<>();
+        Map<String, String> placeholders = new TreeMap<String, String>(
+                new Comparator<String>() {
+                    @Override
+                    public int compare(String s1, String s2) {
+                        if (s1.length() > s2.length()) {
+                            return -1;
+                        } else if (s1.length() < s2.length()) {
+                            return 1;
+                        } else {
+                            return s1.compareTo(s2);
+                        }
+                    }}
+        );
 
         for (Map.Entry<String, InfoExtractor.InfoType> entry : lowLevelSet.entrySet()) {
             int postfix = placeholders.entrySet().stream()
