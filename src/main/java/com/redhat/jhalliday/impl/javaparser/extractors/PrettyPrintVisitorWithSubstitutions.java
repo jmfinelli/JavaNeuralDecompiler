@@ -34,7 +34,6 @@ import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.type.*;
 import com.github.javaparser.ast.visitor.Visitable;
 import com.github.javaparser.ast.visitor.VoidVisitor;
-import com.github.javaparser.printer.PrettyPrinterConfiguration;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,18 +50,18 @@ import static java.util.stream.Collectors.joining;
  * @author Julio Vilmar Gesser
  */
 public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
-    protected final PrettyPrinterConfiguration configuration;
+    protected final PrettyPrinterConfigurationExtraSpace configuration;
     protected final SourcePrinter printer;
     protected final Map<String, String> _placeholders;
 
-    public PrettyPrintVisitorWithSubstitutions(PrettyPrinterConfiguration prettyPrinterConfiguration) {
+    public PrettyPrintVisitorWithSubstitutions(PrettyPrinterConfigurationExtraSpace prettyPrinterConfiguration) {
         configuration = prettyPrinterConfiguration;
         printer = new SourcePrinter(configuration);
         _placeholders = new HashMap<>();
     }
 
     public PrettyPrintVisitorWithSubstitutions(
-            PrettyPrinterConfiguration prettyPrinterConfiguration,
+            PrettyPrinterConfigurationExtraSpace prettyPrinterConfiguration,
             Map<String, String> placeholders) {
         configuration = prettyPrinterConfiguration;
         printer = new SourcePrinter(configuration);
@@ -733,11 +732,7 @@ public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
 
         // Substitutions
         String currentValue = n.getValue();
-        if (this._placeholders.containsKey(currentValue)) {
-            printer.print(this._placeholders.get(currentValue));
-        } else {
-            printer.print(currentValue);
-        }
+        printer.print(this._placeholders.getOrDefault(currentValue, currentValue));
         printer.print("'");
     }
 
@@ -748,11 +743,7 @@ public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
 
         // Substitutions
         String currentValue = n.getValue();
-        if (this._placeholders.containsKey(currentValue)) {
-            printer.print(this._placeholders.get(currentValue));
-        } else {
-            printer.print(currentValue);
-        }
+        printer.print(this._placeholders.getOrDefault(currentValue, currentValue));
     }
 
     @Override
@@ -762,11 +753,7 @@ public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
 
         // Substitutions
         String currentValue = n.getValue();
-        if (this._placeholders.containsKey(currentValue)) {
-            printer.print(this._placeholders.get(currentValue));
-        } else {
-            printer.print(currentValue);
-        }
+        printer.print(this._placeholders.getOrDefault(currentValue, currentValue));
     }
 
     @Override
@@ -776,11 +763,7 @@ public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
 
         // Substitutions
         String currentValue = n.getValue();
-        if (this._placeholders.containsKey(currentValue)) {
-            printer.print(this._placeholders.get(currentValue));
-        } else {
-            printer.print(currentValue);
-        }
+        printer.print(this._placeholders.getOrDefault(currentValue, currentValue));
     }
 
     @Override
@@ -791,11 +774,7 @@ public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
 
         // Substitutions
         String currentValue = n.getValue();
-        if (this._placeholders.containsKey(currentValue)) {
-            printer.print(this._placeholders.get(currentValue));
-        } else {
-            printer.print(currentValue);
-        }
+        printer.print(this._placeholders.getOrDefault(currentValue, currentValue));
         printer.print("\"");
     }
 
@@ -820,11 +799,7 @@ public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
 
         // Substitutions
         String currentValue = String.valueOf(n.getValue());
-        if (this._placeholders.containsKey(currentValue)) {
-            printer.print(this._placeholders.get(currentValue));
-        } else {
-            printer.print(currentValue);
-        }
+        printer.print(this._placeholders.getOrDefault(currentValue, currentValue));
     }
 
     @Override

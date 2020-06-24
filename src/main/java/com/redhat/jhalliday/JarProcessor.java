@@ -19,7 +19,6 @@ public class JarProcessor<
 
     private final TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction;
     private final MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer;
-    private final FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer;
     private final Function<
             DecompilationRecord<LOW_ITEM, MethodDeclaration>,
             Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> juicer;
@@ -31,13 +30,11 @@ public class JarProcessor<
     public JarProcessor(
             TransformerFunction<Map<String, byte[]>, Map<String, ClassWrapper<LOW_AGGREGATE>>> classParsingFunction,
             MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer,
-            FinalWrapperRecordTransformer<LOW_ITEM> finalWrapperRecordTransformer,
             Function<
                     DecompilationRecord<LOW_ITEM, MethodDeclaration>,
                     Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> juicer) {
         this.classParsingFunction = classParsingFunction;
         this.methodAssociatingRecordTransformer = methodAssociatingRecordTransformer;
-        this.finalWrapperRecordTransformer = finalWrapperRecordTransformer;
         this.juicer = juicer;
     }
 
@@ -100,10 +97,8 @@ public class JarProcessor<
          */
         FileNameAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit> fileNameAssociatingRecordTransformer =
                 new FileNameAssociatingRecordTransformer<>();
-        List<DecompilationRecord<ClassWrapper<LOW_AGGREGATE>, CompilationUnit>> associatedFileRecords =
-                fullyParsed.stream().flatMap(fileNameAssociatingRecordTransformer).collect(Collectors.toList());
 
-        return associatedFileRecords;
+        return fullyParsed.stream().flatMap(fileNameAssociatingRecordTransformer).collect(Collectors.toList());
     }
 
     /*
@@ -112,27 +107,12 @@ public class JarProcessor<
     public List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> associateMethods(
             List<DecompilationRecord<ClassWrapper<LOW_AGGREGATE>, CompilationUnit>> associatedFileRecords) {
 
-        List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> methodRecords =
-                associatedFileRecords.stream().flatMap(methodAssociatingRecordTransformer).collect(Collectors.toList());
-
-        return methodRecords;
+        return associatedFileRecords.stream().flatMap(methodAssociatingRecordTransformer).collect(Collectors.toList());
     }
 
     public List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> juicer(List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> associatedMethods) {
 
-        List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> results =
-                associatedMethods.stream().flatMap(juicer).collect(Collectors.toList());
-
-        return results;
-    }
-
-    public List<DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>> finalWrapper(
-            List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> pairedMethods) {
-
-        List<DecompilationRecord<FinalLowLevelMethodWrapper<LOW_ITEM>, FinalHighLevelMethodWrapper>> results =
-                pairedMethods.stream().flatMap(finalWrapperRecordTransformer).collect(Collectors.toList());
-
-        return results;
+        return associatedMethods.stream().flatMap(juicer).collect(Collectors.toList());
     }
 
 }

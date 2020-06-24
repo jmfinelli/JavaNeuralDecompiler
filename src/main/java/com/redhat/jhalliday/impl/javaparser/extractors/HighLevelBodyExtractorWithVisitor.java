@@ -23,7 +23,6 @@ package com.redhat.jhalliday.impl.javaparser.extractors;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitor;
-import com.github.javaparser.printer.PrettyPrinterConfiguration;
 
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -34,13 +33,12 @@ import java.util.function.BiFunction;
 public class HighLevelBodyExtractorWithVisitor implements BiFunction<MethodDeclaration, Map<String, String>, String> {
 
 //    private final PrettyPrinterConfigurationMod configuration;
-    private final PrettyPrinterConfiguration configuration;
+    private final PrettyPrinterConfigurationExtraSpace configuration;
 
     public HighLevelBodyExtractorWithVisitor() {
 
-//        this.configuration = new PrettyPrinterConfigurationMod();
-        this.configuration = new PrettyPrinterConfiguration();
-//        this.configuration.setExtraWhiteSpace(true);
+        this.configuration = new PrettyPrinterConfigurationExtraSpace();
+        this.configuration.setExtraSpace(true);
         this.configuration.setPrintComments(false);
         this.configuration.setEndOfLineCharacter(" ");
         this.configuration.setColumnAlignFirstMethodChain(false);
@@ -55,8 +53,12 @@ public class HighLevelBodyExtractorWithVisitor implements BiFunction<MethodDecla
 
         declaration.getBody().get().accept(visitor, null);
 
-        String body = visitor.toString();
-
-        return body;
+        return visitor.toString()
+                // Remove Redundant Spaces
+                .replaceAll("\\s+", " ")
+                // Remove initial {
+                .replaceAll("\\s+}\\s+$", "")
+                // Remove final }
+                .replaceAll("^\\s+\\{\\s+", "");
     }
 }

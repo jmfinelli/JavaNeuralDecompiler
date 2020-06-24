@@ -26,13 +26,13 @@ public class CtMethodInfoExtractor implements InfoExtractor<CtMethod> {
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final CodeAttribute code = methodInfo.getCodeAttribute();
         final CodeIterator iterator = code.iterator();
-        getVariableName(iterator).forEach(x -> results.putIfAbsent(x, InfoType.VAR));
+        getVariableNames(iterator).forEach(x -> results.putIfAbsent(x, InfoType.VAR));
         getConstants(methodInfo.getConstPool()).forEach(results::putIfAbsent);
 
         return results;
     }
 
-    private static Set<String> getVariableName(CodeIterator iterator) {
+    private static Set<String> getVariableNames(CodeIterator iterator) {
 
         Set<String> results = new HashSet<>();
 
@@ -124,23 +124,23 @@ public class CtMethodInfoExtractor implements InfoExtractor<CtMethod> {
         }
 
         @Override
-        public void edit(MethodCall m) throws CannotCompileException {
+        public void edit(MethodCall m) {
             this._storage.putIfAbsent(m.getMethodName(), InfoType.MET);
         }
 
         @Override
-        public void edit(NewExpr e) throws CannotCompileException {
+        public void edit(NewExpr e) {
             String clazz = e.getClassName();
             this._storage.putIfAbsent(clazz.substring(clazz.lastIndexOf(".") + 1), InfoType.CLASS);
         }
 
         @Override
-        public void edit(ConstructorCall c) throws CannotCompileException {
+        public void edit(ConstructorCall c) {
             this._storage.putIfAbsent(c.getMethodName(), InfoType.MET);
         }
 
         @Override
-        public void edit(FieldAccess f) throws CannotCompileException {
+        public void edit(FieldAccess f) {
             this._storage.putIfAbsent(f.getFieldName(), InfoType.FIELD);
         }
     }

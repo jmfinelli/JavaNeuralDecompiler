@@ -62,12 +62,14 @@ public class Driver {
          * Conversion step to change the directories into jar files pairs using name matching
          */
 
-        Decompiler<File,File> decompiler;
-        try {
-            decompiler = new OriginalFernFlower(dirRecord.getHighLevelDecompiled());
-        } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
-            decompiler = new CLIFernFlower(dirRecord.getHighLevelDecompiled());
+        Decompiler<File,File> decompiler = null;
+        if (USE_DECOMPILER) {
+            try {
+                decompiler = new OriginalFernFlower(dirRecord.getHighLevelDecompiled());
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+                decompiler = new CLIFernFlower(dirRecord.getHighLevelDecompiled());
+            }
         }
 
         DirectoryToJarsRecordTransformer dir2jarsTransformer = USE_DECOMPILER ?
@@ -89,13 +91,9 @@ public class Driver {
                         JavassistFunctions.methodWrappingFunction,
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
-                new FinalWrapperRecordTransformer<>(
-                        JavassistFunctions.finalMethodWrapperFunction,
-                        JavaParserFunctions.finalMethodWrapperFunction),
                 new JuicerRecordLowBasedTransformer<>(
                         //new CtMethodInfoExtractor(),
                         new LowLevelInfoExtractor(),
-                        new MethodDeclarationInfoExtractor(),
                         new LowLevelBodyExtractor(),
                         new HighLevelBodyExtractorWithVisitor())
         );
@@ -137,6 +135,8 @@ public class Driver {
 
             juice.forEach(writePairsToFile);
 
+            count++;
+
 ////            System.out.printf("Successful resolutions: %.0f\n", PrettyPrinterMod.passes - tempPasses);
 ////            System.out.printf("Failed resolutions: %.0f\n", PrettyPrinterMod.fails - tempFails);
 ////            float percentage = 100f * (PrettyPrinterMod.passes - tempPasses)/((PrettyPrinterMod.passes - tempPasses) + (PrettyPrinterMod.fails - tempFails));
@@ -148,9 +148,6 @@ public class Driver {
 ////
 ////            tempFails = PrettyPrinterMod.fails;
 ////            tempPasses = PrettyPrinterMod.passes;
-//
-//            count++;
-
         }
 //
 //        System.out.printf("Overall successful resolutions: %.0f\n", PrettyPrinterMod.passes);

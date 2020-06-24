@@ -47,7 +47,7 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
     private final static String opcodes[] = Mnemonic.OPCODE;
 
     @Override
-    public String apply(CtMethod ctMethod, Map<String, String> placeholders) {
+    public String apply(CtMethod ctMethod, Map<String, String> placeholders) throws RuntimeException {
 
         List<String> body = new LinkedList<>();
 
@@ -56,7 +56,7 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
         return String.join(DELIMITER, body);
     }
 
-    private void ProcessMethod (CtMethod ctMethod, List<String> body, final Map<String, String> placeholders) {
+    private void ProcessMethod (CtMethod ctMethod, List<String> body, final Map<String, String> placeholders) throws RuntimeException {
 
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();
@@ -79,7 +79,7 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
      * Gets a string representation of the bytecode instruction at the specified
      * position.
      */
-    private String instructionString(CodeIterator iter, int pos, ConstPool pool, Map<String, String> placeholders) {
+    private String instructionString(CodeIterator iter, int pos, ConstPool pool, Map<String, String> placeholders) throws RuntimeException {
         int opcode = iter.byteAt(pos);
 
         if (opcode > opcodes.length || opcode < 0)
@@ -248,7 +248,7 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
         }
     }
 
-    private static Map.Entry<Integer, String> getVariableName(CodeIterator iterator, int current, int index) {
+    private static Map.Entry<Integer, String> getVariableName(CodeIterator iterator, int current, int index) throws RuntimeException {
 
         CodeAttribute ca = iterator.get();
         LocalVariableAttribute localVariableTable = (LocalVariableAttribute) ca.getAttribute(LocalVariableAttribute.tag);
@@ -260,15 +260,16 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
                     int end = start + localVariableTable.codeLength(i);
                     if (current >= start - 2 && current < end) {
                         String variableName = localVariableTable.variableName(i);
-                        if (!variableName.equals("this")) {
-                            return Map.entry(i, localVariableTable.variableName(i));
-                        }
+//                        if (!variableName.equals("this")) {
+//                            return Map.entry(i, localVariableTable.variableName(i));
+//                        }
+                        return Map.entry(i, localVariableTable.variableName(i));
                     }
                 }
             }
         }
 
-        return Map.entry(index, "");
+        throw new RuntimeException("Could not find variable name");
     }
 
     private static String wide(CodeIterator iter, int pos) {
@@ -362,28 +363,28 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
     }
 
     private static String lookupSwitch(CodeIterator iter, int pos) {
-        StringBuilder buffer = new StringBuilder("lookupswitch {\n");
+        StringBuilder buffer = new StringBuilder("lookupswitch { ");
         int index = (pos & ~3) + 4;
         // default
-        buffer.append("\t\tdefault:").append(pos + iter.s32bitAt(index)).append("\n");
+        buffer.append("default: ").append(pos + iter.s32bitAt(index));
         int npairs = iter.s32bitAt(index += 4);
         int end = npairs * 8 + (index += 4);
 
         for (; index < end; index += 8) {
             int match = iter.s32bitAt(index);
             int target = iter.s32bitAt(index + 4) + pos;
-            buffer.append(match).append(LABEL_SYMBOL).append(target).append(";");
+            buffer.append(" ").append(match).append(LABEL_SYMBOL).append(target).append(" ");
         }
 
         buffer.setCharAt(buffer.length() - 1, '}');
-        return buffer.toString();
+        return buffer.toString().replaceAll("\\s+", " ");
     }
 
     private static String tableSwitch(CodeIterator iter, int pos) {
-        StringBuilder buffer = new StringBuilder("tableswitch {\n");
+        StringBuilder buffer = new StringBuilder("tableswitch { ");
         int index = (pos & ~3) + 4;
         // default
-        buffer.append("\t\tdefault:").append(pos + iter.s32bitAt(index)).append("\n");
+        buffer.append("default: ").append(pos + iter.s32bitAt(index));
         int low = iter.s32bitAt(index += 4);
         int high = iter.s32bitAt(index += 4);
         int end = (high - low + 1) * 4 + (index += 4);
@@ -391,11 +392,11 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
         // Offset table
         for (int key = low; index < end; index += 4, key++) {
             int target = iter.s32bitAt(index) + pos;
-            buffer.append(key).append(LABEL_SYMBOL).append(target).append(";");
+            buffer.append(" ").append(key).append(LABEL_SYMBOL).append(target).append(" ");
         }
 
         buffer.setCharAt(buffer.length() - 1, '}');
-        return buffer.toString();
+        return buffer.toString().replaceAll("\\s+", " ");
     }
 
     private static Map.Entry<Integer, String> ldc(ConstPool pool, int index) {

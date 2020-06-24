@@ -22,7 +22,6 @@ package com.redhat.jhalliday.impl.javaparser.extractors;
  */
 
 import com.github.javaparser.Position;
-import com.github.javaparser.printer.PrettyPrinterConfiguration;
 import com.github.javaparser.printer.PrettyPrinterConfiguration.IndentType;
 import com.github.javaparser.utils.Utils;
 
@@ -37,6 +36,7 @@ public class SourcePrinter {
     private final String indentation;
     private final int tabWidth;
     private final IndentType indentType;
+    private final boolean extraSpace;
 
     private final Deque<String> indents = new LinkedList<>();
     private final Deque<String> reindentedIndents = new LinkedList<>();
@@ -46,15 +46,16 @@ public class SourcePrinter {
     private boolean indented = false;
 
     SourcePrinter() {
-        this(new PrettyPrinterConfiguration());
+        this(new PrettyPrinterConfigurationExtraSpace());
     }
 
-    SourcePrinter(final PrettyPrinterConfiguration configuration) {
+    SourcePrinter(final PrettyPrinterConfigurationExtraSpace configuration) {
         indentation = configuration.getIndent();
         endOfLineCharacter = configuration.getEndOfLineCharacter();
         tabWidth = configuration.getTabWidth();
         indentType = configuration.getIndentType();
         indents.push("");
+        extraSpace = configuration.isExtraSpace();
     }
 
     /**
@@ -169,7 +170,13 @@ public class SourcePrinter {
             append(lastPrintedIndent);
             indented = true;
         }
-        append(arg);
+
+        if (!this.extraSpace) {
+            append(arg);
+        } else {
+            append(String.format(" %s ", arg));
+        }
+
         return this;
     }
 

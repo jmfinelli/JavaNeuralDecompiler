@@ -18,17 +18,14 @@ public class JuicerRecordLowBasedTransformer<LOW_ITEM> implements Function<
         Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> {
 
     private final InfoExtractor<LOW_ITEM> lowLevelInfoExtractor;
-    private final InfoExtractor<MethodDeclaration> highLevelInfoExtractor;
     private final BiFunction<LOW_ITEM, Map<String, String>, String> lowLevelBodyExtractor;
     private final BiFunction<MethodDeclaration, Map<String, String>, String> highLevelBodyExtractor;
 
     public JuicerRecordLowBasedTransformer(
             InfoExtractor<LOW_ITEM> lowLevelInfoExtractor,
-            InfoExtractor<MethodDeclaration> highLevelInfoExtractor,
             BiFunction<LOW_ITEM, Map<String, String>, String> lowLevelBodyExtractor,
             BiFunction<MethodDeclaration, Map<String, String>, String> highLevelBodyExtractor) {
         this.lowLevelInfoExtractor = lowLevelInfoExtractor;
-        this.highLevelInfoExtractor = highLevelInfoExtractor;
         this.lowLevelBodyExtractor = lowLevelBodyExtractor;
         this.highLevelBodyExtractor = highLevelBodyExtractor;
     }
@@ -39,29 +36,32 @@ public class JuicerRecordLowBasedTransformer<LOW_ITEM> implements Function<
 
         Map<String, InfoExtractor.InfoType> lowLevelSet = lowLevelInfoExtractor.apply(decompilationRecord.getLowLevelRepresentation());
 
-        Map<String, String> placeholders = new TreeMap<String, String>(
-                new Comparator<String>() {
-                    @Override
-                    public int compare(String s1, String s2) {
-                        if (s1.length() > s2.length()) {
-                            return -1;
-                        } else if (s1.length() < s2.length()) {
-                            return 1;
-                        } else {
-                            return s1.compareTo(s2);
-                        }
-                    }}
+        Map<String, String> placeholders = new TreeMap<>(
+                (s1, s2) -> {
+                    if (s1.length() > s2.length()) {
+                        return -1;
+                    } else if (s1.length() < s2.length()) {
+                        return 1;
+                    } else {
+                        return s1.compareTo(s2);
+                    }
+                }
         );
 
         for (Map.Entry<String, InfoExtractor.InfoType> entry : lowLevelSet.entrySet()) {
-            int postfix = placeholders.entrySet().stream()
-                    .filter(x -> x.getValue().startsWith(entry.getValue().toString()))
-                    .collect(Collectors.toList()).size();
+            int postfix = (int) placeholders.entrySet().stream()
+                    .filter(x -> x.getValue().startsWith(entry.getValue().toString())).count();
 
             placeholders.putIfAbsent(entry.getKey(), entry.getValue().toString() + postfix);
         }
 
-        String LowLevelBody = lowLevelBodyExtractor.apply(decompilationRecord.getLowLevelRepresentation(), placeholders);
+        String LowLevelBody;
+        try {
+            LowLevelBody = lowLevelBodyExtractor.apply(decompilationRecord.getLowLevelRepresentation(), placeholders);
+        } catch (RuntimeException ex) {
+            System.out.println("The method " + decompilationRecord.getHighLevelRepresentation().getName() + " has been discarded!");
+            return Stream.empty();
+        }
         String HighLevelBody = highLevelBodyExtractor.apply(decompilationRecord.getHighLevelRepresentation(), placeholders);
 
         DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>> newRecord = new GenericDecompilationRecord<>(
