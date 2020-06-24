@@ -5,7 +5,7 @@ import com.github.javaparser.ast.expr.ClassExpr;
 import com.github.javaparser.ast.expr.LiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
-import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterMod;
+import com.redhat.jhalliday.impl.javaparser.printers.PrettyPrinterMod;
 import com.redhat.jhalliday.impl.FinalHighLevelMethodWrapper;
 
 public class MethodDeclarationFinalWrapper extends FinalHighLevelMethodWrapper {

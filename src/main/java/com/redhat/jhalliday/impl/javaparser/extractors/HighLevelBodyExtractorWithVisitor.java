@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javaparser;
+package com.redhat.jhalliday.impl.javaparser.extractors;
 
 /*
  * Copyright (C) 2007-2010 Júlio Vilmar Gesser.
@@ -24,26 +24,19 @@ package com.redhat.jhalliday.impl.javaparser;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.github.javaparser.printer.PrettyPrinterConfiguration;
-import com.redhat.jhalliday.InfoExtractor;
-import com.redhat.jhalliday.impl.HighInfoExtractor;
-import com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterConfigurationMod;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Pretty printer for AST nodes.
  */
-public class HighLevelBodyExtractor implements BiFunction<MethodDeclaration, Map<String, String>, String> {
+public class HighLevelBodyExtractorWithVisitor implements BiFunction<MethodDeclaration, Map<String, String>, String> {
 
 //    private final PrettyPrinterConfigurationMod configuration;
     private final PrettyPrinterConfiguration configuration;
-    private VoidVisitor<Void> visitor;
 
-    public HighLevelBodyExtractor() {
+    public HighLevelBodyExtractorWithVisitor() {
 
 //        this.configuration = new PrettyPrinterConfigurationMod();
         this.configuration = new PrettyPrinterConfiguration();
@@ -58,37 +51,12 @@ public class HighLevelBodyExtractor implements BiFunction<MethodDeclaration, Map
     @Override
     public String apply(MethodDeclaration declaration, Map<String, String> placeholders) {
 
-        VoidVisitor<Void> visitor = configuration.getVisitorFactory().apply(this.configuration);
+        VoidVisitor<Void> visitor = new PrettyPrintVisitorWithSubstitutions(this.configuration, placeholders);
 
-        String body = ProcessMethod(declaration, visitor);
+        declaration.getBody().get().accept(visitor, null);
 
-        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-            String regex;
-
-            if (entry.getValue().startsWith("CONST")) {
-                regex = String.format("\\b%1$s", entry.getKey());
-            } else {
-                regex = String.format("\\b%1$s\\b", entry.getKey());
-            }
-
-            regex = regex.replaceAll("[\\[\\]]", "\\$1");
-
-            body = body.replaceAll(regex, entry.getValue());
-        }
+        String body = visitor.toString();
 
         return body;
-    }
-
-    private String ProcessMethod(MethodDeclaration methodDeclaration, VoidVisitor<Void> visitor) {
-        // it is not needed to check if there is a body because
-        // all previous operations (in the Driver.java) make sure that a body is present
-        methodDeclaration.getBody().get().accept(visitor, null);
-
-        String tempBody = visitor.toString();
-
-        tempBody = tempBody.replaceAll("\\s+", " ");
-        tempBody = tempBody.replaceAll("\\s+\\}\\s+$", "");
-        tempBody = tempBody.replaceAll("\\s+\\{\\s+", "");
-        return tempBody;
     }
 }

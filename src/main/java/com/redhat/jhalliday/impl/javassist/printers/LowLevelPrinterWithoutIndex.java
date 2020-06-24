@@ -30,14 +30,14 @@ import java.util.Map;
  *
  * @author Jason T. Greene
  */
-public class InfoExtractorFromOriginal implements Opcode, LowInfoExtractor {
+public class LowLevelPrinterWithoutIndex implements Opcode, LowInfoExtractor {
 
     private final static String opcodes[] = Mnemonic.OPCODE;
 
     private final static String DELIMITER = " ";
     private final List<String> body = new LinkedList<>();
 
-    public InfoExtractorFromOriginal(CtMethod ctMethod) {
+    public LowLevelPrinterWithoutIndex(CtMethod ctMethod) {
 
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();
@@ -227,7 +227,7 @@ public class InfoExtractorFromOriginal implements Opcode, LowInfoExtractor {
 
 
     private static String classInfo(ConstPool pool, int index) {
-        return "# " + index + " = Class " + pool.getClassInfo(index);
+        return "Class " + pool.getClassInfo(index);
     }
 
 
@@ -237,7 +237,7 @@ public class InfoExtractorFromOriginal implements Opcode, LowInfoExtractor {
 //                + pool.getInterfaceMethodrefName(index) + " ( "
 //                + pool.getInterfaceMethodrefType(index) + " ) ";
 
-        return "# " + index + " = Method "
+        return "Method "
                 + pool.getInterfaceMethodrefClassName(index) + " . "
                 + pool.getInterfaceMethodrefName(index);
     }
@@ -248,7 +248,7 @@ public class InfoExtractorFromOriginal implements Opcode, LowInfoExtractor {
 //                + pool.getMethodrefName(index) + " ( "
 //                + pool.getMethodrefType(index) + " ) ";
 
-        return "# " + index + " = Method "
+        return "Method "
                 + pool.getMethodrefClassName(index) + " . "
                 + pool.getMethodrefName(index);
     }
@@ -260,7 +260,7 @@ public class InfoExtractorFromOriginal implements Opcode, LowInfoExtractor {
 //                + pool.getFieldrefName(index) + " ( "
 //                + pool.getFieldrefType(index) + " ) ";
 
-        return "# " + index + " = Field "
+        return "Field "
                 + pool.getFieldrefClassName(index) + " . "
                 + pool.getFieldrefName(index);
     }
@@ -309,15 +309,15 @@ public class InfoExtractorFromOriginal implements Opcode, LowInfoExtractor {
         int tag = pool.getTag(index);
         switch (tag) {
             case ConstPool.CONST_String:
-                return "# " + index + " = \" " + pool.getStringInfo(index) + " \"";
+                return "\" " + pool.getStringInfo(index) + " \"";
             case ConstPool.CONST_Integer:
-                return "# " + index + " = int " + pool.getIntegerInfo(index);
+                return "int " + pool.getIntegerInfo(index);
             case ConstPool.CONST_Float:
-                return "# " + index + " = float " + pool.getFloatInfo(index);
+                return "float " + pool.getFloatInfo(index);
             case ConstPool.CONST_Long:
-                return "# " + index + " = long " + pool.getLongInfo(index);
+                return "long " + pool.getLongInfo(index);
             case ConstPool.CONST_Double:
-                return "# " + index + " = double " + pool.getDoubleInfo(index);
+                return "double " + pool.getDoubleInfo(index);
             case ConstPool.CONST_Class:
                 return classInfo(pool, index);
             default:

@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javaparser;
+package com.redhat.jhalliday.impl.javaparser.extractors;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
@@ -17,8 +17,6 @@ public class MethodDeclarationInfoExtractor implements InfoExtractor<MethodDecla
         Map<String, InfoType> results = new HashMap<>();
 
         BlockStmt bodyStmt = methodDeclaration.getBody().get();
-
-        List<Expression> list = bodyStmt.findAll(Expression.class);
 
         bodyStmt.findAll(MethodCallExpr.class)
                 .forEach(x -> results.putIfAbsent(x.getName().asString(), InfoType.MET));

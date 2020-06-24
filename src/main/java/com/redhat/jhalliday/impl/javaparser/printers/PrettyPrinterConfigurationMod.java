@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javaparser.printer;
+package com.redhat.jhalliday.impl.javaparser.printers;
 
 /*
  * Copyright (C) 2007-2010 Júlio Vilmar Gesser.
@@ -25,7 +25,7 @@ import com.github.javaparser.ast.visitor.VoidVisitor;
 
 import java.util.function.Function;
 
-import static com.redhat.jhalliday.impl.javaparser.printer.PrettyPrinterConfigurationMod.IndentType.SPACES;
+import static com.redhat.jhalliday.impl.javaparser.printers.PrettyPrinterConfigurationMod.IndentType.SPACES;
 import static com.github.javaparser.utils.Utils.EOL;
 import static com.github.javaparser.utils.Utils.assertNonNegative;
 import static com.github.javaparser.utils.Utils.assertNotNull;
@@ -236,7 +236,7 @@ public class PrettyPrinterConfigurationMod {
 
     /**
      * Set the factory that creates the PrettyPrintVisitor. By changing this you can make the PrettyPrinter use a custom
-     * PrettyPrinterVisitor.
+     * PrettyPrinterVisitor.java.
      */
     public PrettyPrinterConfigurationMod setVisitorFactory(Function<PrettyPrinterConfigurationMod, VoidVisitor<Void>> visitorFactory) {
         this.visitorFactory = assertNotNull(visitorFactory);

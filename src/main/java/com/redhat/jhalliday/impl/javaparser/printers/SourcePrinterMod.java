@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javaparser.printer;
+package com.redhat.jhalliday.impl.javaparser.printers;
 /*
  * Copyright (C) 2007-2010 Júlio Vilmar Gesser.
  * Copyright (C) 2011, 2013-2020 The JavaParser Team.

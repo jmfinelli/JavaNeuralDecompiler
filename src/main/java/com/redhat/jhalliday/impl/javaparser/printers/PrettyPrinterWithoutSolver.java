@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javaparser.printer;
+package com.redhat.jhalliday.impl.javaparser.printers;
 
 /*
  * Copyright (C) 2007-2010 Júlio Vilmar Gesser.
@@ -22,11 +22,6 @@ package com.redhat.jhalliday.impl.javaparser.printer;
  */
 
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.ClassExpr;
-import com.github.javaparser.ast.expr.LiteralExpr;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.visitor.VoidVisitor;
 import com.redhat.jhalliday.impl.HighInfoExtractor;
 
@@ -36,10 +31,7 @@ import java.util.Set;
 /**
  * Pretty printer for AST nodes.
  */
-public class PrettyPrinterMod implements HighInfoExtractor {
-
-    public static float passes = 0;
-    public static float fails = 0;
+public class PrettyPrinterWithoutSolver implements HighInfoExtractor {
 
     private final PrettyPrinterConfigurationMod configuration;
     private final String body;
@@ -49,7 +41,7 @@ public class PrettyPrinterMod implements HighInfoExtractor {
     private final Set<String> literalExprNames = new HashSet<>();
     private final Set<String> classExprNames = new HashSet<>();
 
-    public PrettyPrinterMod(MethodDeclaration methodDeclaration) {
+    public PrettyPrinterWithoutSolver(MethodDeclaration methodDeclaration) {
 
         this.configuration = new PrettyPrinterConfigurationMod();
         this.configuration.setExtraWhiteSpace(true);
@@ -60,44 +52,16 @@ public class PrettyPrinterMod implements HighInfoExtractor {
         this.configuration.setIndentSize(0);
 
         final VoidVisitor<Void> visitor = configuration.getVisitorFactory().apply(this.configuration);
-        methodDeclaration.accept(visitor, null);
+        // it is not needed to check if there is a body because
+        // all previous operations (in the Driver.java) make sure that a body is present
+        methodDeclaration.getBody().get().accept(visitor, null);
 
         String tempBody = visitor.toString();
+
         tempBody = tempBody.replaceAll("\\s+", " ");
         tempBody = tempBody.replaceAll("\\s+\\}\\s+$", "");
         tempBody = tempBody.replaceAll("\\s+\\{\\s+", "");
         body = tempBody;
-
-        BlockStmt bodyStmt = methodDeclaration.getBody().get();
-
-        bodyStmt.findAll(NameExpr.class).forEach(x -> this.nameExprNames.add(x.getNameAsString()));
-
-        bodyStmt.findAll(MethodCallExpr.class).forEach(x -> {
-            try {
-                this.methodExprNames.add(x.resolve().getQualifiedName());
-                passes++;
-            } catch (Exception ex) {
-                fails++;
-            }
-        });
-
-        bodyStmt.findAll(LiteralExpr.class).forEach(x -> {
-            try {
-                this.literalExprNames.add(x.calculateResolvedType().toString());
-                passes++;
-            } catch (Exception ex) {
-                fails++;
-            }
-        });
-
-        bodyStmt.findAll(ClassExpr.class).forEach(x -> {
-            try {
-                this.classExprNames.add(x.calculateResolvedType().toString());
-                passes++;
-            } catch (Exception ex) {
-                fails++;
-            }
-        });
     }
 
     @Override

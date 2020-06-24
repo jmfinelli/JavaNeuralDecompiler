@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javassist;
+package com.redhat.jhalliday.impl.javassist.extractors;
 
 /*
  * Javassist, a Java-bytecode translator toolkit.
@@ -317,9 +317,9 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
     }
 
     private static Map.Entry<Integer, String> classInfo(ConstPool pool, int index) {
-//        String classInfo = pool.getClassInfo(index);
-//        return Map.entry(index, classInfo.substring(classInfo.lastIndexOf(".") + 1));
-        return Map.entry(index, pool.getClassInfo(index));
+        String classInfo = pool.getClassInfo(index);
+        return Map.entry(index, classInfo.substring(classInfo.lastIndexOf(".") + 1));
+//        return Map.entry(index, pool.getClassInfo(index));
     }
 
     private static Map.Entry<Integer, String> interfaceMethodInfo(ConstPool pool, int index) {

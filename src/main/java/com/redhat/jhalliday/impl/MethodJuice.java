@@ -13,4 +13,8 @@ public class MethodJuice<T> {
         this._naming = naming;
         this._body = body;
     }
+
+    public String getBody() {
+        return _body;
+    }
 }

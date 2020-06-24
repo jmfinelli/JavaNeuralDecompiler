@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javassist;
+package com.redhat.jhalliday.impl.javassist.extractors;
 
 import com.redhat.jhalliday.InfoExtractor;
 import javassist.CannotCompileException;
@@ -84,7 +84,10 @@ public class CtMethodInfoExtractor implements InfoExtractor<CtMethod> {
 
                             switch (tag) {
                                 case ConstPool.CONST_String:
-                                    results.putIfAbsent(pool.getStringInfo(innerElementIndex), InfoType.CONST);
+                                    String temp = pool.getStringInfo(innerElementIndex);
+                                    if (!temp.matches("^this$|^\\s+$")) {
+                                        results.putIfAbsent(pool.getStringInfo(innerElementIndex), InfoType.CONST);
+                                    }
                                     break;
                                 case ConstPool.CONST_Integer:
                                     results.putIfAbsent(String.valueOf(pool.getIntegerInfo(innerElementIndex)), InfoType.CONST);
@@ -107,8 +110,7 @@ public class CtMethodInfoExtractor implements InfoExtractor<CtMethod> {
                     }
                 }
             }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-        }
+        } catch (NoSuchFieldException | IllegalAccessException e) { }
 
         return results;
     }

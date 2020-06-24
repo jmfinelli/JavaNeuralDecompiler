@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javaparser.printer;
+package com.redhat.jhalliday.impl.javaparser.extractors;
 
 /*
  * Copyright (C) 2007-2010 Júlio Vilmar Gesser.
@@ -34,6 +34,7 @@ import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.type.*;
 import com.github.javaparser.ast.visitor.Visitable;
 import com.github.javaparser.ast.visitor.VoidVisitor;
+import com.github.javaparser.printer.PrettyPrinterConfiguration;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,13 +50,23 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Julio Vilmar Gesser
  */
-public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
-    protected final PrettyPrinterConfigurationMod configuration;
-    protected final SourcePrinterMod printer;
+public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
+    protected final PrettyPrinterConfiguration configuration;
+    protected final SourcePrinter printer;
+    protected final Map<String, String> _placeholders;
 
-    public PrettyPrintVisitorMod(PrettyPrinterConfigurationMod prettyPrinterConfiguration) {
+    public PrettyPrintVisitorWithSubstitutions(PrettyPrinterConfiguration prettyPrinterConfiguration) {
         configuration = prettyPrinterConfiguration;
-        printer = new SourcePrinterMod(configuration);
+        printer = new SourcePrinter(configuration);
+        _placeholders = new HashMap<>();
+    }
+
+    public PrettyPrintVisitorWithSubstitutions(
+            PrettyPrinterConfiguration prettyPrinterConfiguration,
+            Map<String, String> placeholders) {
+        configuration = prettyPrinterConfiguration;
+        printer = new SourcePrinter(configuration);
+        _placeholders = placeholders;
     }
 
     /**
@@ -79,9 +90,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
 
     private void printMembers(final NodeList<BodyDeclaration<?>> members, final Void arg) {
         for (final BodyDeclaration<?> member : members) {
-            //printer.println();
+            printer.println();
             member.accept(this, arg);
-            //printer.println();
+            printer.println();
         }
     }
 
@@ -91,7 +102,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         }
         for (final AnnotationExpr a : annotations) {
             a.accept(this, arg);
-            //printer.println();
+            printer.println();
         }
     }
 
@@ -112,55 +123,34 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     private void printTypeArgs(final NodeWithTypeArguments<?> nodeWithTypeArguments, final Void arg) {
         NodeList<Type> typeArguments = nodeWithTypeArguments.getTypeArguments().orElse(null);
         if (!isNullOrEmpty(typeArguments)) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" < ");
-            else
-                printer.print("<");
+            printer.print("<");
             for (final Iterator<Type> i = typeArguments.iterator(); i.hasNext(); ) {
                 final Type t = i.next();
                 t.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" > ");
-            else
-                printer.print(">");
+            printer.print(">");
         }
     }
 
     private void printTypeParameters(final NodeList<TypeParameter> args, final Void arg) {
         if (!isNullOrEmpty(args)) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" < ");
-            else
-                printer.print("<");
+            printer.print("<");
             for (final Iterator<TypeParameter> i = args.iterator(); i.hasNext(); ) {
                 final TypeParameter t = i.next();
                 t.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" > ");
-            else
-                printer.print(">");
+            printer.print(">");
         }
     }
 
     private void printArguments(final NodeList<Expression> args, final Void arg) {
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ");
-        else
-            printer.print("(");
+        printer.print("(");
         if (!isNullOrEmpty(args)) {
             boolean columnAlignParameters = (args.size() > 1) && configuration.isColumnAlignParameters();
             if (columnAlignParameters) {
@@ -170,12 +160,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 final Expression e = i.next();
                 e.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(",");
+                    printer.print(",");
                     if (columnAlignParameters) {
-                        //printer.println();
+                        printer.println();
                     } else {
                         printer.print(" ");
                     }
@@ -185,10 +172,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 printer.unindent();
             }
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(")");
+        printer.print(")");
     }
 
     private void printPrePostFixOptionalList(final NodeList<? extends Visitable> args, final Void arg, String prefix, String separator, String postfix) {
@@ -228,10 +212,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         if (n.getParsed() == UNPARSABLE) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ??? ");
-            else
-                printer.println("???");
+            printer.println("???");
             return;
         }
 
@@ -241,14 +222,14 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
 
         n.getImports().accept(this, arg);
         if (!n.getImports().isEmpty()) {
-            //printer.println();
+            printer.println();
         }
 
         for (final Iterator<TypeDeclaration<?>> i = n.getTypes().iterator(); i.hasNext(); ) {
             i.next().accept(this, arg);
-            //printer.println();
+            printer.println();
             if (i.hasNext()) {
-                //printer.println();
+                printer.println();
             }
         }
 
@@ -262,16 +243,10 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         printMemberAnnotations(n.getAnnotations(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" package ");
-        else
-            printer.print("package ");
+        printer.print("package ");
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.println(";");
-        //printer.println();
+        printer.println(";");
+        printer.println();
 
         printOrphanCommentsEnding(n);
     }
@@ -291,19 +266,30 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printComment(n.getComment(), arg);
         if (n.getQualifier().isPresent()) {
             n.getQualifier().get().accept(this, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" . ");
-            else
-                printer.print(".");
+            printer.print(".");
         }
-        printer.print(n.getIdentifier());
+
+        // Substitution
+        String currentValue = n.getIdentifier();
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(n.getIdentifier());
+        }
 
         printOrphanCommentsEnding(n);
     }
 
     @Override
     public void visit(SimpleName n, Void arg) {
-        printer.print(n.getIdentifier());
+
+        // Substitution
+        String currentValue = n.getIdentifier();
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(n.getIdentifier());
+        }
     }
 
     @Override
@@ -314,15 +300,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printModifiers(n.getModifiers());
 
         if (n.isInterface()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" interface ");
-            else
-                printer.print("interface ");
+            printer.print("interface ");
         } else {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" class ");
-            else
-                printer.print("class ");
+            printer.print("class ");
         }
 
         n.getName().accept(this, arg);
@@ -335,10 +315,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 final ClassOrInterfaceType c = i.next();
                 c.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
@@ -349,18 +326,12 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 final ClassOrInterfaceType c = i.next();
                 c.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" { ");
-        else
-            printer.println(" {");
+        printer.println(" {");
         printer.indent();
         if (!isNullOrEmpty(n.getMembers())) {
             printMembers(n.getMembers(), arg);
@@ -369,10 +340,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsEnding(n);
 
         printer.unindent();
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" } ");
-        else
-            printer.print("}");
+        printer.print("}");
     }
 
     @Override
@@ -406,10 +374,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                         printer.println(" *");
                         prependEmptyLine = false;
                     }
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" * ");
-                    else
-                        printer.print(" *");
+                    printer.print(" *");
                     if (prependSpace) {
                         printer.print(" ");
                     }
@@ -426,20 +391,14 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printComment(n.getComment(), arg);
         if (n.getScope().isPresent()) {
             n.getScope().get().accept(this, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" . ");
-            else
-                printer.print(".");
+            printer.print(".");
         }
         printAnnotations(n.getAnnotations(), false, arg);
 
         n.getName().accept(this, arg);
 
         if (n.isUsingDiamondOperator()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" < > ");
-            else
-                printer.print("<>");
+            printer.print("<>");
         } else {
             printTypeArgs(n, arg);
         }
@@ -484,27 +443,18 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         type.accept(this, arg);
         for (ArrayType arrayType : arrayTypeBuffer) {
             printAnnotations(arrayType.getAnnotations(), true, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" [ ] ");
-            else
-                printer.print("[]");
+            printer.print("[]");
         }
     }
 
     @Override
     public void visit(final ArrayCreationLevel n, final Void arg) {
         printAnnotations(n.getAnnotations(), true, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" [ ");
-        else
-            printer.print("[");
+        printer.print("[");
         if (n.getDimension().isPresent()) {
             n.getDimension().get().accept(this, arg);
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ] ");
-        else
-            printer.print("]");
+        printer.print("]");
     }
 
     @Override
@@ -544,10 +494,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         printAnnotations(n.getAnnotations(), false, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ? ");
-        else
-            printer.print("?");
+        printer.print("?");
         if (n.getExtendedType().isPresent()) {
             printer.print(" extends ");
             n.getExtendedType().get().accept(this, arg);
@@ -574,10 +521,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
             Optional<Type> maximumCommonType = n.getMaximumCommonType();
             maximumCommonType.ifPresent(t -> t.accept(this, arg));
             if (!maximumCommonType.isPresent()) {
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" ??? ");
-                else
-                    printer.print("???");
+                printer.print("???");
             }
         }
 
@@ -586,16 +530,11 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
             final VariableDeclarator var = i.next();
             var.accept(this, arg);
             if (i.hasNext()) {
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" , ");
-                else
-                    printer.print(", ");
+                printer.print(", ");
             }
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+
+        printer.print(";");
     }
 
     @Override
@@ -617,10 +556,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                     arrayType = (ArrayType) arrayType.getComponentType();
                 }
                 printAnnotations(arrayType.getAnnotations(), true, arg);
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" [ ] ");
-                else
-                    printer.print("[]");
+                printer.print("[]");
             }
         }));
 
@@ -634,29 +570,20 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final ArrayInitializerExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" { ");
-        else
-            printer.print("{");
+        printer.print("{");
         if (!isNullOrEmpty(n.getValues())) {
             printer.print(" ");
             for (final Iterator<Expression> i = n.getValues().iterator(); i.hasNext(); ) {
                 final Expression expr = i.next();
                 expr.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
             printer.print(" ");
         }
         printOrphanCommentsEnding(n);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" } ");
-        else
-            printer.print("}");
+        printer.print("}");
     }
 
     @Override
@@ -686,15 +613,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" [ ");
-        else
-            printer.print("[");
+        printer.print("[");
         n.getIndex().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ] ");
-        else
-            printer.print("]");
+        printer.print("]");
     }
 
     @Override
@@ -752,15 +673,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final CastExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ");
-        else
-            printer.print("(");
+        printer.print("(");
         n.getType().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(") ");
+        printer.print(") ");
         n.getExpression().accept(this, arg);
     }
 
@@ -769,10 +684,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         n.getType().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" . class");
-        else
-            printer.print(".class");
+        printer.print(".class");
     }
 
     @Override
@@ -790,15 +702,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final EnclosedExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ");
-        else
-            printer.print("(");
+        printer.print("(");
         n.getInner().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(")");
+        printer.print(")");
     }
 
     @Override
@@ -806,10 +712,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         n.getScope().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" . ");
-        else
-            printer.print(".");
+        printer.print(".");
         n.getName().accept(this, arg);
     }
 
@@ -826,51 +729,74 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final CharLiteralExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ' ");
-        else
-            printer.print("'");
-        printer.print(n.getValue());
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ' ");
-        else
-            printer.print("'");
+        printer.print("'");
+
+        // Substitutions
+        String currentValue = n.getValue();
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(currentValue);
+        }
+        printer.print("'");
     }
 
     @Override
     public void visit(final DoubleLiteralExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        printer.print(n.getValue());
+
+        // Substitutions
+        String currentValue = n.getValue();
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(currentValue);
+        }
     }
 
     @Override
     public void visit(final IntegerLiteralExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        printer.print(n.getValue());
+
+        // Substitutions
+        String currentValue = n.getValue();
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(currentValue);
+        }
     }
 
     @Override
     public void visit(final LongLiteralExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        printer.print(n.getValue());
+
+        // Substitutions
+        String currentValue = n.getValue();
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(currentValue);
+        }
     }
 
     @Override
     public void visit(final StringLiteralExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" \" ");
-        else
-            printer.print("\"");
-        printer.print(n.getValue());
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" \" ");
-        else
-            printer.print("\"");
+        printer.print("\"");
+
+        // Substitutions
+        String currentValue = n.getValue();
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(currentValue);
+        }
+        printer.print("\"");
     }
 
     @Override
@@ -880,7 +806,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printer.print("\"\"\"");
         printer.indent();
         n.stripIndentOfLines().forEach(line -> {
-            //printer.println();
+            printer.println();
             printer.print(line);
         });
         printer.print("\"\"\"");
@@ -891,7 +817,14 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final BooleanLiteralExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        printer.print(String.valueOf(n.getValue()));
+
+        // Substitutions
+        String currentValue = String.valueOf(n.getValue());
+        if (this._placeholders.containsKey(currentValue)) {
+            printer.print(this._placeholders.get(currentValue));
+        } else {
+            printer.print(currentValue);
+        }
     }
 
     @Override
@@ -907,10 +840,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printComment(n.getComment(), arg);
         if (n.getTypeName().isPresent()) {
             n.getTypeName().get().accept(this, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" . ");
-            else
-                printer.print(".");
+            printer.print(".");
         }
         printer.print("this");
     }
@@ -921,10 +851,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printComment(n.getComment(), arg);
         if (n.getTypeName().isPresent()) {
             n.getTypeName().get().accept(this, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" . ");
-            else
-                printer.print(".");
+            printer.print(".");
         }
         printer.print("super");
     }
@@ -1009,7 +936,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                        That means that the "else" has been executed by one of the methods in the scope chain, so that the alignment
                        is set to the "." of that method.
                        That means we will align to that "." when we start a new line: */
-                    //printer.println();
+                    printer.println();
                 } else if (!lastMethodInCallChain.get()) {
                     /* We're the first method call on the result of something in the chain (method call, property access, ...),
                        but we are not at the same time the last method call in that chain, like:
@@ -1019,10 +946,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                     printer.reindentWithAlignToCursor();
                 }
             }
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" . ");
-            else
-                printer.print(".");
+            printer.print(".");
         });
 
         printTypeArgs(n, arg);
@@ -1042,16 +966,10 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printComment(n.getComment(), arg);
         if (n.getScope().isPresent()) {
             n.getScope().get().accept(this, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" . ");
-            else
-                printer.print(".");
+            printer.print(".");
         }
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" new ");
-        else
-            printer.print("new ");
+        printer.print("new ");
 
         printTypeArgs(n, arg);
         if (!isNullOrEmpty(n.getTypeArguments().orElse(null))) {
@@ -1063,17 +981,11 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printArguments(n.getArguments(), arg);
 
         if (n.getAnonymousClassBody().isPresent()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" { ");
-            else
-                printer.println(" {");
+            printer.println(" {");
             printer.indent();
             printMembers(n.getAnonymousClassBody().get(), arg);
             printer.unindent();
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" } ");
-            else
-                printer.print("}");
+            printer.print("}");
         }
     }
 
@@ -1105,26 +1017,17 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         }
         n.getName().accept(this, arg);
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ");
-        else
-            printer.print("(");
+        printer.print("(");
         if (!n.getParameters().isEmpty()) {
             for (final Iterator<Parameter> i = n.getParameters().iterator(); i.hasNext(); ) {
                 final Parameter p = i.next();
                 p.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(")");
+        printer.print(")");
 
         if (!isNullOrEmpty(n.getThrownExceptions())) {
             printer.print(" throws ");
@@ -1132,10 +1035,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 final ReferenceType name = i.next();
                 name.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
@@ -1159,17 +1059,11 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printer.print(" ");
         n.getName().accept(this, arg);
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ");
-        else
-            printer.print("(");
+        printer.print("(");
         n.getReceiverParameter().ifPresent(rp -> {
             rp.accept(this, arg);
             if (!isNullOrEmpty(n.getParameters())) {
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" , ");
-                else
-                    printer.print(", ");
+                printer.print(", ");
             }
         });
         if (!isNullOrEmpty(n.getParameters())) {
@@ -1177,17 +1071,11 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 final Parameter p = i.next();
                 p.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(")");
+        printer.print(")");
 
         if (!isNullOrEmpty(n.getThrownExceptions())) {
             printer.print(" throws ");
@@ -1195,18 +1083,12 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 final ReferenceType name = i.next();
                 name.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
         if (!n.getBody().isPresent()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ; ");
-            else
-                printer.print(";");
+            printer.print(";");
         } else {
             printer.print(" ");
             n.getBody().get().accept(this, arg);
@@ -1222,10 +1104,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         n.getType().accept(this, arg);
         if (n.isVarArgs()) {
             printAnnotations(n.getVarArgsAnnotations(), false, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ... ");
-            else
-                printer.print("...");
+            printer.print("...");
         }
         if (!(n.getType() instanceof UnknownType)) {
             printer.print(" ");
@@ -1249,29 +1128,17 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printComment(n.getComment(), arg);
         if (n.isThis()) {
             printTypeArgs(n, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" this ");
-            else
-                printer.print("this");
+            printer.print("this");
         } else {
             if (n.getExpression().isPresent()) {
                 n.getExpression().get().accept(this, arg);
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" . ");
-                else
-                    printer.print(".");
+                printer.print(".");
             }
             printTypeArgs(n, arg);
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" super ");
-            else
-                printer.print("super");
+            printer.print("super");
         }
         printArguments(n.getArguments(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
@@ -1294,10 +1161,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
             final VariableDeclarator v = i.next();
             v.accept(this, arg);
             if (i.hasNext()) {
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" , ");
-                else
-                    printer.print(", ");
+                printer.print(", ");
             }
         }
     }
@@ -1313,42 +1177,30 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final AssertStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" assert ");
-        else
-            printer.print("assert ");
+        printer.print("assert ");
         n.getCheck().accept(this, arg);
         if (n.getMessage().isPresent()) {
             printer.print(" : ");
             n.getMessage().get().accept(this, arg);
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
     public void visit(final BlockStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" { ");
-        else
-            printer.println("{");
+        printer.println("{");
         if (n.getStatements() != null) {
             printer.indent();
             for (final Statement s : n.getStatements()) {
                 s.accept(this, arg);
-                //printer.println();
+                printer.println();
             }
             printer.unindent();
         }
         printOrphanCommentsEnding(n);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" } ");
-        else
-            printer.print("}");
+        printer.print("}");
     }
 
     @Override
@@ -1356,10 +1208,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         n.getLabel().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" : ");
-        else
-            printer.print(": ");
+        printer.print(": ");
         n.getStatement().accept(this, arg);
     }
 
@@ -1367,10 +1216,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final EmptyStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
@@ -1378,10 +1224,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         n.getExpression().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
@@ -1398,15 +1241,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
 
     private void printSwitchNode(SwitchNode n, Void arg) {
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" switch ( ");
-        else
-            printer.print("switch(");
+        printer.print("switch(");
         n.getSelector().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) { ");
-        else
-            printer.println(") {");
+        printer.println(") {");
         if (n.getEntries() != null) {
             indentIf(configuration.isIndentCaseInSwitch());
             for (final SwitchEntry e : n.getEntries()) {
@@ -1414,10 +1251,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
             }
             unindentIf(configuration.isIndentCaseInSwitch());
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" } ");
-        else
-            printer.print("}");
+        printer.print("}");
     }
 
     @Override
@@ -1426,36 +1260,24 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printComment(n.getComment(), arg);
 
         if (isNullOrEmpty(n.getLabels())) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" default : ");
-            else
-                printer.print("default:");
+            printer.print("default:");
         } else {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" case ");
-            else
-                printer.print("case ");
+            printer.print("case ");
             for (final Iterator<Expression> i = n.getLabels().iterator(); i.hasNext(); ) {
                 final Expression label = i.next();
                 label.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" : ");
-            else
-                printer.print(":");
+            printer.print(":");
         }
-        //printer.println();
+        printer.println();
         printer.indent();
         if (n.getStatements() != null) {
             for (final Statement s : n.getStatements()) {
                 s.accept(this, arg);
-                //printer.println();
+                printer.println();
             }
         }
         printer.unindent();
@@ -1465,48 +1287,30 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final BreakStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" break ");
-        else
-            printer.print("break");
+        printer.print("break");
         n.getLabel().ifPresent(l -> printer.print(" ").print(l.getIdentifier()));
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
     public void visit(final YieldStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" yield ");
-        else
-            printer.print("yield ");
+        printer.print("yield ");
         n.getExpression().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
     public void visit(final ReturnStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" return ");
-        else
-            printer.print("return");
+        printer.print("return");
         if (n.getExpression().isPresent()) {
             printer.print(" ");
             n.getExpression().get().accept(this, arg);
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
@@ -1516,10 +1320,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printMemberAnnotations(n.getAnnotations(), arg);
         printModifiers(n.getModifiers());
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" enum ");
-        else
-            printer.print("enum ");
+        printer.print("enum ");
         n.getName().accept(this, arg);
 
         if (!n.getImplementedTypes().isEmpty()) {
@@ -1528,18 +1329,12 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                 final ClassOrInterfaceType c = i.next();
                 c.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" { ");
-        else
-            printer.println(" {");
+        printer.println(" {");
         printer.indent();
         if (n.getEntries().isNonEmpty()) {
             final boolean alignVertically =
@@ -1547,39 +1342,29 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
                     n.getEntries().size() > configuration.getMaxEnumConstantsToAlignHorizontally() ||
                             // any of the constants has a comment.
                             n.getEntries().stream().anyMatch(e -> e.getComment().isPresent());
-            //printer.println();
+            printer.println();
             for (final Iterator<EnumConstantDeclaration> i = n.getEntries().iterator(); i.hasNext(); ) {
                 final EnumConstantDeclaration e = i.next();
                 e.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else {
-                        if (alignVertically) {
-                            printer.print(",");
-                        } else {
-                            printer.print(", ");
-                        }
+                    if (alignVertically) {
+                        printer.println(",");
+                    } else {
+                        printer.print(", ");
                     }
                 }
             }
         }
         if (!n.getMembers().isEmpty()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ; ");
-            else
-                printer.println(";");
+            printer.println(";");
             printMembers(n.getMembers(), arg);
         } else {
             if (!n.getEntries().isEmpty()) {
-                //printer.println();
+                printer.println();
             }
         }
         printer.unindent();
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" } ");
-        else
-            printer.print("}");
+        printer.print("}");
     }
 
     @Override
@@ -1594,17 +1379,11 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         }
 
         if (!n.getClassBody().isEmpty()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" { ");
-            else
-                printer.println(" {");
+            printer.println(" {");
             printer.indent();
             printMembers(n.getClassBody(), arg);
             printer.unindent();
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" } ");
-            else
-                printer.println("}");
+            printer.println("}");
         }
     }
 
@@ -1613,10 +1392,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
         if (n.isStatic()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" static ");
-            else
-                printer.print("static ");
+            printer.print("static ");
         }
         n.getBody().accept(this, arg);
     }
@@ -1625,41 +1401,29 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final IfStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" if ( ");
-        else
-            printer.print("if (");
+        printer.print("if (");
         n.getCondition().accept(this, arg);
         final boolean thenBlock = n.getThenStmt() instanceof BlockStmt;
         if (thenBlock) // block statement should start on the same line
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ) ");
-            else
-                printer.print(") ");
+            printer.print(") ");
         else {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ) ");
-            else
-                printer.println(")");
+            printer.println(")");
             printer.indent();
         }
         n.getThenStmt().accept(this, arg);
         if (!thenBlock)
             printer.unindent();
         if (n.getElseStmt().isPresent()) {
-            printer.print(" ");
+            if (thenBlock)
+                printer.print(" ");
+            else
+                printer.println();
             final boolean elseIf = n.getElseStmt().orElse(null) instanceof IfStmt;
             final boolean elseBlock = n.getElseStmt().orElse(null) instanceof BlockStmt;
             if (elseIf || elseBlock) // put chained if and start of block statement on a same level
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" else ");
-                else
-                    printer.print("else ");
+                printer.print("else ");
             else {
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" else ");
-                else
-                    printer.println("else");
+                printer.println("else");
                 printer.indent();
             }
             if (n.getElseStmt().isPresent())
@@ -1673,15 +1437,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final WhileStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" while ( ");
-        else
-            printer.print("while (");
+        printer.print("while (");
         n.getCondition().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(") ");
+        printer.print(") ");
         n.getBody().accept(this, arg);
     }
 
@@ -1689,52 +1447,31 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final ContinueStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" continue ");
-        else
-            printer.print("continue");
+        printer.print("continue");
         n.getLabel().ifPresent(l -> printer.print(" ").print(l.getIdentifier()));
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
     public void visit(final DoStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" do ");
-        else
-            printer.print("do ");
+        printer.print("do ");
         n.getBody().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" while ( ");
-        else
-            printer.print(" while (");
+        printer.print(" while (");
         n.getCondition().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ; ");
-        else
-            printer.print(");");
+        printer.print(");");
     }
 
     @Override
     public void visit(final ForEachStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" for ( ");
-        else
-            printer.print("for (");
+        printer.print("for (");
         n.getVariable().accept(this, arg);
         printer.print(" : ");
         n.getIterable().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(") ");
+        printer.print(") ");
         n.getBody().accept(this, arg);
     }
 
@@ -1742,49 +1479,31 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final ForStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" for ( ");
-        else
-            printer.print("for (");
+        printer.print("for (");
         if (n.getInitialization() != null) {
             for (final Iterator<Expression> i = n.getInitialization().iterator(); i.hasNext(); ) {
                 final Expression e = i.next();
                 e.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print("; ");
+        printer.print("; ");
         if (n.getCompare().isPresent()) {
             n.getCompare().get().accept(this, arg);
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print("; ");
+        printer.print("; ");
         if (n.getUpdate() != null) {
             for (final Iterator<Expression> i = n.getUpdate().iterator(); i.hasNext(); ) {
                 final Expression e = i.next();
                 e.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(") ");
+        printer.print(") ");
         n.getBody().accept(this, arg);
     }
 
@@ -1792,30 +1511,18 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final ThrowStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" throw ");
-        else
-            printer.print("throw ");
+        printer.print("throw ");
         n.getExpression().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
     public void visit(final SynchronizedStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" synchronized ( ");
-        else
-            printer.print("synchronized (");
+        printer.print("synchronized (");
         n.getExpression().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(") ");
+        printer.print(") ");
         n.getBody().accept(this, arg);
     }
 
@@ -1823,25 +1530,16 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final TryStmt n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" try ");
-        else
-            printer.print("try ");
+        printer.print("try ");
         if (!n.getResources().isEmpty()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ( ");
-            else
-                printer.print("(");
+            printer.print("(");
             Iterator<Expression> resources = n.getResources().iterator();
             boolean first = true;
             while (resources.hasNext()) {
                 resources.next().accept(this, arg);
                 if (resources.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" ; ");
-                    else
-                        printer.print(";");
-                    //printer.println();
+                    printer.print(";");
+                    printer.println();
                     if (first) {
                         printer.indent();
                     }
@@ -1851,10 +1549,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
             if (n.getResources().size() > 1) {
                 printer.unindent();
             }
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ) ");
-            else
-                printer.print(") ");
+            printer.print(") ");
         }
         n.getTryBlock().accept(this, arg);
         for (final CatchClause c : n.getCatchClauses()) {
@@ -1870,15 +1565,9 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final CatchClause n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" catch ( ");
-        else
-            printer.print(" catch (");
+        printer.print(" catch (");
         n.getParameter().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(") ");
+        printer.print(") ");
         n.getBody().accept(this, arg);
     }
 
@@ -1889,24 +1578,15 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         printMemberAnnotations(n.getAnnotations(), arg);
         printModifiers(n.getModifiers());
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" @ interface ");
-        else
-            printer.print("@interface ");
+        printer.print("@interface ");
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" { ");
-        else
-            printer.println(" {");
+        printer.println(" {");
         printer.indent();
         if (n.getMembers() != null) {
             printMembers(n.getMembers(), arg);
         }
         printer.unindent();
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" } ");
-        else
-            printer.print("}");
+        printer.print("}");
     }
 
     @Override
@@ -1919,28 +1599,19 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         n.getType().accept(this, arg);
         printer.print(" ");
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ) ");
-        else
-            printer.print("()");
+        printer.print("()");
         if (n.getDefaultValue().isPresent()) {
             printer.print(" default ");
             n.getDefaultValue().get().accept(this, arg);
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.print(";");
+        printer.print(";");
     }
 
     @Override
     public void visit(final MarkerAnnotationExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" @ ");
-        else
-            printer.print("@");
+        printer.print("@");
         n.getName().accept(this, arg);
     }
 
@@ -1948,51 +1619,30 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final SingleMemberAnnotationExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" @ ");
-        else
-            printer.print("@");
+        printer.print("@");
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ");
-        else
-            printer.print("(");
+        printer.print("(");
         n.getMemberValue().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(")");
+        printer.print(")");
     }
 
     @Override
     public void visit(final NormalAnnotationExpr n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" @ ");
-        else
-            printer.print("@");
+        printer.print("@");
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ( ");
-        else
-            printer.print("(");
+        printer.print("(");
         if (n.getPairs() != null) {
             for (final Iterator<MemberValuePair> i = n.getPairs().iterator(); i.hasNext(); ) {
                 final MemberValuePair m = i.next();
                 m.accept(this, arg);
                 if (i.hasNext()) {
-                    if (configuration.isExtraWhiteSpace())
-                        printer.print(" , ");
-                    else
-                        printer.print(", ");
+                    printer.print(", ");
                 }
             }
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ) ");
-        else
-            printer.print(")");
+        printer.print(")");
     }
 
     @Override
@@ -2039,26 +1689,17 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
         final boolean printPar = n.isEnclosingParameters();
 
         if (printPar) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ( ");
-            else
-                printer.print("(");
+            printer.print("(");
         }
         for (Iterator<Parameter> i = parameters.iterator(); i.hasNext(); ) {
             Parameter p = i.next();
             p.accept(this, arg);
             if (i.hasNext()) {
-                if (configuration.isExtraWhiteSpace())
-                    printer.print(" , ");
-                else
-                    printer.print(", ");
+                printer.print(", ");
             }
         }
         if (printPar) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" ) ");
-            else
-                printer.print(")");
+            printer.print(")");
         }
 
         printer.print(" -> ");
@@ -2081,10 +1722,7 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
             n.getScope().accept(this, arg);
         }
 
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" :: ");
-        else
-            printer.print("::");
+        printer.print("::");
         printTypeArgs(n, arg);
         if (identifier != null) {
             printer.print(identifier);
@@ -2122,27 +1760,15 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(final ImportDeclaration n, final Void arg) {
         printOrphanCommentsBeforeThisChildNode(n);
         printComment(n.getComment(), arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" import ");
-        else
-            printer.print("import ");
+        printer.print("import ");
         if (n.isStatic()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" static ");
-            else
-                printer.print("static ");
+            printer.print("static ");
         }
         n.getName().accept(this, arg);
         if (n.isAsterisk()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" . *");
-            else
-                printer.print(".*");
+            printer.print(".*");
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.println(";");
+        printer.println(";");
 
         printOrphanCommentsEnding(n);
     }
@@ -2152,100 +1778,57 @@ public class PrettyPrintVisitorMod implements VoidVisitor<Void> {
     public void visit(ModuleDeclaration n, Void arg) {
         printMemberAnnotations(n.getAnnotations(), arg);
         if (n.isOpen()) {
-            if (configuration.isExtraWhiteSpace())
-                printer.print(" open ");
-            else
-                printer.print("open ");
+            printer.print("open ");
         }
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" module ");
-        else
-            printer.print("module ");
+        printer.print("module ");
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" { ");
-        else
-            printer.println(" {").indent();
+        printer.println(" {").indent();
         n.getDirectives().accept(this, arg);
         printer.unindent().println("}");
     }
 
     @Override
     public void visit(ModuleRequiresDirective n, Void arg) {
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" requires ");
-        else
-            printer.print("requires ");
+        printer.print("requires ");
         printModifiers(n.getModifiers());
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.println(";");
+        printer.println(";");
     }
 
     @Override
     public void visit(ModuleExportsDirective n, Void arg) {
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" exports ");
-        else
-            printer.print("exports ");
+        printer.print("exports ");
         n.getName().accept(this, arg);
         printPrePostFixOptionalList(n.getModuleNames(), arg, " to ", ", ", "");
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.println(";");
+        printer.println(";");
     }
 
     @Override
     public void visit(ModuleProvidesDirective n, Void arg) {
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" provides ");
-        else
-            printer.print("provides ");
+        printer.print("provides ");
         n.getName().accept(this, arg);
         printPrePostFixRequiredList(n.getWith(), arg, " with ", ", ", "");
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.println(";");
+        printer.println(";");
     }
 
     @Override
     public void visit(ModuleUsesDirective n, Void arg) {
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" uses ");
-        else
-            printer.print("uses ");
+        printer.print("uses ");
         n.getName().accept(this, arg);
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.println(";");
+        printer.println(";");
     }
 
     @Override
     public void visit(ModuleOpensDirective n, Void arg) {
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" opens ");
-        else
-            printer.print("opens ");
+        printer.print("opens ");
         n.getName().accept(this, arg);
         printPrePostFixOptionalList(n.getModuleNames(), arg, " to ", ", ", "");
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ; ");
-        else
-            printer.println(";");
+        printer.println(";");
     }
 
     @Override
     public void visit(UnparsableStmt n, Void arg) {
-
-        if (configuration.isExtraWhiteSpace())
-            printer.print(" ??? ; ");
-        else
-            printer.print("???;");
+        printer.print("???;");
     }
 
     private void printOrphanCommentsBeforeThisChildNode(final Node node) {

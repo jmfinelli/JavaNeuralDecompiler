@@ -2,7 +2,7 @@ package com.redhat.jhalliday.impl;
 
 import com.redhat.jhalliday.DecompilationRecord;
 import com.redhat.jhalliday.DecompilationRecordWithDic;
-import com.redhat.jhalliday.impl.javassist.printers.InfoExtractor;
+import com.redhat.jhalliday.impl.javassist.printers.LowLevelPrinter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,8 +36,8 @@ public class DictionaryExtractionRecordTransformer<LOW_INPUT> implements Functio
             String variableName = wrappedLowLevelMethod.getVariableNames().get(variableIndex);
             if (wrappedHighLevelMethod.getNameExprNames().contains(variableName)) {
                 String placeHolder = String.format("%s_%d", VAR_PREFIX, variableIndex);
-                dictionary.putIfAbsent(InfoExtractor.LOC_VAR_SYMBOL + variableIndex, placeHolder);
-                wrappedLowLevelMethod.replaceStringInBody(InfoExtractor.LOC_VAR_SYMBOL + variableIndex, placeHolder);
+                dictionary.putIfAbsent(LowLevelPrinter.LOC_VAR_SYMBOL + variableIndex, placeHolder);
+                wrappedLowLevelMethod.replaceStringInBody(LowLevelPrinter.LOC_VAR_SYMBOL + variableIndex, placeHolder);
                 wrappedHighLevelMethod.replaceStringInBody(variableName, placeHolder);
             }
         }
@@ -48,8 +48,8 @@ public class DictionaryExtractionRecordTransformer<LOW_INPUT> implements Functio
             String methodName = wrappedLowLevelMethod.getMethodNames().get(methodIndex);
             if (wrappedHighLevelMethod.getMethodExprNames().contains(methodName)) {
                 String placeHolder = String.format("%s_%d", METHOD_PREFIX, i);
-                dictionary.putIfAbsent(InfoExtractor.POOL_SYMBOL + methodIndex, placeHolder);
-                wrappedLowLevelMethod.replaceStringInBody(InfoExtractor.POOL_SYMBOL + methodIndex, placeHolder);
+                dictionary.putIfAbsent(LowLevelPrinter.POOL_SYMBOL + methodIndex, placeHolder);
+                wrappedLowLevelMethod.replaceStringInBody(LowLevelPrinter.POOL_SYMBOL + methodIndex, placeHolder);
                 wrappedHighLevelMethod.replaceStringInBody(methodName, placeHolder);
             }
         }
