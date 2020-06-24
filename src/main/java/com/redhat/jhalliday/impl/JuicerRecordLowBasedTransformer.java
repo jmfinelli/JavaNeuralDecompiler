@@ -59,7 +59,7 @@ public class JuicerRecordLowBasedTransformer<LOW_ITEM> implements Function<
         try {
             LowLevelBody = lowLevelBodyExtractor.apply(decompilationRecord.getLowLevelRepresentation(), placeholders);
         } catch (RuntimeException ex) {
-            System.out.println("The method " + decompilationRecord.getHighLevelRepresentation().getName() + " has been discarded!");
+            //System.out.println("The method " + decompilationRecord.getHighLevelRepresentation().getName() + " has been discarded!");
             return Stream.empty();
         }
         String HighLevelBody = highLevelBodyExtractor.apply(decompilationRecord.getHighLevelRepresentation(), placeholders);

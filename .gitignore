@@ -1,6 +1,7 @@
 # Output files
 *.output
 target/
+utilityFiles/datasets
 
 # Intellij files
 .idea/
