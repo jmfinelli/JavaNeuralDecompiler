@@ -3,6 +3,7 @@ sudo apt-get install build-essential
 sudo apt-get install subversion
 
 svn co http://svn-rdlab.lsi.upc.edu/subversion/asiya/public asiya
+(User: reader, Password: reader)
 
 sudo apt-get install libxml-perl
 sudo cpan -> o conf init
@@ -28,11 +29,15 @@ sudo cpan Statistics::RankCorrelation
 sudo cpan Statistics::Regression
 sudo cpan boolean
 
-cd tools/svmtool-1.3.1
+cd asiya/tools/svmtool-1.3.1
 perl Makefile.PL
 make
 sudo make install
 cd ../..
+mkdir removed
+mkdir removed/tools
+mkdir removed/tools/candc
+mkdir removed/tools/candc/models
 mv tools/candc/models/chunk removed/tools/candc/models/
 perl Makefile.PL
 sudo make install

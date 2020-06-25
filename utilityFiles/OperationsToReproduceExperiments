@@ -74,12 +74,12 @@ Run experiment
 ----------------------------
 cd ~
 mkdir models
-onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000
+onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/experiment --src_vocab_size 250000 --tgt_vocab_size 250000
 ----------------------------
 1 or 2 GPUs
 ----------------------------
-CUDA_VISIBLE_DEVICES=0 onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel -world_size 1 -gpu_ranks 0
-CUDA_VISIBLE_DEVICES=0,1 onmt_train -data ./models/secondExperiment -save_model ./models/secondExperimentTrainedModel -world_size 2 -gpu_ranks 0 1
+CUDA_VISIBLE_DEVICES=0 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 1 -gpu_ranks 0
+CUDA_VISIBLE_DEVICES=0,1 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 2 -gpu_ranks 0 1
 ----------------------------
 
 ----------------------------
@@ -114,4 +114,4 @@ conda activate openNMT
 conda install pytorch==1.0.0 torchvision==0.2.1 cuda90 -c pytorch
 conda install -c anaconda configargparse
 pip install torchtext
-python preprocess.py -train_src ~/datasets/x_train -train_tgt ~/datasets/y_train -valid_src ~/datasets/x_valid -valid_tgt ~/datasets/y_valid -save_data ~/models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000
+python preprocess.py -early_stopping 4 -train_src ~/datasets/x_train -train_tgt ~/datasets/y_train -valid_src ~/datasets/x_valid -valid_tgt ~/datasets/y_valid -save_data ~/models/secondExperiment --src_vocab_size 250000 --tgt_vocab_size 250000

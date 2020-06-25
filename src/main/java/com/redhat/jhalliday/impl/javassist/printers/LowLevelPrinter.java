@@ -208,50 +208,50 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
             case GOTO_W:
             case JSR_W:
                 return String.format(LABEL_PATTERN, opstring, (iter.s32bitAt(pos + 1) + pos));
-            case Opcode.ALOAD_0:
-            case Opcode.ASTORE_0:
-            case Opcode.ILOAD_0:
-            case Opcode.ISTORE_0:
-            case Opcode.FLOAD_0:
-            case Opcode.FSTORE_0:
-            case Opcode.LLOAD_0:
-            case Opcode.LSTORE_0:
-            case Opcode.DLOAD_0:
-            case Opcode.DSTORE_0:
-            case Opcode.ALOAD_1:
-            case Opcode.ASTORE_1:
-            case Opcode.ILOAD_1:
-            case Opcode.ISTORE_1:
-            case Opcode.FLOAD_1:
-            case Opcode.FSTORE_1:
-            case Opcode.LLOAD_1:
-            case Opcode.LSTORE_1:
-            case Opcode.DLOAD_1:
-            case Opcode.DSTORE_1:
-            case Opcode.ALOAD_2:
-            case Opcode.ASTORE_2:
-            case Opcode.ILOAD_2:
-            case Opcode.ISTORE_2:
-            case Opcode.FLOAD_2:
-            case Opcode.FSTORE_2:
-            case Opcode.LLOAD_2:
-            case Opcode.LSTORE_2:
-            case Opcode.DLOAD_2:
-            case Opcode.DSTORE_2:
-            case Opcode.ALOAD_3:
-            case Opcode.ASTORE_3:
-            case Opcode.ILOAD_3:
-            case Opcode.ISTORE_3:
-            case Opcode.FLOAD_3:
-            case Opcode.FSTORE_3:
-            case Opcode.LLOAD_3:
-            case Opcode.LSTORE_3:
-            case Opcode.DLOAD_3:
-            case Opcode.DSTORE_3:
-                int index = Integer.parseInt(opstring.substring(opstring.lastIndexOf("_") + 1));
-                Map.Entry<Integer, String> variable = getVariableName(iter, pos, index);
-                this.variableNames.putIfAbsent(variable.getKey(), variable.getValue());
-                return String.format(LOC_VAR_PATTERN, opstring.substring(0, opstring.lastIndexOf("_")), index);
+//            case Opcode.ALOAD_0:
+//            case Opcode.ASTORE_0:
+//            case Opcode.ILOAD_0:
+//            case Opcode.ISTORE_0:
+//            case Opcode.FLOAD_0:
+//            case Opcode.FSTORE_0:
+//            case Opcode.LLOAD_0:
+//            case Opcode.LSTORE_0:
+//            case Opcode.DLOAD_0:
+//            case Opcode.DSTORE_0:
+//            case Opcode.ALOAD_1:
+//            case Opcode.ASTORE_1:
+//            case Opcode.ILOAD_1:
+//            case Opcode.ISTORE_1:
+//            case Opcode.FLOAD_1:
+//            case Opcode.FSTORE_1:
+//            case Opcode.LLOAD_1:
+//            case Opcode.LSTORE_1:
+//            case Opcode.DLOAD_1:
+//            case Opcode.DSTORE_1:
+//            case Opcode.ALOAD_2:
+//            case Opcode.ASTORE_2:
+//            case Opcode.ILOAD_2:
+//            case Opcode.ISTORE_2:
+//            case Opcode.FLOAD_2:
+//            case Opcode.FSTORE_2:
+//            case Opcode.LLOAD_2:
+//            case Opcode.LSTORE_2:
+//            case Opcode.DLOAD_2:
+//            case Opcode.DSTORE_2:
+//            case Opcode.ALOAD_3:
+//            case Opcode.ASTORE_3:
+//            case Opcode.ILOAD_3:
+//            case Opcode.ISTORE_3:
+//            case Opcode.FLOAD_3:
+//            case Opcode.FSTORE_3:
+//            case Opcode.LLOAD_3:
+//            case Opcode.LSTORE_3:
+//            case Opcode.DLOAD_3:
+//            case Opcode.DSTORE_3:
+//                int index = Integer.parseInt(opstring.substring(opstring.lastIndexOf("_") + 1));
+//                Map.Entry<Integer, String> variable = getVariableName(iter, pos, index);
+//                this.variableNames.putIfAbsent(variable.getKey(), variable.getValue());
+//                return String.format(LOC_VAR_PATTERN, opstring.substring(0, opstring.lastIndexOf("_")), index);
             default:
                 return opstring;
 
