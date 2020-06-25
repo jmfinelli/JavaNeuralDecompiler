@@ -81,6 +81,10 @@ onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -val
 CUDA_VISIBLE_DEVICES=0 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 1 -gpu_ranks 0
 CUDA_VISIBLE_DEVICES=0,1 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 2 -gpu_ranks 0 1
 ----------------------------
+Decompile validation files
+----------------------------
+CUDA_VISIBLE_DEVICES=0 onmt_translate -gpu 0 -model ./models/experimentTrainedModel_*.pt -src ~/datasets/sources.output -tgt ~/datasets/targets.output -replace_unk -verbose -output ~/datasets/candidates.output
+----------------------------
 
 ----------------------------
 ----------------------------
