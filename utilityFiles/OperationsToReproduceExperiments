@@ -83,7 +83,7 @@ CUDA_VISIBLE_DEVICES=0,1 onmt_train -early_stopping 4 -data ./models/experiment 
 ----------------------------
 Decompile validation files
 ----------------------------
-CUDA_VISIBLE_DEVICES=0 onmt_translate -gpu 0 -model ./models/experimentTrainedModel_step_50000.pt -src ~/datasets/remaining_sources -tgt ~/datasets/remaining_targets -replace_unk -output ~/datasets/remaining_candidates
+CUDA_VISIBLE_DEVICES=0 onmt_translate -gpu 0 -model ./models/experimentTrainedModel_step_50000.pt -src ~/datasets/remaining_sources -tgt ~/datasets/remaining_references -output ~/datasets/remaining_candidates
 ----------------------------
 
 ----------------------------
