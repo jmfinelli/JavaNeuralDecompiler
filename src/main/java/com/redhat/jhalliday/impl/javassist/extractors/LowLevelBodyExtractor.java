@@ -16,6 +16,7 @@ package com.redhat.jhalliday.impl.javassist.extractors;
  * License.
  */
 
+import com.github.javaparser.utils.StringEscapeUtils;
 import com.redhat.jhalliday.InfoExtractor;
 import com.redhat.jhalliday.impl.LowInfoExtractor;
 import javassist.CtMethod;
@@ -405,7 +406,8 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
 
         switch (tag) {
             case ConstPool.CONST_String:
-                return Map.entry(index, pool.getStringInfo(index));
+                String temp = StringEscapeUtils.escapeJava(pool.getStringInfo(index));
+                return Map.entry(index, temp);
             case ConstPool.CONST_Integer:
                 return Map.entry(index, String.valueOf(pool.getIntegerInfo(index)));
             case ConstPool.CONST_Float:

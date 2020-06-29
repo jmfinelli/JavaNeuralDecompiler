@@ -9,13 +9,11 @@ import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 import com.redhat.jhalliday.impl.fernflower.CLIFernFlower;
 import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
-import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractor;
 import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithVisitor;
-import com.redhat.jhalliday.impl.javaparser.extractors.MethodDeclarationInfoExtractor;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
+import com.redhat.jhalliday.impl.javassist.extractors.CtMethodInfoExtractor;
 import com.redhat.jhalliday.impl.javassist.extractors.LowLevelBodyExtractor;
-import com.redhat.jhalliday.impl.javassist.extractors.LowLevelInfoExtractor;
 import javassist.CtClass;
 import javassist.CtMethod;
 
@@ -92,8 +90,8 @@ public class Driver {
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
                 new JuicerRecordLowBasedTransformer<>(
-                        //new CtMethodInfoExtractor(),
-                        new LowLevelInfoExtractor(),
+                        new CtMethodInfoExtractor(),
+                        //new LowLevelInfoExtractor(),
                         new LowLevelBodyExtractor(),
                         new HighLevelBodyExtractorWithVisitor())
         );
@@ -137,21 +135,7 @@ public class Driver {
 
             count++;
 
-////            System.out.printf("Successful resolutions: %.0f\n", PrettyPrinterMod.passes - tempPasses);
-////            System.out.printf("Failed resolutions: %.0f\n", PrettyPrinterMod.fails - tempFails);
-////            float percentage = 100f * (PrettyPrinterMod.passes - tempPasses)/((PrettyPrinterMod.passes - tempPasses) + (PrettyPrinterMod.fails - tempFails));
-////            System.out.printf("Passes rate: %.2f%%\n", percentage);
-////            long localEnd = System.currentTimeMillis();
-////            System.out.printf("Runtime %d ms\n", localEnd-localStart);
-////
-////            System.out.println();
-////
-////            tempFails = PrettyPrinterMod.fails;
-////            tempPasses = PrettyPrinterMod.passes;
         }
-//
-//        System.out.printf("Overall successful resolutions: %.0f\n", PrettyPrinterMod.passes);
-//        System.out.printf("Overall failed resolutions: %.0f\n", PrettyPrinterMod.fails);
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);
         System.out.printf("Found %d method pairs\n", methods);

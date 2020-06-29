@@ -34,6 +34,7 @@ import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.type.*;
 import com.github.javaparser.ast.visitor.Visitable;
 import com.github.javaparser.ast.visitor.VoidVisitor;
+import com.github.javaparser.utils.StringEscapeUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -773,7 +774,7 @@ public class PrettyPrintVisitorWithSubstitutions implements VoidVisitor<Void> {
         printer.print("\"");
 
         // Substitutions
-        String currentValue = n.getValue();
+        String currentValue = StringEscapeUtils.escapeJava(n.getValue());
         printer.print(this._placeholders.getOrDefault(currentValue, currentValue));
         printer.print("\"");
     }

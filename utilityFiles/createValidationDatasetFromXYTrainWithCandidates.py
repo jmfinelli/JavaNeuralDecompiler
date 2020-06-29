@@ -1,5 +1,9 @@
 import pandas as pd
 
+length_switch = True
+max_body_length = 50
+process_candidates = False
+
 x_train = open('./datasets/x_train').readlines()
 x_train = [x.rstrip('\n') for x in x_train]
 y_train = open('./datasets/y_train').readlines()
@@ -14,10 +18,17 @@ bytecodes = open('./datasets/bytecode.output').readlines()
 bytecodes = [x.rstrip('\n') for x in bytecodes]
 references = open('./datasets/references.output').readlines()
 references = [x.rstrip('\n') for x in references]
-candidates = open('./datasets/candidates.output').readlines()
-candidates = [x.rstrip('\n') for x in candidates]
 
-df_pairs = pd.DataFrame({'source': bytecodes, 'target' : references, 'candidates': candidates })
+if (process_candidates):
+    candidates = open('./datasets/candidates.output').readlines()
+    candidates = [x.rstrip('\n') for x in candidates]
+    df_pairs = pd.DataFrame({'source': bytecodes, 'target' : references, 'candidates': candidates })
+else:
+    df_pairs = pd.DataFrame({'source': bytecodes, 'target': references })
+
+if (length_switch):
+    mask = df_pairs['source'].apply(lambda x: len(x.split()) <= max_body_length)
+    df_pairs = df_pairs.loc[mask]
 
 df_train = pd.DataFrame({'source': x_train + x_valid, 'target' : y_train + y_valid })
 
@@ -34,5 +45,6 @@ with open('./datasets/remaining_sources', 'w') as filehandle:
 with open('./datasets/remaining_references', 'w') as filehandle:
     filehandle.writelines("%s\n" % place for place in df_valid['target_x'])
 
-with open('./datasets/remaining_candidates', 'w') as filehandle:
-    filehandle.writelines("%s\n" % place for place in df_valid['candidates'])
+if (process_candidates):
+    with open('./datasets/remaining_candidates', 'w') as filehandle:
+        filehandle.writelines("%s\n" % place for place in df_valid['candidates'])

@@ -1,5 +1,6 @@
 package com.redhat.jhalliday.impl.javassist.extractors;
 
+import com.github.javaparser.utils.StringEscapeUtils;
 import com.redhat.jhalliday.InfoExtractor;
 import javassist.CannotCompileException;
 import javassist.CtMethod;
@@ -84,9 +85,9 @@ public class CtMethodInfoExtractor implements InfoExtractor<CtMethod> {
 
                             switch (tag) {
                                 case ConstPool.CONST_String:
-                                    String temp = pool.getStringInfo(innerElementIndex);
-                                    if (!temp.matches("^this$|^\\s+$")) {
-                                        results.putIfAbsent(pool.getStringInfo(innerElementIndex), InfoType.CONST);
+                                    String temp = StringEscapeUtils.escapeJava(pool.getStringInfo(innerElementIndex));
+                                    if (!temp.isEmpty() && !temp.matches("^this$|^\\s+$")) {
+                                        results.putIfAbsent(temp, InfoType.CONST);
                                     }
                                     break;
                                 case ConstPool.CONST_Integer:
@@ -103,8 +104,23 @@ public class CtMethodInfoExtractor implements InfoExtractor<CtMethod> {
                                     break;
                                 case ConstPool.CONST_Class:
                                     String clazz = pool.getClassInfo(innerElementIndex);
-                                    results.putIfAbsent(clazz.substring(clazz.lastIndexOf(".") + 1), InfoType.CLASS);
+                                    String endClazz = clazz.substring(clazz.lastIndexOf(".") + 1);
+                                    if (endClazz.contains("$")){
+                                        endClazz = endClazz.substring(endClazz.lastIndexOf("$") + 1);
+                                    }
+                                    results.putIfAbsent(endClazz, InfoType.CLASS);
                                     break;
+//                                case ConstPool.CONST_Utf8:
+//                                    System.out.println("CONST_Utf8: " + pool.getUtf8Info(innerElementIndex));
+//                                    break;
+//                                case ConstPool.CONST_DynamicCallSite:
+//                                    System.out.println("CONST_DynamicCallSite");
+//                                    break;
+//                                case ConstPool.CONST_NameAndType:
+//                                    System.out.println("CONST_NameAndType: " + pool.getUtf8Info(pool.getNameAndTypeName(innerElementIndex)));
+//                                    break;
+//                                case ConstPool.CONST_Fieldref:
+//                                    System.out.println("CONST_Fieldref: " + pool.getFieldrefName(innerElementIndex));
                             }
                         }
                     }
@@ -143,5 +159,6 @@ public class CtMethodInfoExtractor implements InfoExtractor<CtMethod> {
         public void edit(FieldAccess f) {
             this._storage.putIfAbsent(f.getFieldName(), InfoType.FIELD);
         }
+
     }
 }

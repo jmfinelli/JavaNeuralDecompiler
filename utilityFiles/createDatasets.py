@@ -1,16 +1,29 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+body_length_switch = True
+max_body_length = 50
+dataset_fixed_size_switch = True
+dataset_fixed_size = 50000
+process_candidates = False
+
 lowLevel = open('./datasets/bytecode.output').readlines()
 lowLevel = [x.rstrip('\n') for x in lowLevel]
 highLevel = open('./datasets/references.output').readlines()
 highLevel = [x.rstrip('\n') for x in highLevel]
 
-df = pd.DataFrame({'source': lowLevel, 'target' : highLevel})
+df_pairs = pd.DataFrame({'source': lowLevel, 'target' : highLevel})
 
-df_samples = df.sample(frac=1).reset_index(drop=True).sample(50000)
+if (body_length_switch):
+    mask = df_pairs['source'].apply(lambda x: len(x.split()) <= max_body_length)
+    df_pairs = df_pairs.loc[mask]
 
-df_valid = df.merge(df_samples, indicator=True, how='left')\
+if (dataset_fixed_size_switch):
+    df_samples = df_pairs.sample(frac=1).reset_index(drop=True).sample(dataset_fixed_size)
+else:
+    df_samples = df_pairs
+
+df_valid = df_pairs.merge(df_samples, indicator=True, how='left')\
     .query('_merge=="left_only"')\
     .drop('_merge', axis=1)
 

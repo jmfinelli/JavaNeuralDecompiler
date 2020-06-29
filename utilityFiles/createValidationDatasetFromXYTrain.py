@@ -1,6 +1,7 @@
 import pandas as pd
 
 length_switch = True
+max_body_length = 50
 
 x_train = open('./datasets/x_train').readlines()
 x_train = [x.rstrip('\n') for x in x_train]
@@ -20,7 +21,7 @@ references = [x.rstrip('\n') for x in references]
 df_pairs = pd.DataFrame({'source': bytecodes, 'target' : references})
 
 if (length_switch):
-    mask = df_pairs['source'].apply(lambda x: len(x.split()) <= 50);
+    mask = df_pairs['source'].apply(lambda x: len(x.split()) <= max_body_length);
     df_pairs = df_pairs.loc[mask]
 
 df_train = pd.DataFrame({'source': x_train + x_valid, 'target' : y_train + y_valid })
