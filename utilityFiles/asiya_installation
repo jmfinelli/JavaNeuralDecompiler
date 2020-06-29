@@ -67,5 +67,5 @@ cd ~/asiya/tools/terp.v1/
 sudo find / -name java [select the forlder that contains bin/java]
 ./bin/setup_bin.sh ./ /usr/lib/jvm/java-8-openjdk-amd64/ /usr/local/WordNet-3.0/
 
-Asiya.pl -eval single -metric_set some_metrics -no_tok -g sys -v Asiya.config
+Asiya.pl -eval single -metric_set simple_metrics -no_tok -g sys -v Asiya.config
 Asiya.pl -eval single -metric_set metrics_TER -no_tok -g sys -v Asiya.config

@@ -13,6 +13,7 @@ import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWit
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import com.redhat.jhalliday.impl.javassist.extractors.CtMethodInfoExtractor;
+import com.redhat.jhalliday.impl.javassist.extractors.IdentityInfoExtractor;
 import com.redhat.jhalliday.impl.javassist.extractors.LowLevelBodyExtractor;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -90,7 +91,8 @@ public class Driver {
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
                 new JuicerRecordLowBasedTransformer<>(
-                        new CtMethodInfoExtractor(),
+                        new IdentityInfoExtractor(),
+                        //new CtMethodInfoExtractor(),
                         //new LowLevelInfoExtractor(),
                         new LowLevelBodyExtractor(),
                         new HighLevelBodyExtractorWithVisitor())
