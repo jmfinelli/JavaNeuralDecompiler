@@ -22,7 +22,7 @@ public class OriginalFernFlower implements Decompiler<File, File> {
         }
         this._outputFolder = outputFolder;
 
-        if (options == null ) {
+        if (options == null) {
             throw new IllegalArgumentException("You must provide options for FernFlower");
         }
         this._options = options;
@@ -43,9 +43,14 @@ public class OriginalFernFlower implements Decompiler<File, File> {
 
         JetbrainsFernFlower engine = new JetbrainsFernFlower(this._outputFolder, this._options, new PrintStreamLogger(this._stream));
 
-        engine.addSource(file);
+        try {
+            engine.addSource(file);
 
-        engine.decompileContext();
+            engine.decompileContext();
+
+        } catch (Exception ex) {
+            return null;
+        }
 
         if (outputFile.exists()) {
             return outputFile;

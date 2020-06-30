@@ -64,11 +64,25 @@ public class JuicerRecordLowBasedTransformer<LOW_ITEM> implements Function<
         }
         String HighLevelBody = highLevelBodyExtractor.apply(decompilationRecord.getHighLevelRepresentation(), placeholders);
 
-        DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>> newRecord = new GenericDecompilationRecord<>(
-                new MethodJuice<>(decompilationRecord.getLowLevelRepresentation(), placeholders, LowLevelBody),
-                new MethodJuice<>(decompilationRecord.getHighLevelRepresentation(), placeholders, HighLevelBody),
-                decompilationRecord
-        );
+        DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>> newRecord;
+        if (decompilationRecord.getHighLevelDecompiled() == null) {
+
+            newRecord = new GenericDecompilationRecord<>(
+                    new MethodJuice<>(decompilationRecord.getLowLevelRepresentation(), placeholders, LowLevelBody),
+                    new MethodJuice<>(decompilationRecord.getHighLevelRepresentation(), placeholders, HighLevelBody),
+                    decompilationRecord
+            );
+        } else {
+
+            String DecompiledBody = highLevelBodyExtractor.apply(decompilationRecord.getHighLevelDecompiled(), placeholders);
+
+            newRecord = new GenericDecompilationRecord<>(
+                    new MethodJuice<>(decompilationRecord.getLowLevelRepresentation(), placeholders, LowLevelBody),
+                    new MethodJuice<>(decompilationRecord.getHighLevelRepresentation(), placeholders, HighLevelBody),
+                    new MethodJuice<>(decompilationRecord.getHighLevelDecompiled(), placeholders, DecompiledBody),
+                    decompilationRecord
+            );
+        }
 
         return Stream.of(newRecord);
     }

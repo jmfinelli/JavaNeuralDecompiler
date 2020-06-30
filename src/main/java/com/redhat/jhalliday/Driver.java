@@ -28,7 +28,7 @@ public class Driver {
     private static final File HIGH_FILENAME = new File("./references.output");
     private static final File HIGH_DEC_FILENAME = new File("./candidates.output");
 
-    private static boolean USE_DECOMPILER = false;
+    private static boolean USE_DECOMPILER = true;
 
     public static void main(String[] args) {
 
@@ -63,16 +63,15 @@ public class Driver {
 
         Decompiler<File,File> decompiler = null;
         if (USE_DECOMPILER) {
+//            decompiler = new CLIFernFlower(dirRecord.getHighLevelDecompiled());
             try {
                 decompiler = new OriginalFernFlower(dirRecord.getHighLevelDecompiled());
-            } catch (FileNotFoundException ex) {
-                ex.printStackTrace();
-                decompiler = new CLIFernFlower(dirRecord.getHighLevelDecompiled());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
         }
 
         DirectoryToJarsRecordTransformer dir2jarsTransformer = USE_DECOMPILER ?
-                //new DirectoryToJarsRecordTransformer(new CLIFernFlower(dirRecord.getHighLevelDecompiled())) :
                 new DirectoryToJarsRecordTransformer(decompiler) :
                 new DirectoryToJarsRecordTransformer();
 
@@ -105,15 +104,11 @@ public class Driver {
         Set<String> lowLevelDictionary = new HashSet<>();
         Set<String> highLevelDictionary = new HashSet<>();
 
-        float tempPasses = 0;
-        float tempFails = 0;
         int count = 0;
 
         for (DecompilationRecord<File, File> decompilationRecord : jarRecords) {
 
             System.out.printf("%d: %s\n", count + 1, decompilationRecord.getLowLevelRepresentation().getName());
-
-            long localStart = System.currentTimeMillis();
 
             List<DecompilationRecord<ClassWrapper<CtClass>, CompilationUnit>> filePairs =
                     jarProcessor.associateFiles(decompilationRecord);

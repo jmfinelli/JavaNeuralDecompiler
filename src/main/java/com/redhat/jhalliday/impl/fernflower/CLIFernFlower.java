@@ -60,11 +60,10 @@ public class CLIFernFlower implements Decompiler<File, File> {
 
         String binariesPath = binJar.getPath().substring(0, binJar.getPath().lastIndexOf("/"));
 
-        // File fernflowerJar = new File(binariesPath + File.separator + "fernflower.jar");
-        File fernflowerJar = new File(outputFolder + File.separator + "fernflower.jar");
+        File fernflowerJar = new File("./lib/fernflower.jar");
 
         if (!fernflowerJar.exists())
-            throw new IOException("FernFlower JAR is not present in " + binariesPath);
+            throw new IOException("FernFlower JAR is not present in ./lib/fernflower.jar");
 
         processBuilder.command("bash", "-c", String.format(
                 "java -jar %s -dsg=true %s %s",
