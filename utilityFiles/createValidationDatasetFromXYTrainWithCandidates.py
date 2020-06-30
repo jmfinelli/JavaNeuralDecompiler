@@ -1,8 +1,9 @@
 import pandas as pd
+import os.path
 
 length_switch = True
 max_body_length = 50
-process_candidates = False
+process_candidates = os.path.exists('./datasets/candidates.output')
 
 x_train = open('./datasets/x_train').readlines()
 x_train = [x.rstrip('\n') for x in x_train]

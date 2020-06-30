@@ -16,22 +16,21 @@ package com.redhat.jhalliday.impl.javassist.printers;
  * License.
  */
 
-import com.redhat.jhalliday.impl.LowInfoExtractor;
 import javassist.CtMethod;
 import javassist.bytecode.*;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
  * Simple utility class for printing the bytecode instructions of a method.
  *
  * @author Jason T. Greene
  */
-public class LowLevelPrinter implements Opcode, LowInfoExtractor {
+@Deprecated
+public class LowLevelPrinter implements BiFunction<CtMethod, Map<String, String>, String>, Opcode {
 
     public final static String LABEL_SYMBOL = "L";
     public final static String POOL_SYMBOL = "#";
@@ -46,14 +45,16 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
 
     private final static String opcodes[] = Mnemonic.OPCODE;
 
-    private final Map<Integer, String> methodNames = new HashMap<>();
-    private final Map<Integer, String> classNames = new HashMap<>();
-    private final Map<Integer, String> constants = new HashMap<>();
-    private final Map<Integer, String> fieldNames = new HashMap<>();
-    private final Map<Integer, String> variableNames = new HashMap<>();
-    private final List<String> body = new LinkedList<>();
+    @Override
+    public String apply(CtMethod ctMethod, Map<String, String> placeholders) {
+        List<String> body = new LinkedList<>();
 
-    public LowLevelPrinter(CtMethod ctMethod) {
+        ProcessMethod(ctMethod, body, placeholders);
+
+        return String.join(DELIMITER, body);
+    }
+
+    private void ProcessMethod (CtMethod ctMethod, List<String> body, final Map<String, String> placeholders) throws RuntimeException {
 
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();
@@ -68,38 +69,8 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
                 throw new RuntimeException(e);
             }
 
-            body.add(instructionString(iterator, pos, pool));
+            body.add(instructionString(iterator, pos, pool).replaceAll("\\s+", " "));
         }
-    }
-
-    @Override
-    public Map<Integer, String> getMethodNames() {
-        return methodNames;
-    }
-
-    @Override
-    public Map<Integer, String> getClassNames() {
-        return classNames;
-    }
-
-    @Override
-    public Map<Integer, String> getConstants() {
-        return constants;
-    }
-
-    @Override
-    public Map<Integer, String> getFieldNames() {
-        return fieldNames;
-    }
-
-    @Override
-    public Map<Integer, String> getVariableNames() {
-        return variableNames;
-    }
-
-    @Override
-    public String getBody() {
-        return String.join(DELIMITER, body);
     }
 
     /**
@@ -121,12 +92,10 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
                 return String.format(SIMPLE_PATTERN, opstring, iter.s16bitAt(pos + 1));
             case LDC:
                 entry = ldc(pool, iter.byteAt(pos + 1));
-                constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.byteAt(pos + 1));
             case LDC_W:
             case LDC2_W:
                 entry = ldc(pool, iter.u16bitAt(pos + 1));
-                constants.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case ILOAD:
             case LLOAD:
@@ -140,7 +109,6 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
             case ASTORE:
                 entry = getVariableName(iter, pos, iter.byteAt(pos + 1));
                 if (!entry.getValue().isEmpty())
-                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(LOC_VAR_PATTERN, opstring, entry.getKey());
             case IFEQ:
             case IFGE:
@@ -161,8 +129,6 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
                 return String.format(LABEL_PATTERN, opstring, (iter.s16bitAt(pos + 1) + pos));
             case IINC:
                 entry = getVariableName(iter, pos, iter.byteAt(pos + 1));
-                if (!entry.getValue().isEmpty())
-                    this.variableNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format("%s %s%d,%d", opstring, LOC_VAR_SYMBOL, entry.getKey(), iter.signedByteAt(pos + 2));
             case GOTO:
             case JSR:
@@ -178,17 +144,14 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
             case GETFIELD:
             case PUTFIELD:
                 entry = fieldInfo(pool, iter.u16bitAt(pos + 1));
-                fieldNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEVIRTUAL:
             case INVOKESPECIAL:
             case INVOKESTATIC:
                 entry = methodInfo(pool, iter.u16bitAt(pos + 1));
-                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEINTERFACE:
                 entry = interfaceMethodInfo(pool, iter.u16bitAt(pos + 1));
-                methodNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case INVOKEDYNAMIC:
                 return String.format(SIMPLE_PATTERN, opstring, iter.u16bitAt(pos + 1));
@@ -201,7 +164,6 @@ public class LowLevelPrinter implements Opcode, LowInfoExtractor {
             case CHECKCAST:
             case MULTIANEWARRAY:
                 entry = classInfo(pool, iter.u16bitAt(pos + 1));
-                classNames.putIfAbsent(entry.getKey(), entry.getValue());
                 return String.format(POOL_PATTERN, opstring, iter.u16bitAt(pos + 1));
             case WIDE:
                 return wide(iter, pos);

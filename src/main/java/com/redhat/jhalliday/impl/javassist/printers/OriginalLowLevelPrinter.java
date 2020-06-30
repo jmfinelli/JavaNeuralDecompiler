@@ -16,28 +16,36 @@ package com.redhat.jhalliday.impl.javassist.printers;
  * License.
  */
 
-import com.redhat.jhalliday.impl.LowInfoExtractor;
 import javassist.CtMethod;
 import javassist.bytecode.*;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 /**
  * Simple utility class for printing the bytecode instructions of a method.
  *
  * @author Jason T. Greene
  */
-public class OriginalLowLevelPrinter implements Opcode, LowInfoExtractor {
+@Deprecated
+public class OriginalLowLevelPrinter implements BiFunction<CtMethod, Map<String, String>, String>, Opcode {
 
     private final static String opcodes[] = Mnemonic.OPCODE;
 
     private final static String DELIMITER = " ";
-    private final List<String> body = new LinkedList<>();
 
-    public OriginalLowLevelPrinter(CtMethod ctMethod) {
+    @Override
+    public String apply(CtMethod ctMethod, Map<String, String> placeholders) {
+        List<String> body = new LinkedList<>();
+
+        ProcessMethod(ctMethod, body, placeholders);
+
+        return String.join(DELIMITER, body);
+    }
+
+    private void ProcessMethod (CtMethod ctMethod, List<String> body, final Map<String, String> placeholders) throws RuntimeException {
 
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();
@@ -52,38 +60,8 @@ public class OriginalLowLevelPrinter implements Opcode, LowInfoExtractor {
                 throw new RuntimeException(e);
             }
 
-            body.add(instructionString(iterator, pos, pool));
+            body.add(instructionString(iterator, pos, pool).replaceAll("\\s+", " "));
         }
-    }
-
-    @Override
-    public Map<Integer, String> getMethodNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getClassNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getConstants() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getFieldNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getVariableNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public String getBody() {
-        return String.join(DELIMITER, this.body).replaceAll("\\s+", " ");
     }
 
     /**

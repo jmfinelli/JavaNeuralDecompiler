@@ -1,4 +1,4 @@
-package com.redhat.jhalliday.impl.javassist.printers;
+package com.redhat.jhalliday.impl.javassist.extractors;
 
 /*
  * Javassist, a Java-bytecode translator toolkit.
@@ -16,28 +16,35 @@ package com.redhat.jhalliday.impl.javassist.printers;
  * License.
  */
 
-import com.redhat.jhalliday.impl.LowInfoExtractor;
 import javassist.CtMethod;
 import javassist.bytecode.*;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 /**
  * Simple utility class for printing the bytecode instructions of a method.
  *
  * @author Jason T. Greene
  */
-public class LowLevelPrinterWithoutIndex implements Opcode, LowInfoExtractor {
+public class OriginalLowLevelBodyExtractorWithoutIndex implements BiFunction<CtMethod, Map<String, String>, String>, Opcode {
 
     private final static String opcodes[] = Mnemonic.OPCODE;
 
     private final static String DELIMITER = " ";
-    private final List<String> body = new LinkedList<>();
 
-    public LowLevelPrinterWithoutIndex(CtMethod ctMethod) {
+    @Override
+    public String apply(CtMethod ctMethod, Map<String, String> placeholders) {
+        List<String> body = new LinkedList<>();
+
+        ProcessMethod(ctMethod, body, placeholders);
+
+        return String.join(DELIMITER, body);
+    }
+
+    private void ProcessMethod (CtMethod ctMethod, List<String> body, final Map<String, String> placeholders) throws RuntimeException {
 
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();
@@ -52,45 +59,14 @@ public class LowLevelPrinterWithoutIndex implements Opcode, LowInfoExtractor {
                 throw new RuntimeException(e);
             }
 
-            body.add(instructionString(iterator, pos, pool));
+            body.add(instructionString(iterator, pos, pool).replaceAll("\\s+", " "));
         }
     }
-
-    @Override
-    public Map<Integer, String> getMethodNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getClassNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getConstants() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getFieldNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public Map<Integer, String> getVariableNames() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public String getBody() {
-        return String.join(DELIMITER, this.body).replaceAll("\\s+", " ");
-    }
-
     /**
      * Gets a string representation of the bytecode instruction at the specified
      * position.
      */
-    public static String instructionString(CodeIterator iter, int pos, ConstPool pool) {
+    private String instructionString(CodeIterator iter, int pos, ConstPool pool) throws RuntimeException {
         int opcode = iter.byteAt(pos);
 
         if (opcode > opcodes.length || opcode < 0)
@@ -227,7 +203,7 @@ public class LowLevelPrinterWithoutIndex implements Opcode, LowInfoExtractor {
 
 
     private static String classInfo(ConstPool pool, int index) {
-        return "Class " + pool.getClassInfo(index);
+        return "Class " + String.join(" . ", pool.getClassInfo(index).split("[\\.\\$]"));
     }
 
 
@@ -238,7 +214,7 @@ public class LowLevelPrinterWithoutIndex implements Opcode, LowInfoExtractor {
 //                + pool.getInterfaceMethodrefType(index) + " ) ";
 
         return "Method "
-                + pool.getInterfaceMethodrefClassName(index) + " . "
+                + String.join(" . ", pool.getInterfaceMethodrefClassName(index).split("[\\.\\$]")) + " . "
                 + pool.getInterfaceMethodrefName(index);
     }
 
@@ -249,7 +225,7 @@ public class LowLevelPrinterWithoutIndex implements Opcode, LowInfoExtractor {
 //                + pool.getMethodrefType(index) + " ) ";
 
         return "Method "
-                + pool.getMethodrefClassName(index) + " . "
+                + String.join(" . ", pool.getMethodrefClassName(index).split("[\\.\\$]")) + " . "
                 + pool.getMethodrefName(index);
     }
 
@@ -261,7 +237,7 @@ public class LowLevelPrinterWithoutIndex implements Opcode, LowInfoExtractor {
 //                + pool.getFieldrefType(index) + " ) ";
 
         return "Field "
-                + pool.getFieldrefClassName(index) + " . "
+                + String.join(" . ", pool.getFieldrefClassName(index).split("[\\.\\$]")) + " . "
                 + pool.getFieldrefName(index);
     }
 

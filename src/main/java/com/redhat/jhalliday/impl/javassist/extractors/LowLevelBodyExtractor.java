@@ -17,17 +17,13 @@ package com.redhat.jhalliday.impl.javassist.extractors;
  */
 
 import com.github.javaparser.utils.StringEscapeUtils;
-import com.redhat.jhalliday.InfoExtractor;
-import com.redhat.jhalliday.impl.LowInfoExtractor;
 import javassist.CtMethod;
 import javassist.bytecode.*;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Simple utility class for printing the bytecode instructions of a method.

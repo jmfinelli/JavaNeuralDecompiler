@@ -1,4 +1,5 @@
 import pandas as pd
+import os.path
 from sklearn.model_selection import train_test_split
 
 def checkMethodLength(list, a, b):
@@ -6,10 +7,10 @@ def checkMethodLength(list, a, b):
 
 body_length_switch = True
 min_body_length = 0
-max_body_length = 30
+max_body_length = 33
 dataset_fixed_size_switch = True
 dataset_fixed_size = 50000
-process_candidates = True
+process_candidates = os.path.exists('./datasets/candidates.output')
 
 lowLevel = open('./datasets/bytecode.output').readlines()
 lowLevel = [x.rstrip('\n') for x in lowLevel]

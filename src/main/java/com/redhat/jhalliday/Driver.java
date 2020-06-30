@@ -6,15 +6,13 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.redhat.jhalliday.impl.*;
 import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
-import com.redhat.jhalliday.impl.fernflower.CLIFernFlower;
 import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
 import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithVisitor;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
-import com.redhat.jhalliday.impl.javassist.extractors.CtMethodInfoExtractor;
 import com.redhat.jhalliday.impl.javassist.extractors.IdentityInfoExtractor;
-import com.redhat.jhalliday.impl.javassist.extractors.LowLevelBodyExtractor;
+import com.redhat.jhalliday.impl.javassist.extractors.OriginalLowLevelBodyExtractorWithoutIndex;
 import javassist.CtClass;
 import javassist.CtMethod;
 
@@ -24,11 +22,19 @@ import java.util.stream.Collectors;
 
 public class Driver {
 
+    //////////////////////////////////////////
+    //////////////// SWITCHES ////////////////
+    //////////////////////////////////////////
+
+    private static boolean USE_DECOMPILER = false;
+
+    //////////////////////////////////////////
+    //////////////////////////////////////////
+    //////////////////////////////////////////
+
     private static final File LOW_FILENAME = new File("./bytecode.output");
     private static final File HIGH_FILENAME = new File("./references.output");
     private static final File HIGH_DEC_FILENAME = new File("./candidates.output");
-
-    private static boolean USE_DECOMPILER = true;
 
     public static void main(String[] args) {
 
@@ -90,10 +96,17 @@ public class Driver {
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
                 new JuicerRecordLowBasedTransformer<>(
+                        // Low-Level Info Extractor
                         new IdentityInfoExtractor(),
                         //new CtMethodInfoExtractor(),
                         //new LowLevelInfoExtractor(),
-                        new LowLevelBodyExtractor(),
+
+                        // Low-Level Body Extractor
+                        //new LowLevelBodyExtractor(),
+                        //new OriginalLowLevelPrinter(),
+                        new OriginalLowLevelBodyExtractorWithoutIndex(),
+
+                        // High-Level Body Extractor
                         new HighLevelBodyExtractorWithVisitor())
         );
 
