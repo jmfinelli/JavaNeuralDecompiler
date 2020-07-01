@@ -25,14 +25,17 @@ if process_candidates:
     df_pairs['candidate'] = candidates
     df_pairs['candidate_tokens'] = [len(x.split()) for x in candidates]
 
+print(df_pairs.describe())
 
-print(df_pairs.head(5))
 for x in range(10, 100, 5):
     q = df_pairs['source_tokens'].quantile(x/100)
     print("Quantile " + str(x) + "%: " + str(q))
 
 mask = df_pairs['source_tokens'] < df_pairs['source_tokens'].quantile(0.95)
+print ("Size of the dataset before filtering: " + str(len(df_pairs)))
 df_pairs = df_pairs.loc[mask]
+print ("Size of the dataset after filtering: " + str(len(df_pairs)))
+
 
 #sns.boxplot(x=df_pairs['source_tokens'])
 #sns.boxplot(x=df_pairs['target_tokens'])

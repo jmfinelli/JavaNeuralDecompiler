@@ -74,16 +74,28 @@ Run experiment
 ----------------------------
 cd ~
 mkdir models
-onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/experiment --src_vocab_size 250000 --tgt_vocab_size 250000
+onmt_preprocess -train_src ./datasets/x_train -train_tgt ./datasets/y_train -valid_src ./datasets/x_valid -valid_tgt ./datasets/y_valid -save_data ./models/experiment --src_vocab_size 250000 --tgt_vocab_size 250000 --src_seq_length 20000 --tgt_seq_length 20000 --log_file ~/datasets/logs
+
 ----------------------------
 1 or 2 GPUs
 ----------------------------
-CUDA_VISIBLE_DEVICES=0 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 1 -gpu_ranks 0
-CUDA_VISIBLE_DEVICES=0,1 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 2 -gpu_ranks 0 1
+CUDA_VISIBLE_DEVICES=0 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 1 -gpu_ranks 0 -log_file ~/datasets/logs
+CUDA_VISIBLE_DEVICES=0,1 onmt_train -early_stopping 4 -data ./models/experiment -save_model ./models/experimentTrainedModel -world_size 2 -gpu_ranks 0 1 -log_file ~/datasets/logs
+
 ----------------------------
 Decompile validation files
 ----------------------------
 CUDA_VISIBLE_DEVICES=0 onmt_translate -gpu 0 -model ./models/experimentTrainedModel_step_50000.pt -src ~/datasets/remaining_sources -tgt ~/datasets/remaining_references -output ~/datasets/remaining_candidates
+
+----------------------------
+Work out evaluation metrics
+----------------------------
+th tools/score.lua ~/datasets/remaining_references -scorer bleu -order 2 < ~/datasets/remaining_candidates
+th tools/score.lua ~/datasets/remaining_references -scorer bleu < ~/datasets/remaining_candidates
+th tools/score.lua ~/datasets/remaining_references -scorer bleu -order 8 < ~/datasets/remaining_candidates
+so on and so forth
+th tools/score.lua ~/datasets/remaining_references -scorer ter < ~/datasets/remaining_candidates
+
 ----------------------------
 
 ----------------------------
