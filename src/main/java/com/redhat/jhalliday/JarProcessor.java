@@ -22,6 +22,7 @@ public class JarProcessor<
     private final Function<
             DecompilationRecord<LOW_ITEM, MethodDeclaration>,
             Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> juicer;
+    private final List<RecordTransformer<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>, MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> filteringRecordTransformers;
 
     private static final List<String> javaExclusions = new ArrayList<>() {{
         add(".+/package-info.java$");
@@ -32,10 +33,12 @@ public class JarProcessor<
             MethodAssociatingRecordTransformer<ClassWrapper<LOW_AGGREGATE>, CompilationUnit, LOW_ITEM> methodAssociatingRecordTransformer,
             Function<
                     DecompilationRecord<LOW_ITEM, MethodDeclaration>,
-                    Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> juicer) {
+                    Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> juicer,
+            List<RecordTransformer<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>, MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> filteringRecordTransformers) {
         this.classParsingFunction = classParsingFunction;
         this.methodAssociatingRecordTransformer = methodAssociatingRecordTransformer;
         this.juicer = juicer;
+        this.filteringRecordTransformers = filteringRecordTransformers;
     }
 
     public List<DecompilationRecord<ClassWrapper<LOW_AGGREGATE>, CompilationUnit>> associateFiles(
@@ -110,9 +113,21 @@ public class JarProcessor<
         return associatedFileRecords.stream().flatMap(methodAssociatingRecordTransformer).collect(Collectors.toList());
     }
 
-    public List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> juicer(List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> associatedMethods) {
+    public List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> juicer(
+            List<DecompilationRecord<LOW_ITEM, MethodDeclaration>> associatedMethods) {
 
         return associatedMethods.stream().flatMap(juicer).collect(Collectors.toList());
+    }
+
+    public List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> filterMethods(
+            List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>> finalMethods) {
+
+        for (RecordTransformer filteringRecordTransformer : this.filteringRecordTransformers) {
+            finalMethods = (List<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>)
+                    finalMethods.stream().flatMap(filteringRecordTransformer).collect(Collectors.toList());
+        }
+
+        return finalMethods;
     }
 
 }

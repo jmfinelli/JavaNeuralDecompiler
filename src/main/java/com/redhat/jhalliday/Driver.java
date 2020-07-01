@@ -9,6 +9,7 @@ import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
 import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithVisitor;
+import com.redhat.jhalliday.impl.javassist.FilteringBasedOnCFGs;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import com.redhat.jhalliday.impl.javassist.extractors.IdentityInfoExtractor;
@@ -26,7 +27,7 @@ public class Driver {
     //////////////// SWITCHES ////////////////
     //////////////////////////////////////////
 
-    private static boolean USE_DECOMPILER = false;
+    private static boolean USE_DECOMPILER = true;
 
     //////////////////////////////////////////
     //////////////////////////////////////////
@@ -107,8 +108,11 @@ public class Driver {
                         new OriginalLowLevelBodyExtractorWithoutIndex(),
 
                         // High-Level Body Extractor
-                        new HighLevelBodyExtractorWithVisitor())
-        );
+                        new HighLevelBodyExtractorWithVisitor()),
+                new ArrayList<>() {{
+                    //add(new FilteringBasedOnCFGs(10));
+                    add(new IdentityRecordTransformer<>());
+                }});
 
         int files = 0;
         int methods = 0;
@@ -140,6 +144,8 @@ public class Driver {
                 lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getBody().split(" ")));
                 highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getBody().split(" ")));
             }
+
+            jarProcessor.filterMethods(juice);
 
             juice.forEach(writePairsToFile);
 

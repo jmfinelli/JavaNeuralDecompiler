@@ -17,4 +17,6 @@ public class MethodJuice<T> {
     public String getBody() {
         return _body;
     }
+
+    public T getMethod() { return method; }
 }
