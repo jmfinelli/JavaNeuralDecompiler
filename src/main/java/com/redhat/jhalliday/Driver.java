@@ -13,6 +13,8 @@ import com.redhat.jhalliday.impl.javassist.FilteringBasedOnCFGs;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import com.redhat.jhalliday.impl.javassist.extractors.IdentityInfoExtractor;
+import com.redhat.jhalliday.impl.javassist.extractors.LowLevelBodyExtractor;
+import com.redhat.jhalliday.impl.javassist.extractors.LowLevelInfoExtractor;
 import com.redhat.jhalliday.impl.javassist.extractors.OriginalLowLevelBodyExtractorWithoutIndex;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -27,7 +29,7 @@ public class Driver {
     //////////////// SWITCHES ////////////////
     //////////////////////////////////////////
 
-    private static boolean USE_DECOMPILER = true;
+    private static boolean USE_DECOMPILER = false;
 
     //////////////////////////////////////////
     //////////////////////////////////////////
@@ -98,20 +100,21 @@ public class Driver {
                         JavaParserFunctions.methodWrappingFunction),
                 new JuicerRecordLowBasedTransformer<>(
                         // Low-Level Info Extractor
-                        new IdentityInfoExtractor(),
+                        //new IdentityInfoExtractor(),
                         //new CtMethodInfoExtractor(),
-                        //new LowLevelInfoExtractor(),
+                        new LowLevelInfoExtractor(),
 
                         // Low-Level Body Extractor
-                        //new LowLevelBodyExtractor(),
+                        new LowLevelBodyExtractor(),
                         //new OriginalLowLevelPrinter(),
-                        new OriginalLowLevelBodyExtractorWithoutIndex(),
+                        //new OriginalLowLevelBodyExtractorWithoutIndex(),
 
                         // High-Level Body Extractor
                         new HighLevelBodyExtractorWithVisitor()),
                 new ArrayList<>() {{
                     //add(new FilteringBasedOnCFGs(10));
-                    add(new IdentityRecordTransformer<>());
+                    //add(new IdentityRecordTransformer<>());
+                    add(new FilterDuplicatesOutRecordTransformer());
                 }});
 
         int files = 0;
@@ -138,16 +141,17 @@ public class Driver {
             List<DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>>> juice =
                     jarProcessor.juicer(methodRecords);
 
-            filteredMethods += juice.size();
-
             for (DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>> record : juice) {
                 lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getBody().split(" ")));
                 highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getBody().split(" ")));
             }
 
-            jarProcessor.filterMethods(juice);
+            List<DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>>> finalResults =
+                    jarProcessor.filterMethods(juice);
 
-            juice.forEach(writePairsToFile);
+            filteredMethods += finalResults.size();
+
+            finalResults.forEach(writePairsToFile);
 
             count++;
 

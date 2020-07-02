@@ -7,8 +7,8 @@ def checkMethodLength(list, a, b):
     return len(list) >= a and len(list) <= b
 
 body_length_switch = True
-min_body_length = 89
-max_body_length = math.inf
+min_body_length = 62
+max_body_length = 370
 dataset_fixed_size_switch = True
 dataset_fixed_size = 50000
 process_candidates = os.path.exists('./datasets/candidates.output')
