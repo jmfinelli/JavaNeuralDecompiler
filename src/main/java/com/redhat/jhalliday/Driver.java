@@ -12,10 +12,7 @@ import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWit
 import com.redhat.jhalliday.impl.javassist.FilteringBasedOnCFGs;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
-import com.redhat.jhalliday.impl.javassist.extractors.IdentityInfoExtractor;
-import com.redhat.jhalliday.impl.javassist.extractors.LowLevelBodyExtractor;
-import com.redhat.jhalliday.impl.javassist.extractors.LowLevelInfoExtractor;
-import com.redhat.jhalliday.impl.javassist.extractors.OriginalLowLevelBodyExtractorWithoutIndex;
+import com.redhat.jhalliday.impl.javassist.extractors.*;
 import javassist.CtClass;
 import javassist.CtMethod;
 
@@ -101,19 +98,19 @@ public class Driver {
                 new JuicerRecordLowBasedTransformer<>(
                         // Low-Level Info Extractor
                         //new IdentityInfoExtractor(),
-                        //new CtMethodInfoExtractor(),
-                        new LowLevelInfoExtractor(),
+                        //new LowLevelInfoExtractor(),
+                        new CtMethodInfoExtractor(),
 
                         // Low-Level Body Extractor
-                        new LowLevelBodyExtractor(),
                         //new OriginalLowLevelPrinter(),
                         //new OriginalLowLevelBodyExtractorWithoutIndex(),
+                        new LowLevelBodyExtractor(),
 
                         // High-Level Body Extractor
                         new HighLevelBodyExtractorWithVisitor()),
                 new ArrayList<>() {{
-                    //add(new FilteringBasedOnCFGs(10));
                     //add(new IdentityRecordTransformer<>());
+                    //add(new FilteringBasedOnCFGs(10));
                     add(new FilterDuplicatesOutRecordTransformer());
                 }});
 
@@ -138,16 +135,16 @@ public class Driver {
                     jarProcessor.associateMethods(filePairs);
             methods += methodRecords.size();
 
-            List<DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>>> juice =
+            List<DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>>> juicedMethods =
                     jarProcessor.juicer(methodRecords);
 
-            for (DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>> record : juice) {
+            for (DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>> record : juicedMethods) {
                 lowLevelDictionary.addAll(Arrays.asList(record.getLowLevelRepresentation().getBody().split(" ")));
                 highLevelDictionary.addAll(Arrays.asList(record.getHighLevelRepresentation().getBody().split(" ")));
             }
 
             List<DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>>> finalResults =
-                    jarProcessor.filterMethods(juice);
+                    jarProcessor.filterMethods(juicedMethods);
 
             filteredMethods += finalResults.size();
 
