@@ -17,20 +17,26 @@ package com.redhat.jhalliday.impl.javassist.extractors;
  */
 
 import com.github.javaparser.utils.StringEscapeUtils;
+import com.redhat.jhalliday.TriFunction;
 import javassist.CtMethod;
 import javassist.bytecode.*;
+import javassist.bytecode.analysis.ControlFlow;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Simple utility class for printing the bytecode instructions of a method.
  *
  * @author Jason T. Greene
  */
-public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, String>, String>, Opcode {
+public class LowLevelBodyExtractor implements
+        BiFunction<CtMethod, Map<String, String>, String>,
+        TriFunction<CtMethod, ControlFlow.Block, Map<String, String>, String>,
+        Opcode {
 
     public final static String LABEL_SYMBOL = "L";
     public final static String POOL_SYMBOL = "#";
@@ -41,7 +47,7 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
 
     private final static String DELIMITER = " ";
 
-    private final static String opcodes[] = Mnemonic.OPCODE;
+    private final static String[] opcodes = Mnemonic.OPCODE;
 
     @Override
     public String apply(CtMethod ctMethod, Map<String, String> placeholders) throws RuntimeException {
@@ -49,6 +55,15 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
         List<String> body = new LinkedList<>();
 
         ProcessMethod(ctMethod, body, placeholders);
+
+        return String.join(DELIMITER, body);
+    }
+
+    @Override
+    public String apply(CtMethod ctMethod, ControlFlow.Block block, Map<String, String> placeholders) {
+        List<String> body = new LinkedList<>();
+
+        ProcessBlock(ctMethod, block, body, placeholders);
 
         return String.join(DELIMITER, body);
     }
@@ -66,6 +81,31 @@ public class LowLevelBodyExtractor implements BiFunction<CtMethod, Map<String, S
                 pos = iterator.next();
             } catch (BadBytecode e) {
                 throw new RuntimeException(e);
+            }
+
+            body.add(instructionString(iterator, pos, pool, placeholders));
+        }
+    }
+
+    private void ProcessBlock (CtMethod ctMethod, ControlFlow.Block block, List<String> body, final Map<String, String> placeholders) throws RuntimeException {
+
+        final MethodInfo methodInfo = ctMethod.getMethodInfo();
+        final ConstPool pool = methodInfo.getConstPool();
+        final CodeAttribute code = methodInfo.getCodeAttribute();
+        final CodeIterator iterator = code.iterator();
+
+        while (iterator.hasNext()) {
+            int pos;
+            try {
+                pos = iterator.next();
+            } catch (BadBytecode e) {
+                throw new RuntimeException(e);
+            }
+
+            if (pos < block.position()) {
+                continue;
+            } else if (pos > block.position() + block.length()) {
+                break;
             }
 
             body.add(instructionString(iterator, pos, pool, placeholders));

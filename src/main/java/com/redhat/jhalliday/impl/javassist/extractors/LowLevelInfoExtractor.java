@@ -32,7 +32,7 @@ import java.util.Set;
  */
 public class LowLevelInfoExtractor implements Opcode, InfoExtractor<CtMethod> {
 
-    private final static String opcodes[] = Mnemonic.OPCODE;
+    private final static String[] opcodes = Mnemonic.OPCODE;
 
     @Override
     public Map<String, InfoType> apply(CtMethod ctMethod) {

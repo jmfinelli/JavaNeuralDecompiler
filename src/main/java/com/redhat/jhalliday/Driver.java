@@ -9,7 +9,6 @@ import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
 import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithVisitor;
-import com.redhat.jhalliday.impl.javassist.FilteringBasedOnCFGs;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import com.redhat.jhalliday.impl.javassist.extractors.*;
@@ -18,6 +17,7 @@ import javassist.CtMethod;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Driver {
@@ -90,16 +90,21 @@ public class Driver {
                 new ClassWrapperCreationTransformerFunction<>(
                         JavassistFunctions.classCreationFunction,
                         JavassistFunctions.classWrappingFunction),
+
                 new MethodAssociatingRecordTransformer<>(
                         JavassistFunctions.classShreddingFunction,
                         JavassistFunctions.methodWrappingFunction,
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
-                new JuicerRecordLowBasedTransformer<>(
+
+                new LowLevelBasedJuicerRecordTransformer<CtMethod>(
                         // Low-Level Info Extractor
                         //new IdentityInfoExtractor(),
                         //new LowLevelInfoExtractor(),
                         new CtMethodInfoExtractor(),
+
+                        // Low-Level Block Extractor
+                        new CFGBlockExtractor(new LowLevelBodyExtractor()),
 
                         // Low-Level Body Extractor
                         //new OriginalLowLevelPrinter(),
@@ -108,6 +113,7 @@ public class Driver {
 
                         // High-Level Body Extractor
                         new HighLevelBodyExtractorWithVisitor()),
+
                 new ArrayList<>() {{
                     //add(new IdentityRecordTransformer<>());
                     //add(new FilteringBasedOnCFGs(10));

@@ -31,7 +31,7 @@ import java.util.function.BiFunction;
  */
 public class OriginalLowLevelBodyExtractorWithoutIndex implements BiFunction<CtMethod, Map<String, String>, String>, Opcode {
 
-    private final static String opcodes[] = Mnemonic.OPCODE;
+    private final static String[] opcodes = Mnemonic.OPCODE;
 
     private final static String DELIMITER = " ";
 

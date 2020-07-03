@@ -43,7 +43,7 @@ public class LowLevelPrinter implements BiFunction<CtMethod, Map<String, String>
 
     private final static String DELIMITER = " ";
 
-    private final static String opcodes[] = Mnemonic.OPCODE;
+    private final static String[] opcodes = Mnemonic.OPCODE;
 
     @Override
     public String apply(CtMethod ctMethod, Map<String, String> placeholders) {
