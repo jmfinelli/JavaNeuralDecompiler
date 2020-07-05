@@ -8,7 +8,7 @@ public class MethodJuice<T> {
     private T method;
     private Map<String, String> _naming;
     private String _body;
-    private final Map<Integer, String> CFG;
+    private final Map<LineNumber, String> CFG;
 
     public MethodJuice(T method, Map<String, String> naming, String body) {
         this.method = method;
@@ -17,10 +17,10 @@ public class MethodJuice<T> {
         this.CFG = new HashMap<>();
     }
 
-    public MethodJuice(T method, Map<String, String> naming, String body, Map<Integer, String> CFG) {
+    public MethodJuice(T method, Map<String, String> naming, Map<LineNumber, String> CFG) {
         this.method = method;
         this._naming = naming;
-        this._body = body;
+        this._body = "";
         this.CFG = CFG;
     }
 
@@ -30,7 +30,7 @@ public class MethodJuice<T> {
 
     public T getMethod() { return method; }
 
-    public boolean addBlock(Map.Entry<Integer, String> entry) {
+    public boolean addBlock(Map.Entry<LineNumber, String> entry) {
         return !this.CFG.putIfAbsent(entry.getKey(), entry.getValue()).equals(entry.getValue());
     }
 }

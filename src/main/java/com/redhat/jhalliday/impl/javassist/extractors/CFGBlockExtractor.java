@@ -1,8 +1,7 @@
 package com.redhat.jhalliday.impl.javassist.extractors;
 
 import com.redhat.jhalliday.TriFunction;
-import com.redhat.jhalliday.impl.CFGBlockWrapper;
-import com.redhat.jhalliday.impl.javassist.CFGBlock;
+import com.redhat.jhalliday.impl.LineNumber;
 import javassist.CtMethod;
 import javassist.bytecode.BadBytecode;
 import javassist.bytecode.analysis.ControlFlow.Block;
@@ -13,16 +12,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public class CFGBlockExtractor implements BiFunction<CtMethod, Map<String, String>, List<CFGBlockWrapper>> {
+public class CFGBlockExtractor implements BiFunction<CtMethod, Map<String, String>, List<Map<LineNumber, String>>> {
 
-    private final TriFunction<CtMethod, Block, Map<String, String>, String> BlockBodyExtractor;
+    private final TriFunction<CtMethod, Block, Map<String, String>, Map<LineNumber, String>> BlockBodyExtractor;
 
-    public CFGBlockExtractor(TriFunction<CtMethod, Block, Map<String, String>, String> blockBodyExtractor) {
+    public CFGBlockExtractor(TriFunction<CtMethod, Block, Map<String, String>, Map<LineNumber, String>> blockBodyExtractor) {
         BlockBodyExtractor = blockBodyExtractor;
     }
 
     @Override
-    public List<CFGBlockWrapper> apply(CtMethod ctMethod, Map<String, String> placeholders) {
+    public List<Map<LineNumber, String>> apply(CtMethod ctMethod, Map<String, String> placeholders) {
 
         ControlFlow CFGs = null;
         try {
@@ -31,12 +30,12 @@ public class CFGBlockExtractor implements BiFunction<CtMethod, Map<String, Strin
             // impossible
         }
 
-        List<CFGBlockWrapper> results = new ArrayList<>();
+        List<Map<LineNumber, String>> results = new ArrayList<>();
 
         for (ControlFlow.Block block : CFGs.basicBlocks()) {
 
-            String blockBody = BlockBodyExtractor.apply(ctMethod, block, placeholders);
-            results.add(new CFGBlock(block, blockBody));
+            Map<LineNumber, String> blockBody = BlockBodyExtractor.apply(ctMethod, block, placeholders);
+            results.add(blockBody);
 
         }
 

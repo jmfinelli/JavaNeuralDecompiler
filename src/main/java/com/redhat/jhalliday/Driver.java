@@ -17,7 +17,6 @@ import javassist.CtMethod;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Driver {
@@ -97,14 +96,11 @@ public class Driver {
                         new CompilationUnitToMethodDeclarationsTransformerFunction(),
                         JavaParserFunctions.methodWrappingFunction),
 
-                new LowLevelBasedJuicerRecordTransformer<CtMethod>(
+                new BodyJuicerRecordTransformer<>(
                         // Low-Level Info Extractor
                         //new IdentityInfoExtractor(),
                         //new LowLevelInfoExtractor(),
                         new CtMethodInfoExtractor(),
-
-                        // Low-Level Block Extractor
-                        new CFGBlockExtractor(new LowLevelBodyExtractor()),
 
                         // Low-Level Body Extractor
                         //new OriginalLowLevelPrinter(),
@@ -113,6 +109,16 @@ public class Driver {
 
                         // High-Level Body Extractor
                         new HighLevelBodyExtractorWithVisitor()),
+//                new BlockJuicerRecordTransformer<CtMethod>(
+//                        // Low-Level Info Extractor
+//                        //new IdentityInfoExtractor(),
+//                        //new LowLevelInfoExtractor(),
+//                        new CtMethodInfoExtractor(),
+//
+//                        // Low-Level Block Extractor
+//                        new CFGBlockExtractor(new LowLevelBodyExtractor()),
+//                        // High-Level Body Extractor
+//                        SOMETHING),
 
                 new ArrayList<>() {{
                     //add(new IdentityRecordTransformer<>());

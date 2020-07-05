@@ -18,13 +18,12 @@ package com.redhat.jhalliday.impl.javassist.extractors;
 
 import com.github.javaparser.utils.StringEscapeUtils;
 import com.redhat.jhalliday.TriFunction;
+import com.redhat.jhalliday.impl.LineNumber;
 import javassist.CtMethod;
 import javassist.bytecode.*;
 import javassist.bytecode.analysis.ControlFlow;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -35,7 +34,7 @@ import java.util.function.Function;
  */
 public class LowLevelBodyExtractor implements
         BiFunction<CtMethod, Map<String, String>, String>,
-        TriFunction<CtMethod, ControlFlow.Block, Map<String, String>, String>,
+        TriFunction<CtMethod, ControlFlow.Block, Map<String, String>, Map<LineNumber, String>>,
         Opcode {
 
     public final static String LABEL_SYMBOL = "L";
@@ -45,7 +44,7 @@ public class LowLevelBodyExtractor implements
     private final static String LABEL_PATTERN = String.format("%%s %s%%s", LABEL_SYMBOL);
     private final static String POOL_PATTERN = String.format("%%s %s%%s", POOL_SYMBOL);
 
-    private final static String DELIMITER = " ";
+    public final static String DELIMITER = " ";
 
     private final static String[] opcodes = Mnemonic.OPCODE;
 
@@ -60,12 +59,13 @@ public class LowLevelBodyExtractor implements
     }
 
     @Override
-    public String apply(CtMethod ctMethod, ControlFlow.Block block, Map<String, String> placeholders) {
-        List<String> body = new LinkedList<>();
+    public Map<LineNumber, String> apply(CtMethod ctMethod, ControlFlow.Block block, Map<String, String> placeholders) {
+
+        Map<LineNumber, String> body = new TreeMap<>();
 
         ProcessBlock(ctMethod, block, body, placeholders);
 
-        return String.join(DELIMITER, body);
+        return body;
     }
 
     private void ProcessMethod (CtMethod ctMethod, List<String> body, final Map<String, String> placeholders) throws RuntimeException {
@@ -87,12 +87,13 @@ public class LowLevelBodyExtractor implements
         }
     }
 
-    private void ProcessBlock (CtMethod ctMethod, ControlFlow.Block block, List<String> body, final Map<String, String> placeholders) throws RuntimeException {
+    private void ProcessBlock (CtMethod ctMethod, ControlFlow.Block block, Map<LineNumber, String> body, final Map<String, String> placeholders) throws RuntimeException {
 
         final MethodInfo methodInfo = ctMethod.getMethodInfo();
         final ConstPool pool = methodInfo.getConstPool();
         final CodeAttribute code = methodInfo.getCodeAttribute();
         final CodeIterator iterator = code.iterator();
+        final LineNumberAttribute lineNumberAttribute = (LineNumberAttribute) code.getAttribute(LineNumberAttribute.tag);
 
         while (iterator.hasNext()) {
             int pos;
@@ -108,7 +109,9 @@ public class LowLevelBodyExtractor implements
                 break;
             }
 
-            body.add(instructionString(iterator, pos, pool, placeholders));
+            int lineNumber = lineNumberAttribute.toLineNumber(pos);
+
+            body.putIfAbsent(new LineNumber(pos, lineNumber), instructionString(iterator, pos, pool, placeholders));
         }
     }
 

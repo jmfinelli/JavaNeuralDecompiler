@@ -7,25 +7,21 @@ import com.redhat.jhalliday.InfoExtractor;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class LowLevelBasedJuicerRecordTransformer<LOW_ITEM> implements Function<
+public class BodyJuicerRecordTransformer<LOW_ITEM> implements Function<
         DecompilationRecord<LOW_ITEM, MethodDeclaration>,
         Stream<DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>>>> {
 
     private final InfoExtractor<LOW_ITEM> lowLevelInfoExtractor;
-    private final BiFunction<LOW_ITEM, Map<String, String>, List<CFGBlockWrapper>> lwoLevelControlFlowBlockExtractor;
     private final BiFunction<LOW_ITEM, Map<String, String>, String> lowLevelBodyExtractor;
     private final BiFunction<MethodDeclaration, Map<String, String>, String> highLevelBodyExtractor;
 
-    public LowLevelBasedJuicerRecordTransformer(
+    public BodyJuicerRecordTransformer(
             InfoExtractor<LOW_ITEM> lowLevelInfoExtractor,
-            BiFunction<LOW_ITEM, Map<String, String>, List<CFGBlockWrapper>> lwoLevelControlFlowBlockExtractor,
             BiFunction<LOW_ITEM, Map<String, String>, String> lowLevelBodyExtractor,
             BiFunction<MethodDeclaration, Map<String, String>, String> highLevelBodyExtractor) {
         this.lowLevelInfoExtractor = lowLevelInfoExtractor;
-        this.lwoLevelControlFlowBlockExtractor = lwoLevelControlFlowBlockExtractor;
         this.lowLevelBodyExtractor = lowLevelBodyExtractor;
         this.highLevelBodyExtractor = highLevelBodyExtractor;
     }
@@ -62,11 +58,11 @@ public class LowLevelBasedJuicerRecordTransformer<LOW_ITEM> implements Function<
             //System.out.println("The method " + decompilationRecord.getHighLevelRepresentation().getName() + " has been discarded!");
             return Stream.empty();
         }
-        List<CFGBlockWrapper> block = lwoLevelControlFlowBlockExtractor.apply(decompilationRecord.getLowLevelRepresentation(), placeholders);
 
         String HighLevelBody = highLevelBodyExtractor.apply(decompilationRecord.getHighLevelRepresentation(), placeholders);
 
         DecompilationRecord<MethodJuice<LOW_ITEM>, MethodJuice<MethodDeclaration>> newRecord;
+
         if (decompilationRecord.getHighLevelDecompiled() == null) {
 
             newRecord = new GenericDecompilationRecord<>(
