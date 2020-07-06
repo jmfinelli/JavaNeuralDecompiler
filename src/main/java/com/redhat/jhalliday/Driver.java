@@ -8,7 +8,9 @@ import com.redhat.jhalliday.impl.MethodAssociatingRecordTransformer;
 
 import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
+import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithLineNumber;
 import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithVisitor;
+import com.redhat.jhalliday.impl.javassist.FilteringBasedOnCFGs;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
 import com.redhat.jhalliday.impl.javassist.extractors.*;
@@ -109,7 +111,7 @@ public class Driver {
 
                         // High-Level Body Extractor
                         new HighLevelBodyExtractorWithVisitor()),
-//                new BlockJuicerRecordTransformer<CtMethod>(
+//                new BlockJuicerRecordTransformer<>(
 //                        // Low-Level Info Extractor
 //                        //new IdentityInfoExtractor(),
 //                        //new LowLevelInfoExtractor(),
@@ -118,12 +120,12 @@ public class Driver {
 //                        // Low-Level Block Extractor
 //                        new CFGBlockExtractor(new LowLevelBodyExtractor()),
 //                        // High-Level Body Extractor
-//                        SOMETHING),
+//                        new HighLevelBodyExtractorWithLineNumber()),
 
                 new ArrayList<>() {{
                     //add(new IdentityRecordTransformer<>());
-                    //add(new FilteringBasedOnCFGs(10));
                     add(new FilterDuplicatesOutRecordTransformer());
+                    //add(new FilteringBasedOnCFGs(10));
                 }});
 
         int files = 0;

@@ -10,6 +10,11 @@ public class LineNumber implements Comparable<LineNumber>{
         this.lineNumber = lineNumber;
     }
 
+    public LineNumber(int lineNumber) {
+        this.index = -1;
+        this.lineNumber = lineNumber;
+    }
+
     @Override
     public int compareTo(LineNumber lineNumber) {
         if (index < lineNumber.getIndex()){

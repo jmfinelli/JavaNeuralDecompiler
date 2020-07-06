@@ -60,6 +60,7 @@ mvn -f gather-sample-corpus.xml -DoutputDirectory=data/binjars dependency:copy-d
 mvn -f gather-sample-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies
 mv data ../
 cd ../
+mvn org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file -Dfile=/home/jf/Workspace/IdeaProjects/ReadJarFiles/lib/fernflower.jar -DgroupId=org.jetbrains.decompiler -DartifactId=jetbrains-decompiler -Dversion=1.0 -Dpackaging=jar -DlocalRepositoryPath=/home/jf/Workspace/IdeaProjects/ReadJarFiles/lib/
 mvn compile
 mvn exec:java -Dexec.mainClass=com.redhat.jhalliday.Driver
 mkdir ~/datasets
