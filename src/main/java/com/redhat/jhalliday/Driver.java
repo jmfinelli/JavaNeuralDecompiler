@@ -100,9 +100,9 @@ public class Driver {
 
                 new BodyJuicerRecordTransformer<>(
                         // Low-Level Info Extractor
-                        //new IdentityInfoExtractor(),
+                        new IdentityInfoExtractor(),
                         //new LowLevelInfoExtractor(),
-                        new CtMethodInfoExtractor(),
+                        //new CtMethodInfoExtractor(),
 
                         // Low-Level Body Extractor
                         //new OriginalLowLevelPrinter(),
@@ -123,8 +123,8 @@ public class Driver {
 //                        new HighLevelBodyExtractorWithLineNumber()),
 
                 new ArrayList<>() {{
-                    //add(new IdentityRecordTransformer<>());
-                    add(new FilterDuplicatesOutRecordTransformer());
+                    add(new IdentityRecordTransformer<>());
+                    //add(new FilterDuplicatesOutRecordTransformer());
                     //add(new FilteringBasedOnCFGs(10));
                 }});
 
