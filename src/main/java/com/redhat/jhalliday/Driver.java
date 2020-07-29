@@ -10,6 +10,7 @@ import com.redhat.jhalliday.impl.fernflower.OriginalFernFlower;
 import com.redhat.jhalliday.impl.javaparser.*;
 import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithLineNumber;
 import com.redhat.jhalliday.impl.javaparser.extractors.HighLevelBodyExtractorWithVisitor;
+import com.redhat.jhalliday.impl.javassist.CountCFGs;
 import com.redhat.jhalliday.impl.javassist.FilteringBasedOnCFGs;
 import com.redhat.jhalliday.impl.javassist.JavassistFunctions;
 
@@ -84,6 +85,8 @@ public class Driver {
 
         List<DecompilationRecord<File, File>> jarRecords = dir2jarsTransformer.apply(dirRecord).collect(Collectors.toList());
 
+        CountCFGs BasicBlockCounter = new CountCFGs();
+
 //        CreatePairsFromMainFolder createPairsFromMainFolder = new CreatePairsFromMainFolder("binjars", "srcjars");
 //        List<DecompilationRecord<File, File>> jarRecords = createPairsFromMainFolder.apply(new File("./lib/")).collect(Collectors.toList());
 
@@ -100,9 +103,9 @@ public class Driver {
 
                 new BodyJuicerRecordTransformer<>(
                         // Low-Level Info Extractor
-                        new IdentityInfoExtractor(),
+                        //new IdentityInfoExtractor(),
                         //new LowLevelInfoExtractor(),
-                        //new CtMethodInfoExtractor(),
+                        new CtMethodInfoExtractor(),
 
                         // Low-Level Body Extractor
                         //new OriginalLowLevelPrinter(),
@@ -111,6 +114,7 @@ public class Driver {
 
                         // High-Level Body Extractor
                         new HighLevelBodyExtractorWithVisitor()),
+
 //                new BlockJuicerRecordTransformer<>(
 //                        // Low-Level Info Extractor
 //                        //new IdentityInfoExtractor(),
@@ -123,9 +127,10 @@ public class Driver {
 //                        new HighLevelBodyExtractorWithLineNumber()),
 
                 new ArrayList<>() {{
-                    add(new IdentityRecordTransformer<>());
+                    //add(new IdentityRecordTransformer<>());
                     //add(new FilterDuplicatesOutRecordTransformer());
-                    //add(new FilteringBasedOnCFGs(10));
+                    //add(BasicBlockCounter);
+                    add(new FilteringBasedOnCFGs(3));
                 }});
 
         int files = 0;
@@ -160,12 +165,22 @@ public class Driver {
             List<DecompilationRecord<MethodJuice<CtMethod>, MethodJuice<MethodDeclaration>>> finalResults =
                     jarProcessor.filterMethods(juicedMethods);
 
+            // Using FilterDuplicatesOutRecordTransformer here, results in the removal of duplicates
+            // within the scope of each library. Duplicates still exist between libraries,
+            // which is useful when training the model.
+            FilterDuplicatesOutRecordTransformer<CtMethod> filterDuplicates = new FilterDuplicatesOutRecordTransformer();
+            finalResults = finalResults.stream().flatMap(filterDuplicates).collect(Collectors.toList());
+
             filteredMethods += finalResults.size();
 
             finalResults.forEach(writePairsToFile);
 
             count++;
 
+        }
+
+        for (Map.Entry<Integer, Integer> entry : BasicBlockCounter.getBasicBlockMap().entrySet()) {
+            System.out.printf("Number of Basic Blocks: %d; Number of methods: %d\n", entry.getKey(), entry.getValue());
         }
 
         System.out.printf("Processed %d jar file pairs, yielding %d file pairs\n", jarRecords.size(), files);

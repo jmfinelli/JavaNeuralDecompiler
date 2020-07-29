@@ -1,13 +1,14 @@
 import pandas as pd
 import os.path
+import math
 from sklearn.model_selection import train_test_split
 
 def checkMethodLength(list, a, b):
     return len(list) >= a and len(list) <= b
 
 body_length_switch = True
-min_body_length = 44
-max_body_length = 211
+min_body_length = 0
+max_body_length = 200
 training_dataset_fixed_size_switch = True
 training_dataset_fixed_size = 60000
 validation_dataset_fixed_size = 9000
