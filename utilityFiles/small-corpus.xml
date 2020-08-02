@@ -7,20 +7,20 @@
     gather test data files from maven central
     https://maven.apache.org/plugins/maven-dependency-plugin/copy-dependencies-mojo.html
 
-    mvn -f gather-sample-corpus.xml -DoutputDirectory=data/binjars dependency:copy-dependencies
-    mvn -f gather-sample-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies
+    mvn -f small-corpus.xml -DoutputDirectory=data/binjars dependency:copy-dependencies
+    mvn -f small-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies
 
     -->
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.jhalli</groupId>
-    <artifactId>gather-sample-corpus</artifactId>
+    <artifactId>small-corpus</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>gather-sample-corpus</name>
-    <description>gather-sample-corpus</description>
+    <name>small-corpus</name>
+    <description>small-corpus</description>
 
     <dependencies>
 

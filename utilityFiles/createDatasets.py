@@ -1,18 +1,36 @@
 import pandas as pd
 import os.path
-import math
+import argparse
 from sklearn.model_selection import train_test_split
 
 def checkMethodLength(list, a, b):
     return len(list) >= a and len(list) <= b
 
-body_length_switch = True
-min_body_length = 0
-max_body_length = 200
-training_dataset_fixed_size_switch = True
-training_dataset_fixed_size = 60000
-validation_dataset_fixed_size = 9000
-testing_dataset_percentage = 0.15
+parser=argparse.ArgumentParser(
+    description='This script generates a dataset to train, validate and test OpenNMT.',
+    epilog='Use it responsably!.')
+parser.add_argument('--body_switch', help="Switch to apply a filter on the methods' bodies.", type=bool, default=True)
+parser.add_argument('--min_body_length', help="Minimum body length to consider.", type=int, default="0")
+parser.add_argument('--max_body_length', help="Maximum body length to consider.", type=int, default="200")
+parser.add_argument('--training_switch',
+                    help="Switch to turn on the functionality to limit the number of items to train the neural model. "
+                         "To use together with --training_size",
+                    type=bool, default=True)
+parser.add_argument('--training_size', help="Number of items to train the neural model. To use together with --training_switch",
+                    type=int, default=60000)
+parser.add_argument('--validation_size', help="Number of items to validate the neural model.",
+                    type=int, default=9000)
+parser.add_argument('--testing_percentage', help="Percentage to split the dataset in training and testing datasets.", type= float, default="0.15")
+
+args = parser.parse_args()
+
+body_length_switch = args.body_switch
+min_body_length = args.min_body_length
+max_body_length = args.max_body_length
+training_dataset_fixed_size_switch = args.training_switch
+training_dataset_fixed_size = args.training_size
+validation_dataset_fixed_size = args.validation_size
+testing_dataset_percentage = args.testing_percentage
 process_candidates = os.path.exists('./datasets/candidates.output')
 
 lowLevel = open('./datasets/bytecode.output').readlines()

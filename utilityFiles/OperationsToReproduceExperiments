@@ -48,30 +48,6 @@ nano ~/.bash_profile ->
 source ~/.bash_profile
 
 ----------------------------
-Create Datasets
-----------------------------
-cd ~
-mkdir code
-cd code
-sudo dnf install git
-git clone https://github.com/manuNCL/ReadJarFiles.git
-cd ReadJarFiles/utilityFiles
-mvn -f gather-sample-corpus.xml -DoutputDirectory=data/binjars dependency:copy-dependencies
-mvn -f gather-sample-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies
-mv data ../
-cd ../
-cd lib
-mvn org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file -Dfile=./fernflower.jar -DgroupId=org.jetbrains.decompiler -DartifactId=jetbrains-decompiler -Dversion=1.0 -Dpackaging=jar -DlocalRepositoryPath=./lib/
-mvn compile
-mvn exec:java -Dexec.mainClass=com.redhat.jhalliday.Driver
-mkdir ~/datasets
-cp pairs.output ~/datasets/
-cp utilityFiles/createDatasets.py ~
-cd ~
-python createDatasets.py
-rm createDatasets.py
-
-----------------------------
 Run experiment
 ----------------------------
 cd ~
