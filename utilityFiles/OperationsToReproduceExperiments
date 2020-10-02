@@ -78,6 +78,7 @@ th tools/score.lua ~/datasets/remaining_references -scorer bleu < ~/datasets/rem
 th tools/score.lua ~/datasets/remaining_references -scorer bleu -order 8 < ~/datasets/remaining_candidates
 so on and so forth
 th tools/score.lua ~/datasets/remaining_references -scorer ter < ~/datasets/remaining_candidates
+th tools/score.lua ~/datasets/remaining_references -scorer dlratio < ~/datasets/remaining_candidates
 
 ----------------------------
 

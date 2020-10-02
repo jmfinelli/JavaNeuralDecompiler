@@ -5,8 +5,8 @@ cd ~
 mkdir code
 cd code
 sudo dnf install git
-git clone https://github.com/manuNCL/ReadJarFiles.git
-cd ReadJarFiles/utilityFiles
+git clone https://github.com/manuNCL/JavaNeuralDecompiler.git
+cd JavaNeuralDecompiler/utilityFiles
 
 mvn -f small-corpus.xml -DoutputDirectory=data/binjars dependency:copy-dependencies [OR mvn -f large-corpus.xml -DoutputDirectory=data/binjars dependency:copy-dependencies]
 mvn -f small-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies [OR mvn -f large-corpus.xml -DoutputDirectory=data/srcjars -Dclassifier=sources dependency:copy-dependencies]
