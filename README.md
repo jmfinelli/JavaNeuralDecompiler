@@ -30,6 +30,7 @@ To execute the Java software and extract translation pairs, run the command:
 mvn exec:java -Dexec.mainClass=com.redhat.jhalliday.Driver
 ```
 The complete chain of commands to create the dataset and run the Java software are reported in ```UtilityFiles/CreateDataset```
+Before using the OpenNMT framework, the dataset composed by the translation pairs must be divided to create three datasets, which are used to train, validate and test the neural model. To do so, it is possible to use the python script ```createDatasets.py``` available in the folder ```UtilityFiles```. It is also possible to run the python script ```analyseDataset.py``` to visualise the distribution of translation pairs in function of their (low-level) length.
 
 ### OpenNMT
 This framework is used to train a neural model, which is then used to decompile translation pairs. To train the neural model, run the following commands:
