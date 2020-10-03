@@ -50,4 +50,6 @@ To work out the metrics used in this dissertation project, two are the possible 
 th tools/score.lua ~/datasets/remaining_references -scorer ter < ~/datasets/remaining_candidates
 th tools/score.lua ~/datasets/remaining_references -scorer dlratio < ~/datasets/remaining_candidates
 ```
+**NOTE: TensorFlow must be installed!**
+
 In case you want to use ASIYA, it is best to refer to the installation and usage guide located in the file UtilityFiles/asiya_installation
