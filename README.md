@@ -45,11 +45,11 @@ CUDA_VISIBLE_DEVICES=0 onmt_translate -gpu 0 -model ./models/experimentTrainedMo
 In the guide located in UtilityFiles/OperationsToReproduceExperiments, the process to install and use OpenNMT is reported. Please, refer to it.
 
 ### Assess the decompilation
-To work out the metrics used in this dissertation project, two are the possible tools that can be used: ASIYA and the available metrics in OpenNMT. Using the latter, the evaluation of the results is very easy:
+To work out the metrics used in this dissertation project, two tools can be used: ASIYA and the available metrics in OpenNMT. Using the latter, the evaluation of results is very easy:
 ```
 th tools/score.lua ~/datasets/remaining_references -scorer ter < ~/datasets/remaining_candidates
 th tools/score.lua ~/datasets/remaining_references -scorer dlratio < ~/datasets/remaining_candidates
 ```
 **NOTE: TensorFlow must be installed!**
 
-In case you want to use ASIYA, it is best to refer to the installation and usage guide located in the file UtilityFiles/asiya_installation
+In case you want to use ASIYA, it is best to refer to the installation and user guide located in the file UtilityFiles/asiya_installation
